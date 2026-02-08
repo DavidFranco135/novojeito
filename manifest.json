@@ -1,10 +1,12 @@
 {
   "name": "Barbearia Sr. José",
   "short_name": "Sr. José",
+  "description": "Sistema Premium de Gestão de Barbearia",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#D4AF37",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/logo.png.jpg",
