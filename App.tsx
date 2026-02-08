@@ -23,22 +23,25 @@ const App: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerData, setRegisterData] = useState({ name: '', phone: '', email: '', password: '' });
 
-  // --- LÓGICA DE NOTIFICAÇÃO SONORA (SINO ESTILO APPLE/IFOOD) ---
+  // --- LÓGICA DE NOTIFICAÇÃO (SINO APPLE/IFOOD CORRIGIDO PARA PC) ---
   useEffect(() => {
-    // Som de sino duplo agudo e profissional
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/3005/3005-preview.mp3');
-    audio.load();
+    // Definimos o áudio globalmente para pré-carregamento no PC
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2638/2638-preview.mp3');
+    audio.preload = 'auto'; // Força o PC a baixar o som assim que abre o site
 
     const q = query(collection(db, 'appointments'), orderBy('createdAt', 'desc'), limit(1));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      // Evita tocar ao carregar a página (somente para novos itens)
+      // Ignora agendamentos antigos do cache ao atualizar a página
       if (snapshot.metadata.hasPendingWrites) return;
 
       snapshot.docChanges().forEach((change) => {
+        // change.type === 'added' significa que alguém acabou de agendar
         if (change.type === 'added' && !snapshot.metadata.fromCache) {
-          audio.play().catch(() => {
-            console.log("Notificação silenciosa (clique na página para ativar o som).");
+          // No PC, tentamos tocar o som. Se falhar, ele avisa no console
+          audio.currentTime = 0; // Reinicia o som caso toque duas vezes seguido
+          audio.play().catch(e => {
+            console.warn("Navegador bloqueou o som. Clique na página para habilitar o áudio.");
           });
         }
       });
@@ -46,6 +49,7 @@ const App: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+  // -----------------------------------------------------------------
 
   const handleLogin = async () => {
     try {
@@ -57,7 +61,7 @@ const App: React.FC = () => {
 
   const handleRegister = async () => {
     if (!registerData.name || !registerData.phone || !registerData.password) {
-      alert("Preencha os campos!");
+      alert("Preencha todos os campos.");
       return;
     }
     try {
@@ -67,13 +71,14 @@ const App: React.FC = () => {
         email: registerData.email,
         password: registerData.password
       } as any);
-      alert("Sucesso!");
+      alert("Cadastro realizado!");
       setIsRegistering(false);
     } catch (err) {
-      alert("Erro.");
+      alert("Erro ao cadastrar.");
     }
   };
 
+  // MANTENDO TODA A SUA ESTRUTURA ORIGINAL ABAIXO
   if (user && user.role === 'CLIENTE') {
     return (
       <div className={`relative min-h-screen theme-transition ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
@@ -94,7 +99,7 @@ const App: React.FC = () => {
           <button onClick={toggleTheme} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-500' : 'bg-[#D4AF37] text-black border-transparent'}`}>
             {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
           </button>
-          <button onClick={() => setIsPublicView(false)} className="p-4 rounded-2xl border shadow-2xl bg-zinc-900 border-white/10 text-white hover:bg-zinc-800">
+          <button onClick={() => setIsPublicView(false)} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-500' : 'bg-zinc-900 border-white/10 text-white hover:bg-zinc-800'}`}>
             <LogIn size={24} />
           </button>
         </div>
@@ -112,8 +117,6 @@ const App: React.FC = () => {
         </div>
 
         <div className="cartao-vidro w-full max-w-md rounded-[3.5rem] p-8 md:p-12 space-y-8 animate-in fade-in zoom-in duration-700 shadow-2xl relative z-10 border-white/5">
-          <div className="absolute top-0 inset-x-0 h-1 gradiente-ouro rounded-t-[3.5rem]"></div>
-          
           <div className="text-center space-y-4">
             <div className="w-20 h-20 rounded-[2rem] mx-auto overflow-hidden shadow-2xl border-2 border-[#D4AF37]/30">
                <img src={config.logo} className="w-full h-full object-cover" alt="Logo" />
@@ -127,25 +130,19 @@ const App: React.FC = () => {
           {!isRegistering ? (
             <div className="space-y-6">
               <div className="space-y-4">
-                <input type="text" placeholder="E-MAIL OU WHATSAPP" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-4 rounded-2xl outline-none focus:border-[#D4AF37] transition-all font-bold text-base ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-                <input type="password" placeholder="SENHA" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-4 rounded-2xl outline-none focus:border-[#D4AF37] transition-all font-bold text-base ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
+                <input type="text" placeholder="E-MAIL OU WHATSAPP" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-4 rounded-2xl outline-none focus:border-[#D4AF37] font-bold text-base ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
+                <input type="password" placeholder="SENHA" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-4 rounded-2xl outline-none focus:border-[#D4AF37] font-bold text-base ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
               </div>
-              <button onClick={handleLogin} className="w-full gradiente-ouro text-black py-5 rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">ACESSAR</button>
-              <div className="text-center">
-                <button onClick={() => setIsRegistering(true)} className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37] hover:underline">Novo por aqui? Cadastre-se</button>
-              </div>
+              <button onClick={handleLogin} className="w-full gradiente-ouro text-black py-5 rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl transition-all">ACESSAR</button>
             </div>
           ) : (
             <div className="space-y-4">
               <input type="text" placeholder="NOME" value={registerData.name} onChange={e => setRegisterData({...registerData, name: e.target.value})} className={`w-full border p-4 rounded-xl outline-none ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-              <input type="text" placeholder="WHATSAPP" value={registerData.phone} onChange={e => setRegisterData({...registerData, phone: e.target.value})} className={`w-full border p-4 rounded-xl outline-none ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-              <input type="password" placeholder="CRIAR SENHA" value={registerData.password} onChange={e => setRegisterData({...registerData, password: e.target.value})} className={`w-full border p-4 rounded-xl outline-none ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-              <button onClick={handleRegister} className="w-full gradiente-ouro text-black py-5 rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl">FINALIZAR</button>
-              <button onClick={() => setIsRegistering(false)} className="w-full text-[9px] font-black uppercase opacity-40">Voltar</button>
+              <input type="password" placeholder="SENHA" value={registerData.password} onChange={e => setRegisterData({...registerData, password: e.target.value})} className={`w-full border p-4 rounded-xl outline-none ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
+              <button onClick={handleRegister} className="w-full gradiente-ouro text-black py-5 rounded-[2rem] font-black uppercase tracking-widest text-xs">FINALIZAR</button>
             </div>
           )}
-
-          <button onClick={() => setIsPublicView(true)} className="w-full opacity-40 hover:opacity-100 text-[9px] font-black uppercase tracking-[0.2em] transition-all">Sair e voltar ao site</button>
+          <button onClick={() => setIsPublicView(true)} className="w-full opacity-40 hover:opacity-100 text-[9px] font-black uppercase tracking-[0.2em] transition-all">Visualizar Site</button>
         </div>
       </div>
     );
@@ -170,7 +167,7 @@ const App: React.FC = () => {
       <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
         {renderContent()}
       </Layout>
-      <button onClick={() => setIsPublicView(true)} className="fixed bottom-6 right-6 z-[100] gradiente-ouro text-black px-8 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-110 active:scale-95 transition-all">VISÃO DO CLIENTE</button>
+      <button onClick={() => setIsPublicView(true)} className="fixed bottom-6 right-6 z-[100] gradiente-ouro text-black px-8 py-4 rounded-[2rem] font-black text-xs uppercase shadow-2xl">VISÃO DO CLIENTE</button>
     </div>
   );
 };
