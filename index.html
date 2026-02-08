@@ -1,10 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Sr. José | Gestão de Barbearia</title>
+    
+    <!-- Favicon e App Icons -->
+    <link rel="icon" type="image/jpeg" href="/logo_000060138.jpg" />
+    <link rel="apple-touch-icon" href="/logo_000060138.jpg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#D4AF37" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,8 +27,8 @@
 
       .light-theme {
         --fundo: #F3F4F6;
-        --texto: #000000; /* Preto puro para contraste máximo */
-        --texto-secundario: #374151; /* Cinza escuro */
+        --texto: #000000;
+        --texto-secundario: #374151;
         --cartao: #FFFFFF;
         --borda: rgba(0, 0, 0, 0.15);
       }
@@ -34,7 +40,7 @@
         -webkit-font-smoothing: antialiased;
         transition: background-color 0.3s ease, color 0.3s ease;
         margin: 0;
-        font-size: 16px; /* Aumento da base */
+        font-size: 16px;
       }
 
       .font-display {
@@ -55,9 +61,8 @@
       .text-color-main { color: var(--texto); }
       .text-color-sec { color: var(--texto-secundario); }
 
-      /* Melhoria de legibilidade para inputs */
       input, select, textarea {
-        font-size: 16px !important; /* Evita zoom no iOS */
+        font-size: 16px !important;
         color: var(--texto) !important;
       }
 
@@ -66,7 +71,6 @@
       
       .theme-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
       
-      /* Estilo para fotos com espaçamento automático */
       .img-container {
         aspect-ratio: 1/1;
         overflow: hidden;
