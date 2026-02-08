@@ -25,6 +25,7 @@ interface BarberContextType {
   financialEntries: FinancialEntry[];
   notifications: Notification[];
   suggestions: Suggestion[];
+  shopReviews: Review[];
   config: ShopConfig;
   loading: boolean;
   theme: 'dark' | 'light';
@@ -109,6 +110,9 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     gallery: [],
     reviews: []
   });
+
+  // Extrai reviews do config
+  const shopReviews = config.reviews || [];
 
   useEffect(() => {
     localStorage.setItem('brb_theme', theme);
@@ -280,7 +284,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   return React.createElement(BarberContext.Provider, {
     value: {
-      user, clients, professionals, services, appointments, financialEntries, notifications, suggestions, config, loading, theme,
+      user, clients, professionals, services, appointments, financialEntries, notifications, suggestions, shopReviews, config, loading, theme,
       toggleTheme, login, logout, updateUser, addClient, updateClient, deleteClient,
       addService, updateService, deleteService,
       addProfessional, updateProfessional, deleteProfessional, likeProfessional: (id) => {},
