@@ -172,7 +172,10 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     unsubscribers.push(unsubConfig);
 
     setLoading(false);
-    return () => unsubscribers.forEach(unsub => unsub());
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
   }, []);
 
   useEffect(() => {
@@ -199,13 +202,22 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   };
 
   const logout = () => setUser(null);
-  const updateUser = (data: Partial<User>) => setUser(prev => prev ? { ...prev, ...data } : null);
+
+  const updateUser = (data: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...data } : null);
+  };
 
   const addClient = async (data: Omit<Client, 'id' | 'totalSpent' | 'createdAt'>): Promise<Client> => {
     const phoneClean = data.phone.replace(/\D/g, '');
     const existing = clients.find(c => c.phone.replace(/\D/g, '') === phoneClean || c.email.toLowerCase() === data.email.toLowerCase());
     if (existing) return existing;
-    const newClient: Omit<Client, 'id'> = { ...data, totalSpent: 0, createdAt: new Date().toISOString() };
+    
+    const newClient: Omit<Client, 'id'> = { 
+      ...data, 
+      totalSpent: 0, 
+      createdAt: new Date().toISOString() 
+    };
+    
     const docRef = await addDoc(collection(db, COLLECTIONS.CLIENTS), newClient);
     return { id: docRef.id, ...newClient };
   };
@@ -252,6 +264,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const addAppointment = async (data: Omit<Appointment, 'id' | 'status'>, isPublic: boolean = false) => {
     const newApp = { ...data, status: 'AGENDADO' as const };
     const docRef = await addDoc(collection(db, COLLECTIONS.APPOINTMENTS), newApp);
+    
     if (isPublic) {
       await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
         title: 'Novo Agendamento',
@@ -266,9 +279,11 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const updateAppointmentStatus = async (id: string, status: Appointment['status']) => {
     const app = appointments.find(a => a.id === id);
     if (!app) return;
+
     if (app.status === 'CONCLUIDO_PAGO' && status !== 'CONCLUIDO_PAGO') {
       const finEntry = financialEntries.find(f => f.appointmentId === id);
       if (finEntry) await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, finEntry.id));
+      
       const client = clients.find(c => c.id === app.clientId);
       if (client) {
         await updateDoc(doc(db, COLLECTIONS.CLIENTS, app.clientId), {
@@ -284,6 +299,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
         date: app.date,
         category: 'Serviços'
       });
+      
       const client = clients.find(c => c.id === app.clientId);
       if (client) {
         await updateDoc(doc(db, COLLECTIONS.CLIENTS, app.clientId), {
@@ -292,6 +308,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
         });
       }
     }
+
     await updateDoc(doc(db, COLLECTIONS.APPOINTMENTS, id), { status });
   };
 
