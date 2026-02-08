@@ -1,172 +1,90 @@
+// ... (mantenha os imports e as funções handleLogin/handleRegister originais)
 
-import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Appointments from './pages/Appointments';
-import Clients from './pages/Clients';
-import Professionals from './pages/Professionals';
-import Services from './pages/Services';
-import Financial from './pages/Financial';
-import Settings from './pages/Settings';
-import Suggestions from './pages/Suggestions';
-import PublicBooking from './pages/PublicBooking';
-import { useBarberStore } from './store';
-import { LogIn, Sparkles, Sun, Moon, LogOut, UserPlus } from 'lucide-react';
-
-const App: React.FC = () => {
-  const { user, config, theme, login, toggleTheme, addClient, clients } = useBarberStore();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [isPublicView, setIsPublicView] = useState(true);
-  const [loginIdentifier, setLoginIdentifier] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [registerData, setRegisterData] = useState({ name: '', phone: '', email: '', password: '' });
-
-  const handleLogin = async () => {
-    try {
-      await login(loginIdentifier, loginPassword);
-    } catch (err) {
-      alert("Falha no acesso. Verifique suas credenciais.");
-    }
-  };
-
-  const handleRegister = async () => {
-    if (!registerData.name || !registerData.phone || !registerData.password) {
-      alert("Preencha todos os campos obrigatórios.");
-      return;
-    }
-    try {
-      await addClient({
-        name: registerData.name,
-        phone: registerData.phone,
-        email: registerData.email,
-        password: registerData.password
-      } as any);
-      alert("Cadastro realizado com sucesso! Agora faça o login.");
-      setIsRegistering(false);
-    } catch (err) {
-      alert("Erro ao realizar cadastro.");
-    }
-  };
-
-  // Se o usuário logado for um CLIENTE, ele deve ver apenas o Portal do Membro
-  if (user && user.role === 'CLIENTE') {
-    return (
-      <div className={`relative min-h-screen theme-transition ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
-        <div className="fixed bottom-8 left-8 z-[100] flex gap-3">
-          <button onClick={toggleTheme} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-500' : 'bg-[#D4AF37] text-black border-transparent'}`}>
-            {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
-          </button>
-        </div>
-        <PublicBooking initialView="CLIENT_DASHBOARD" />
+if (!user) {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-black">
+      {/* Ajuste da Imagem de Fundo para não cortar */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src={config.loginBackground} 
+          className="w-full h-full object-cover opacity-40 grayscale" 
+          alt="Background" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
       </div>
-    );
-  }
 
-  // Se não houver usuário logado e estiver na visão pública (Padrão)
-  if (!user && isPublicView) {
-    return (
-      <div className={`relative min-h-screen theme-transition ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
-        <div className="fixed bottom-8 left-8 z-[100] flex gap-3">
-          <button onClick={toggleTheme} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-500' : 'bg-[#D4AF37] text-black border-transparent'}`}>
-            {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
-          </button>
-          <button onClick={() => setIsPublicView(false)} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-500' : 'bg-zinc-900 border-white/10 text-white hover:bg-zinc-800'}`}>
-            <LogOut size={24} />
-          </button>
-        </div>
-        <PublicBooking />
-      </div>
-    );
-  }
-
-  // Se não houver usuário logado e NÃO estiver na visão pública, mostra a tela de login (acesso ADM/Login Geral)
-  if (!user && !isPublicView) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center p-6 selection:bg-[#D4AF37]/30 relative overflow-hidden transition-all duration-500 ${theme === 'light' ? 'bg-[#F8F9FA] text-[#1A1A1A]' : 'bg-[#050505] text-[#f3f4f6]'}`}>
-        <div className="absolute inset-0 z-0">
-           <img src={config.loginBackground} className={`w-full h-full object-cover grayscale transition-all duration-1000 ${theme === 'light' ? 'opacity-5' : 'opacity-20'}`} alt="Login Background" />
-           <div className={`absolute inset-0 bg-gradient-to-t ${theme === 'light' ? 'from-[#F8F9FA] via-transparent to-[#F8F9FA]' : 'from-[#050505] via-transparent to-[#050505]'}`}></div>
-        </div>
-
-        <button onClick={toggleTheme} className={`absolute top-10 right-10 p-4 rounded-2xl border transition-all z-20 ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-500 shadow-lg' : 'bg-white/5 border-white/10 text-zinc-400'}`}>
-          {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
-        </button>
-
-        <div className="cartao-vidro w-full max-w-lg rounded-[4rem] p-12 md:p-20 space-y-12 animate-in fade-in zoom-in duration-1000 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] relative z-10 border-white/5">
-          <div className="absolute top-0 inset-x-0 h-1.5 gradiente-ouro rounded-t-[4rem]"></div>
+      <div className="w-full max-w-[400px] z-10 space-y-8 animate-in fade-in zoom-in duration-700">
+        <div className="text-center space-y-4">
+          <div className="relative inline-block group">
+            <img 
+              src={config.logo} 
+              className="w-24 h-24 md:w-28 md:h-28 rounded-[2.5rem] object-cover border-2 border-[#D4AF37]/50 shadow-[0_0_50px_rgba(212,175,55,0.2)] mx-auto" 
+              alt="Logo" 
+            />
+            <div className="absolute -inset-4 bg-[#D4AF37]/20 blur-3xl rounded-full opacity-50 group-hover:opacity-100 transition-all" />
+          </div>
           
-          <div className="text-center space-y-6">
-            <div className="w-24 h-24 rounded-3xl mx-auto overflow-hidden shadow-2xl shadow-[#D4AF37]/30 border-2 border-[#D4AF37]/30">
-               <img src={config.logo} className="w-full h-full object-cover" alt="Logo/Profile" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-4xl font-black font-display italic tracking-tight">{isRegistering ? 'Criar Conta' : 'Portal Sr. José'}</h1>
-              <p className="opacity-40 text-[10px] font-black uppercase tracking-[0.4em]">{isRegistering ? 'Cadastre-se para agendar' : 'Acesse para gerir ou agendar'}</p>
-            </div>
+          <div>
+            {/* Letras ajustadas (text-3xl em vez de 4xl) */}
+            <h2 className="text-3xl font-black text-white font-display italic tracking-tight uppercase">
+              {isRegistering ? 'Criar Conta' : 'Área Master'}
+            </h2>
+            <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.4em] mt-2 opacity-80">
+              {config.name} Signature
+            </p>
+          </div>
+        </div>
+
+        <div className="cartao-vidro rounded-[3rem] p-8 md:p-10 border-white/10 shadow-2xl space-y-6">
+          <div className="space-y-4">
+            {isRegistering ? (
+              <>
+                <input type="text" placeholder="NOME COMPLETO" value={registerData.name} onChange={e => setRegisterData({...registerData, name: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-white text-xs font-bold focus:border-[#D4AF37]/50 transition-all uppercase tracking-widest" />
+                <input type="text" placeholder="WHATSAPP (DDD)" value={registerData.phone} onChange={e => setRegisterData({...registerData, phone: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-white text-xs font-bold focus:border-[#D4AF37]/50 transition-all uppercase tracking-widest" />
+              </>
+            ) : null}
+            
+            <input 
+              type="text" 
+              placeholder="E-MAIL OU USUÁRIO" 
+              value={loginIdentifier} 
+              onChange={e => setLoginIdentifier(e.target.value)} 
+              className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-white text-xs font-bold focus:border-[#D4AF37]/50 transition-all uppercase tracking-widest" 
+            />
+            <input 
+              type="password" 
+              placeholder="SENHA SECRETA" 
+              value={loginPassword} 
+              onChange={e => setLoginPassword(e.target.value)} 
+              className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-white text-xs font-bold focus:border-[#D4AF37]/50 transition-all uppercase tracking-widest" 
+            />
           </div>
 
-          {!isRegistering ? (
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">E-mail ou WhatsApp</label>
-                  <input type="text" placeholder="gestor@srjose.com.br ou (21)..." value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-6 rounded-[2rem] outline-none focus:border-[#D4AF37] transition-all font-bold text-lg ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Senha</label>
-                  <input type="password" placeholder="••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-6 rounded-[2rem] outline-none focus:border-[#D4AF37] transition-all font-bold text-lg ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-                </div>
-              </div>
-              <button onClick={handleLogin} className="w-full gradiente-ouro text-black py-7 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl hover:scale-[1.03] active:scale-[0.97] transition-all">ACESSAR</button>
-              <div className="text-center">
-                <button onClick={() => setIsRegistering(true)} className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] hover:underline">Ainda não tem conta? Cadastre-se</button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <input type="text" placeholder="Nome Completo" value={registerData.name} onChange={e => setRegisterData({...registerData, name: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none focus:border-[#D4AF37] font-bold ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-                <input type="tel" placeholder="WhatsApp" value={registerData.phone} onChange={e => setRegisterData({...registerData, phone: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none focus:border-[#D4AF37] font-bold ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-                <input type="email" placeholder="E-mail" value={registerData.email} onChange={e => setRegisterData({...registerData, email: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none focus:border-[#D4AF37] font-bold ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-                <input type="password" placeholder="Crie uma Senha" value={registerData.password} onChange={e => setRegisterData({...registerData, password: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none focus:border-[#D4AF37] font-bold ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`} />
-              </div>
-              <button onClick={handleRegister} className="w-full gradiente-ouro text-black py-6 rounded-[2.5rem] font-black uppercase tracking-widest text-xs shadow-xl">CADASTRAR E CONTINUAR</button>
-              <div className="text-center">
-                <button onClick={() => setIsRegistering(false)} className="text-[10px] font-black uppercase tracking-widest opacity-40 hover:opacity-100">Já tem conta? Voltar ao Login</button>
-              </div>
-            </div>
-          )}
+          <button 
+            onClick={isRegistering ? handleRegister : handleLogin} 
+            className="w-full gradiente-ouro text-black py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+          >
+            {isRegistering ? <UserPlus size={18} /> : <LogIn size={18} />}
+            {isRegistering ? 'FINALIZAR CADASTRO' : 'ENTRAR NO SISTEMA'}
+          </button>
 
-          <button onClick={() => setIsPublicView(true)} className="w-full opacity-40 hover:opacity-100 hover:text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] transition-all">Visualizar Site (Site Público)</button>
+          <div className="pt-4 text-center border-t border-white/5">
+            <button 
+              onClick={() => setIsRegistering(!isRegistering)} 
+              className="text-white/40 hover:text-[#D4AF37] text-[10px] font-black uppercase tracking-widest transition-all"
+            >
+              {isRegistering ? 'Já tenho acesso? Fazer Login' : 'Ainda não é cliente? Cadastre-se'}
+            </button>
+          </div>
         </div>
+
+        <button 
+          onClick={() => setIsPublicView(true)} 
+          className="w-full text-white/30 hover:text-white text-[9px] font-black uppercase tracking-[0.3em] transition-all"
+        >
+          — Voltar para a vitrine —
+        </button>
       </div>
-    );
-  }
-
-  // Se o usuário logado for ADMIN, mostra o Layout de Gestão
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard': return <Dashboard onNavigate={setActiveTab} />;
-      case 'appointments': return <Appointments />;
-      case 'clients': return <Clients />;
-      case 'professionals': return <Professionals />;
-      case 'services': return <Services />;
-      case 'financial': return <Financial />;
-      case 'suggestions': return <Suggestions />;
-      case 'settings': return <Settings />;
-      default: return <Dashboard onNavigate={setActiveTab} />;
-    }
-  };
-
-  return (
-    <div className={`h-screen overflow-hidden theme-transition ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
-      <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
-        {renderContent()}
-      </Layout>
-      <button onClick={() => setIsPublicView(true)} className="fixed bottom-6 right-6 z-[100] gradiente-ouro text-black px-8 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-110 active:scale-95 transition-all">VISÃO DO CLIENTE</button>
     </div>
   );
-};
-
-export default App;
+}
