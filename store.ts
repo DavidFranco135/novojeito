@@ -56,6 +56,7 @@ interface BarberContextType {
   deleteFinancialEntry: (id: string) => Promise<void>;
   
   addSuggestion: (data: Omit<Suggestion, 'id' | 'date'>) => Promise<void>;
+  updateSuggestion: (id: string, data: Partial<Suggestion>) => Promise<void>;
   deleteSuggestion: (id: string) => Promise<void>;
 
   markNotificationAsRead: (id: string) => void;
@@ -118,60 +119,51 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     reviews: []
   });
 
-  // Carregar dados do Firebase em tempo real
   useEffect(() => {
     const unsubscribers: (() => void)[] = [];
 
-    // Clients
     const unsubClients = onSnapshot(collection(db, COLLECTIONS.CLIENTS), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
       setClients(data);
     });
     unsubscribers.push(unsubClients);
 
-    // Professionals
     const unsubProfs = onSnapshot(collection(db, COLLECTIONS.PROFESSIONALS), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Professional));
       setProfessionals(data);
     });
     unsubscribers.push(unsubProfs);
 
-    // Services
     const unsubServices = onSnapshot(collection(db, COLLECTIONS.SERVICES), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service));
       setServices(data);
     });
     unsubscribers.push(unsubServices);
 
-    // Appointments
     const unsubApps = onSnapshot(collection(db, COLLECTIONS.APPOINTMENTS), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Appointment));
       setAppointments(data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     });
     unsubscribers.push(unsubApps);
 
-    // Financial
     const unsubFinancial = onSnapshot(collection(db, COLLECTIONS.FINANCIAL), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FinancialEntry));
       setFinancialEntries(data);
     });
     unsubscribers.push(unsubFinancial);
 
-    // Notifications
     const unsubNotifs = onSnapshot(collection(db, COLLECTIONS.NOTIFICATIONS), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
       setNotifications(data);
     });
     unsubscribers.push(unsubNotifs);
 
-    // Suggestions
     const unsubSuggestions = onSnapshot(collection(db, COLLECTIONS.SUGGESTIONS), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Suggestion));
       setSuggestions(data);
     });
     unsubscribers.push(unsubSuggestions);
 
-    // Config
     const unsubConfig = onSnapshot(doc(db, COLLECTIONS.CONFIG, 'main'), (docSnap) => {
       if (docSnap.exists()) {
         setConfig(docSnap.data() as ShopConfig);
@@ -180,13 +172,9 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     unsubscribers.push(unsubConfig);
 
     setLoading(false);
-
-    return () => {
-      unsubscribers.forEach(unsub => unsub());
-    };
+    return () => unsubscribers.forEach(unsub => unsub());
   }, []);
 
-  // Salvar tema e usuário no localStorage
   useEffect(() => {
     localStorage.setItem('brb_theme', theme);
     localStorage.setItem('brb_user', JSON.stringify(user));
@@ -211,23 +199,13 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   };
 
   const logout = () => setUser(null);
+  const updateUser = (data: Partial<User>) => setUser(prev => prev ? { ...prev, ...data } : null);
 
-  const updateUser = (data: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...data } : null);
-  };
-
-  // CLIENTS
   const addClient = async (data: Omit<Client, 'id' | 'totalSpent' | 'createdAt'>): Promise<Client> => {
     const phoneClean = data.phone.replace(/\D/g, '');
     const existing = clients.find(c => c.phone.replace(/\D/g, '') === phoneClean || c.email.toLowerCase() === data.email.toLowerCase());
     if (existing) return existing;
-    
-    const newClient: Omit<Client, 'id'> = { 
-      ...data, 
-      totalSpent: 0, 
-      createdAt: new Date().toISOString() 
-    };
-    
+    const newClient: Omit<Client, 'id'> = { ...data, totalSpent: 0, createdAt: new Date().toISOString() };
     const docRef = await addDoc(collection(db, COLLECTIONS.CLIENTS), newClient);
     return { id: docRef.id, ...newClient };
   };
@@ -240,7 +218,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.CLIENTS, id));
   };
 
-  // SERVICES
   const addService = async (data: Omit<Service, 'id'>) => {
     await addDoc(collection(db, COLLECTIONS.SERVICES), data);
   };
@@ -253,7 +230,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.SERVICES, id));
   };
 
-  // PROFESSIONALS
   const addProfessional = async (data: Omit<Professional, 'id' | 'likes'>) => {
     await addDoc(collection(db, COLLECTIONS.PROFESSIONALS), { ...data, likes: 0 });
   };
@@ -273,14 +249,10 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     }
   };
 
-  // APPOINTMENTS
   const addAppointment = async (data: Omit<Appointment, 'id' | 'status'>, isPublic: boolean = false) => {
     const newApp = { ...data, status: 'AGENDADO' as const };
     const docRef = await addDoc(collection(db, COLLECTIONS.APPOINTMENTS), newApp);
-    
     if (isPublic) {
-      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-      audio.play().catch(() => {});
       await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
         title: 'Novo Agendamento',
         message: `${data.clientName} agendou ${data.serviceName} para ${data.date}.`,
@@ -294,11 +266,9 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const updateAppointmentStatus = async (id: string, status: Appointment['status']) => {
     const app = appointments.find(a => a.id === id);
     if (!app) return;
-
     if (app.status === 'CONCLUIDO_PAGO' && status !== 'CONCLUIDO_PAGO') {
       const finEntry = financialEntries.find(f => f.appointmentId === id);
       if (finEntry) await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, finEntry.id));
-      
       const client = clients.find(c => c.id === app.clientId);
       if (client) {
         await updateDoc(doc(db, COLLECTIONS.CLIENTS, app.clientId), {
@@ -314,7 +284,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
         date: app.date,
         category: 'Serviços'
       });
-      
       const client = clients.find(c => c.id === app.clientId);
       if (client) {
         await updateDoc(doc(db, COLLECTIONS.CLIENTS, app.clientId), {
@@ -323,7 +292,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
         });
       }
     }
-
     await updateDoc(doc(db, COLLECTIONS.APPOINTMENTS, id), { status });
   };
 
@@ -335,7 +303,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.APPOINTMENTS, id));
   };
 
-  // FINANCIAL
   const addFinancialEntry = async (data: Omit<FinancialEntry, 'id'>) => {
     await addDoc(collection(db, COLLECTIONS.FINANCIAL), data);
   };
@@ -344,7 +311,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, id));
   };
 
-  // SUGGESTIONS
   const addSuggestion = async (data: Omit<Suggestion, 'id' | 'date'>) => {
     const newSug = { ...data, date: new Date().toLocaleDateString('pt-BR') };
     await addDoc(collection(db, COLLECTIONS.SUGGESTIONS), newSug);
@@ -356,23 +322,25 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     });
   };
 
+  const updateSuggestion = async (id: string, data: Partial<Suggestion>) => {
+    await updateDoc(doc(db, COLLECTIONS.SUGGESTIONS, id), data as any);
+  };
+
   const deleteSuggestion = async (id: string) => {
     await deleteDoc(doc(db, COLLECTIONS.SUGGESTIONS, id));
   };
 
-  // NOTIFICATIONS
   const markNotificationAsRead = async (id: string) => {
     await updateDoc(doc(db, COLLECTIONS.NOTIFICATIONS, id), { read: true });
   };
 
   const clearNotifications = async () => {
     const snapshot = await getDocs(collection(db, COLLECTIONS.NOTIFICATIONS));
-    snapshot.docs.forEach(async (document) => {
+    for (const document of snapshot.docs) {
       await deleteDoc(doc(db, COLLECTIONS.NOTIFICATIONS, document.id));
-    });
+    }
   };
 
-  // CONFIG
   const updateConfig = async (data: Partial<ShopConfig>) => {
     await setDoc(doc(db, COLLECTIONS.CONFIG, 'main'), { ...config, ...data }, { merge: true });
   };
@@ -389,7 +357,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
       addService, updateService, deleteService,
       addProfessional, updateProfessional, deleteProfessional, likeProfessional,
       addAppointment, updateAppointmentStatus, rescheduleAppointment, deleteAppointment,
-      addFinancialEntry, deleteFinancialEntry, addSuggestion, deleteSuggestion,
+      addFinancialEntry, deleteFinancialEntry, addSuggestion, updateSuggestion, deleteSuggestion,
       markNotificationAsRead, clearNotifications, updateConfig, addShopReview
     }
   }, children);
