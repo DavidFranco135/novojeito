@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Scissors, Calendar, Check, MapPin, ChevronLeft, ChevronRight, ArrowRight, Clock, User, Phone, 
@@ -11,7 +12,7 @@ interface PublicBookingProps {
 }
 
 const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) => {
-  const { services, professionals, appointments, addAppointment, addClient, updateClient, config, theme, likeProfessional, addShopReview, addSuggestion, clients, user, logout, shopReviews } = useBarberStore();
+  const { services, professionals, appointments, addAppointment, addClient, updateClient, config, theme, likeProfessional, addShopReview, addSuggestion, clients, user, logout } = useBarberStore();
   
   const [view, setView] = useState<'HOME' | 'BOOKING' | 'LOGIN' | 'CLIENT_DASHBOARD'>(initialView);
   const [passo, setPasso] = useState(1);
@@ -122,360 +123,270 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       await addSuggestion({
         clientName: loggedClient.name,
         clientPhone: loggedClient.phone,
-        text: suggestionText,
-        date: new Date().toLocaleDateString('pt-BR'),
-        status: 'unread'
+        text: suggestionText
       });
-      alert("Sugestão enviada com sucesso!");
       setSuggestionText('');
-    } catch (err) { alert("Erro ao enviar sugestão."); }
-    finally { setLoading(false); }
-  };
-
-  const handleSaveProfile = async () => {
-    if (!loggedClient) return;
-    setLoading(true);
-    try {
-      await updateClient(loggedClient.id, editData);
-      setLoggedClient({ ...loggedClient, ...editData });
-      alert("Perfil atualizado!");
-    } catch (err) { alert("Erro ao atualizar."); }
-    finally { setLoading(false); }
-  };
-
-  const handleAddReview = async () => {
-    if (!newReview.comment.trim()) {
-      alert("Por favor, escreva um comentário.");
-      return;
+      alert("Obrigado pela sua sugestão! O admin recebeu seu feedback.");
+    } catch (err) {
+      alert("Erro ao enviar sugestão.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(true);
-    try {
-      await addShopReview({
-        rating: newReview.rating,
-        comment: newReview.comment,
-        userName: newReview.userName || 'Anônimo',
-        clientPhone: newReview.clientPhone || '',
-        date: new Date().toLocaleDateString('pt-BR')
-      });
-      alert("Avaliação enviada com sucesso!");
-      setShowReviewModal(false);
-      setNewReview({ rating: 5, comment: '', userName: '', clientPhone: '' });
-    } catch (err) { alert("Erro ao enviar avaliação."); }
-    finally { setLoading(false); }
   };
 
-  const clientAppointments = useMemo(() => {
-    if (!loggedClient) return { past: [], future: [] };
-    const filtered = appointments.filter(a => a.clientId === loggedClient.id || a.clientPhone === loggedClient.phone)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const now = new Date(); now.setHours(0,0,0,0);
-    return {
-      past: filtered.filter(a => new Date(a.date) < now || a.status === 'CONCLUIDO_PAGO'),
-      future: filtered.filter(a => new Date(a.date) >= now && a.status !== 'CONCLUIDO_PAGO' && a.status !== 'CANCELADO')
-    };
-  }, [loggedClient, appointments]);
+  const handleAddReview = () => {
+    if (!newReview.comment) return alert("Escreva um comentário!");
+    if (config.reviews?.some(r => r.clientPhone === loggedClient?.phone)) {
+        return alert("Você já deixou sua avaliação exclusiva!");
+    }
+    addShopReview(newReview);
+    setShowReviewModal(false);
+    setNewReview({ rating: 5, comment: '', userName: loggedClient?.name || '', clientPhone: loggedClient?.phone || '' });
+    alert("Obrigado pela sua avaliação!");
+  };
 
-  // Cálculo da média de avaliações
-  const averageRating = useMemo(() => {
-    if (!shopReviews || shopReviews.length === 0) return 0;
-    const sum = shopReviews.reduce((acc, review) => acc + review.rating, 0);
-    return (sum / shopReviews.length).toFixed(1);
-  }, [shopReviews]);
+  const handleLogout = () => {
+    setLoggedClient(null);
+    logout();
+    setView('HOME');
+  };
+
+  if (success) return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-[#050505] animate-in zoom-in">
+      <div className="cartao-vidro w-full max-w-lg p-12 rounded-[3rem] text-center space-y-8 border-[#D4AF37]/30">
+        <div className="w-20 h-20 gradiente-ouro rounded-full mx-auto flex items-center justify-center"><Check className="w-10 h-10 text-black" /></div>
+        <h2 className="text-3xl font-black font-display italic text-[#D4AF37]">Reserva Confirmada!</h2>
+        <p className="text-zinc-500 text-sm">Aguardamos você para o seu ritual signature.</p>
+        <button onClick={() => window.location.reload()} className="bg-[#D4AF37] text-black px-10 py-4 rounded-xl text-[10px] font-black uppercase">Voltar à Início</button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className={`min-h-screen flex flex-col theme-transition ${theme === 'light' ? 'bg-[#F8F9FA] text-[#1A1A1A]' : 'bg-[#050505] text-white'}`}>
-      
+    <div className={`min-h-screen flex flex-col theme-transition ${theme === 'light' ? 'bg-[#F3F4F6] text-black' : 'bg-[#050505] text-white'}`}>
       {view === 'HOME' && (
-        <>
-          {/* HERO */}
-          <div className="relative h-screen flex items-center justify-center overflow-hidden">
-             <div className="absolute inset-0 z-0">
-                <img src={config.coverImage} className={`w-full h-full object-cover grayscale transition-all ${theme === 'light' ? 'opacity-10' : 'opacity-30'}`} alt="Capa" />
-                <div className={`absolute inset-0 ${theme === 'light' ? 'bg-gradient-to-b from-transparent via-[#F8F9FA]/50 to-[#F8F9FA]' : 'bg-gradient-to-b from-transparent via-[#050505]/50 to-[#050505]'}`}></div>
-             </div>
-             
-             <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-10 animate-in fade-in zoom-in duration-1000">
-                <div className="inline-block">
-                   <img src={config.logo} className="h-32 md:h-40 mx-auto rounded-3xl shadow-2xl border-4 border-[#D4AF37]/30" alt="Logo" />
-                </div>
-                <div className="space-y-6">
-                   <h1 className="text-5xl md:text-7xl font-black font-display italic tracking-tight">{config.name}</h1>
-                   <p className="text-sm md:text-lg text-color-sec uppercase tracking-[0.4em] font-black opacity-60">{config.description}</p>
-                </div>
-                <button onClick={() => setView('BOOKING')} className="inline-flex items-center gap-4 gradiente-ouro text-black px-12 py-6 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl hover:scale-110 transition-all">
-                   <Scissors size={20} /> Agendar Ritual
-                </button>
-                <button onClick={() => setView('LOGIN')} className="block mx-auto mt-6 text-[#D4AF37] text-[10px] font-black uppercase tracking-widest hover:underline">
-                   Portal do Membro
-                </button>
-             </div>
-          </div>
+        <div className="animate-in fade-in flex flex-col min-h-screen">
+          <header className="relative h-[65vh] overflow-hidden flex flex-col items-center justify-center">
+            <img src={config.coverImage} className="absolute inset-0 w-full h-full object-cover brightness-50" alt="Capa" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+            <div className="absolute top-6 right-6 z-[100]"><button onClick={() => setView('LOGIN')} className="bg-[#D4AF37] text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95"><History size={16}/> PORTAL DO MEMBRO</button></div>
+            <div className="relative z-20 text-center px-6 mt-10">
+               <div className="w-20 h-20 rounded-[2rem] gradiente-ouro p-1 mx-auto mb-6"><div className="w-full h-full rounded-[1.8rem] bg-black overflow-hidden"><img src={config.logo} className="w-full h-full object-cover" alt="Logo" /></div></div>
+               <h1 className="text-5xl md:text-7xl font-black font-display italic tracking-tight">{config.name}</h1>
+               <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.4em] mt-3">{config.description}</p>
+            </div>
+          </header>
 
-          {/* SOBRE */}
-          <section className="py-20 md:py-32 px-6">
-             <div className="max-w-4xl mx-auto space-y-10 text-center animate-in fade-in slide-in-from-bottom-4">
-                <h2 className="text-4xl md:text-5xl font-black font-display italic text-[#D4AF37]">{config.aboutTitle}</h2>
-                <p className="text-color-sec leading-loose text-base md:text-lg">{config.aboutText}</p>
-             </div>
-          </section>
-
-          {/* SERVIÇOS */}
-          <section className="py-20 md:py-32 px-6 relative">
-             <div className="max-w-6xl mx-auto space-y-16">
-                <div className="text-center space-y-4">
-                   <h2 className="text-4xl md:text-5xl font-black font-display italic">Nossos Rituais</h2>
-                   <p className="text-color-sec text-[10px] font-black uppercase tracking-[0.3em]">Experiências Exclusivas</p>
-                </div>
-                
-                <div className="flex flex-wrap justify-center gap-4 mb-12">
-                   {categories.map(cat => (
-                      <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-8 py-3 rounded-[2rem] font-black text-[10px] uppercase tracking-widest transition-all ${selectedCategory === cat ? 'gradiente-ouro text-black shadow-xl' : 'bg-white/5 text-color-sec border border-white/10'}`}>
-                         {cat}
-                      </button>
-                   ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                   {filteredServices.map(svc => (
-                      <div key={svc.id} className="cartao-vidro rounded-[2.5rem] p-8 md:p-10 border-white/5 space-y-6 hover:border-[#D4AF37]/40 transition-all duration-500 group">
-                         <div className="flex items-start justify-between">
-                            <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
-                               <Scissors size={24}/>
-                            </div>
-                            <span className="text-2xl font-black italic text-[#D4AF37] font-display">R$ {svc.price.toFixed(0)}</span>
-                         </div>
-                         <div>
-                            <h3 className="text-2xl font-black font-display italic text-color-main mb-2">{svc.name}</h3>
-                            <p className="text-[10px] text-color-sec font-black uppercase tracking-widest opacity-60">{svc.category}</p>
-                         </div>
-                         <p className="text-color-sec text-sm leading-relaxed">{svc.description}</p>
-                         <button onClick={() => handleBookingStart(svc)} className="w-full gradiente-ouro text-black py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all">
-                            Reservar
-                         </button>
-                      </div>
-                   ))}
-                </div>
-             </div>
-          </section>
-
-          {/* PROFISSIONAIS */}
-          <section className="py-20 md:py-32 px-6">
-             <div className="max-w-6xl mx-auto space-y-16">
-                <div className="text-center space-y-4">
-                   <h2 className="text-4xl md:text-5xl font-black font-display italic">Nossos Artífices</h2>
-                   <p className="text-color-sec text-[10px] font-black uppercase tracking-[0.3em]">Mestres da Tradição</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                   {professionals.map(prof => (
-                      <div key={prof.id} className="cartao-vidro rounded-[2.5rem] p-8 border-white/5 text-center space-y-6 group hover:border-[#D4AF37]/40 transition-all">
-                         <div className="relative inline-block">
-                            <img src={prof.avatar} className="w-28 h-28 rounded-[2rem] object-cover border-4 border-white/10 group-hover:border-[#D4AF37] transition-all mx-auto" alt="" />
-                            <button onClick={() => likeProfessional(prof.id)} className="absolute -bottom-3 -right-3 bg-[#D4AF37] text-black p-3 rounded-xl shadow-xl hover:scale-110 transition-all">
-                               <Heart size={14} fill="currentColor"/>
-                            </button>
-                         </div>
-                         <div>
-                            <h3 className="text-xl font-black font-display italic text-color-main">{prof.name}</h3>
-                            <p className="text-[9px] text-color-sec font-black uppercase tracking-widest mt-2">{prof.specialty}</p>
-                            <div className="flex items-center justify-center gap-2 mt-3">
-                               <Heart size={12} className="text-[#D4AF37]" fill="currentColor"/>
-                               <span className="text-[10px] font-black text-[#D4AF37]">{prof.likes || 0} curtidas</span>
-                            </div>
-                         </div>
-                      </div>
-                   ))}
-                </div>
-             </div>
-          </section>
-
-          {/* GALERIA */}
-          {config.gallery && config.gallery.length > 0 && (
-            <section className="py-20 md:py-32 px-6">
-               <div className="max-w-6xl mx-auto space-y-16">
-                  <div className="text-center space-y-4">
-                     <h2 className="text-4xl md:text-5xl font-black font-display italic">Nosso Espaço</h2>
-                     <p className="text-color-sec text-[10px] font-black uppercase tracking-[0.3em]">Ambiente Exclusivo</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                     {config.gallery.map((img, i) => (
-                        <div key={i} className="aspect-video rounded-[2rem] overflow-hidden border-2 border-white/10 shadow-2xl group">
-                           <img src={img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt="" />
+          <main className="max-w-6xl mx-auto w-full px-6 flex-1 -mt-10 relative z-30 pb-40">
+             {/* 1. Destaques da Casa */}
+             <section className="mb-20 pt-10">
+                <h2 className="text-2xl font-black font-display italic mb-8 flex items-center gap-6">Destaques da Casa <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                   {services.slice(0, 6).map(svc => (
+                     <div key={svc.id} className="snap-center flex-shrink-0 w-64 md:w-72 cartao-vidro rounded-[2.5rem] overflow-hidden group shadow-2xl border-white/5 hover:border-[#D4AF37]/30 transition-all">
+                        <div className="h-48 overflow-hidden"><img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="" /></div>
+                        <div className="p-6">
+                           <h3 className="text-xl font-black font-display italic leading-tight">{svc.name}</h3>
+                           <p className="text-[#D4AF37] text-[9px] font-black mt-2">R$ {svc.price.toFixed(2)} • {svc.durationMinutes} min</p>
+                           <button onClick={() => handleBookingStart(svc)} className="w-full mt-6 gradiente-ouro text-black py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl">RESERVAR</button>
                         </div>
-                     ))}
-                  </div>
-               </div>
-            </section>
-          )}
-
-          {/* AVALIAÇÕES COM ESTRELAS */}
-          {shopReviews && shopReviews.length > 0 && (
-            <section className="py-20 md:py-32 px-6">
-               <div className="max-w-6xl mx-auto space-y-16">
-                  <div className="text-center space-y-6">
-                     <h2 className="text-4xl md:text-5xl font-black font-display italic">O Que Dizem</h2>
-                     <div className="flex items-center justify-center gap-3">
-                        <div className="flex gap-1">
-                           {[1,2,3,4,5].map(star => (
-                              <Star key={star} size={28} className={parseFloat(averageRating) >= star ? 'text-[#D4AF37]' : 'text-zinc-800'} fill={parseFloat(averageRating) >= star ? 'currentColor' : 'none'} />
-                           ))}
-                        </div>
-                        <span className="text-3xl font-black text-[#D4AF37] font-display">{averageRating}</span>
-                        <span className="text-[10px] text-color-sec font-black uppercase tracking-widest">({shopReviews.length} avaliações)</span>
                      </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                     {shopReviews.slice(0, 6).map((rev, i) => (
-                        <div key={i} className="cartao-vidro rounded-[2.5rem] p-8 border-white/5 space-y-6">
-                           <div className="flex items-center justify-between">
-                              <div className="flex gap-1">
-                                 {[1,2,3,4,5].map(star => (
-                                    <Star key={star} size={16} className={rev.rating >= star ? 'text-[#D4AF37]' : 'text-zinc-800'} fill={rev.rating >= star ? 'currentColor' : 'none'} />
-                                 ))}
-                              </div>
-                              <Quote className="text-[#D4AF37]/20" size={32}/>
-                           </div>
-                           <p className="text-color-sec italic leading-relaxed text-sm">"{rev.comment}"</p>
-                           <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                              <span className="text-[10px] font-black text-color-main uppercase tracking-widest">{rev.userName}</span>
-                              <span className="text-[8px] text-color-sec font-black uppercase tracking-widest">{rev.date}</span>
-                           </div>
-                        </div>
-                     ))}
-                  </div>
-                  <div className="text-center">
-                     <button onClick={() => setShowReviewModal(true)} className="gradiente-ouro text-black px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all">
-                        Deixar Avaliação
-                     </button>
-                  </div>
-               </div>
-            </section>
-          )}
+                   ))}
+                </div>
+             </section>
 
-          {/* CONTATO */}
-          <section className="py-20 md:py-32 px-6">
-             <div className="max-w-4xl mx-auto cartao-vidro rounded-[3rem] p-12 md:p-16 border-[#D4AF37]/10 space-y-10 text-center">
-                <h2 className="text-4xl md:text-5xl font-black font-display italic">Onde Estamos</h2>
-                <div className="space-y-6 text-color-sec">
-                   <div className="flex items-center justify-center gap-4">
-                      <MapPin className="text-[#D4AF37]" size={24}/>
-                      <p className="text-base font-bold">{config.address}, {config.city} - {config.state}</p>
-                   </div>
-                   <div className="flex items-center justify-center gap-4">
-                      <Clock className="text-[#D4AF37]" size={24}/>
-                      <p className="text-base font-bold">{config.openingTime} às {config.closingTime}</p>
-                   </div>
-                   <div className="flex items-center justify-center gap-4">
-                      <Phone className="text-[#D4AF37]" size={24}/>
-                      <a href={`https://wa.me/${config.whatsapp.replace(/\D/g, '')}`} className="text-base font-bold hover:text-[#D4AF37] transition-all">{config.whatsapp}</a>
-                   </div>
-                   <div className="flex items-center justify-center gap-4">
-                      <Instagram className="text-[#D4AF37]" size={24}/>
-                      <a href={`https://instagram.com/${config.instagram}`} className="text-base font-bold hover:text-[#D4AF37] transition-all">@{config.instagram}</a>
+             {/* 2. Nossos Rituais (Menu) */}
+             <section className="mb-24" id="catalogo">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                   <h2 className="text-2xl font-black font-display italic flex items-center gap-6">Nossos Rituais <div className="h-1 w-10 gradiente-ouro opacity-10"></div></h2>
+                   <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                      {categories.map(cat => (
+                        <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-5 py-2.5 rounded-full text-[9px] font-black uppercase transition-all ${selectedCategory === cat ? 'bg-[#D4AF37] text-black shadow-lg' : 'bg-white/5 text-zinc-500'}`}>{cat}</button>
+                      ))}
                    </div>
                 </div>
-                {config.locationUrl && (
-                  <a href={config.locationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 gradiente-ouro text-black px-10 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all">
-                     <MapPin size={18}/> Ver no Mapa
-                  </a>
-                )}
-             </div>
-          </section>
-        </>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   {filteredServices.map(svc => (
+                     <div key={svc.id} className="cartao-vidro p-5 rounded-[2rem] flex items-center gap-6 hover:border-[#D4AF37]/30 transition-all group">
+                        <img src={svc.image} className="w-20 h-20 rounded-2xl object-cover bg-zinc-900 flex-shrink-0" alt="" />
+                        <div className="flex-1 min-w-0">
+                           <h3 className="text-lg font-black font-display italic leading-none">{svc.name}</h3>
+                           <p className="text-zinc-500 text-xs mt-2 line-clamp-1">{svc.description}</p>
+                           <div className="flex gap-4 mt-3">
+                              <span className="text-[#D4AF37] text-[9px] font-black">R$ {svc.price.toFixed(2)}</span>
+                              <span className="text-zinc-500 text-[9px] font-black">{svc.durationMinutes} min</span>
+                           </div>
+                        </div>
+                        <button onClick={() => handleBookingStart(svc)} className="bg-[#D4AF37]/10 text-[#D4AF37] p-3 rounded-xl hover:bg-[#D4AF37] hover:text-black transition-all"><ArrowRight size={18}/></button>
+                     </div>
+                   ))}
+                </div>
+             </section>
+
+             {/* 3. A Experiência Signature (Galeria) */}
+             <section className="mb-24">
+                <h2 className="text-2xl font-black font-display italic mb-8 flex items-center gap-6">A Experiência Signature <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                   {(Array.isArray(config.gallery) ? config.gallery : []).map((img, i) => (
+                     <div key={i} className="snap-center flex-shrink-0 w-80 md:w-[500px] h-64 md:h-80 rounded-[2.5rem] overflow-hidden border-4 border-white/5 shadow-2xl transition-all hover:scale-[1.02]">
+                        <img src={img} className="w-full h-full object-cover" alt="" />
+                     </div>
+                   ))}
+                   {(!config.gallery || config.gallery.length === 0) && <p className="text-zinc-600 italic py-10">Em breve, novas fotos do nosso ambiente.</p>}
+                </div>
+             </section>
+
+             {/* 4. Voz dos Membros (Avaliações) */}
+             <section className="mb-24 py-10">
+                <h2 className="text-2xl font-black font-display italic mb-10 flex items-center gap-6">Voz dos Membros <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                   {config.reviews?.length === 0 && <p className="text-zinc-600 italic py-10 text-center w-full">Aguardando seu feedback para brilhar aqui.</p>}
+                   {config.reviews?.map((rev, i) => (
+                      <div key={i} className="snap-center flex-shrink-0 w-80 cartao-vidro p-8 rounded-[2rem] border-white/5 relative group">
+                         <div className="absolute -top-4 -left-4 w-10 h-10 gradiente-ouro rounded-full flex items-center justify-center text-black shadow-lg"><Quote size={18} fill="currentColor"/></div>
+                         <div className="flex gap-1 mb-4">
+                            {[1,2,3,4,5].map(s => (
+                               <Star key={s} size={14} fill={s <= rev.rating ? '#D4AF37' : 'none'} className={s <= rev.rating ? 'text-[#D4AF37]' : 'text-zinc-800'}/>
+                            ))}
+                         </div>
+                         <p className="text-sm italic text-zinc-300 leading-relaxed mb-6">"{rev.comment}"</p>
+                         <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">{rev.userName}</span>
+                            <span className="text-[9px] font-bold text-zinc-600">{rev.date}</span>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             </section>
+
+             {/* 5. Mestres Artífices (Equipe) */}
+             <section className="mb-24">
+                <h2 className="text-2xl font-black font-display italic mb-12 flex items-center gap-6">Mestres Artífices <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                   {professionals.map(p => (
+                     <div key={p.id} className="text-center group">
+                        <div className="relative mb-6 mx-auto w-32 h-32 md:w-44 md:h-44">
+                           <img src={p.avatar} className="w-full h-full object-cover rounded-[2.5rem] border-4 border-white/5 group-hover:border-[#D4AF37] transition-all duration-500" alt={p.name} />
+                           <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-white text-rose-500 p-3 rounded-xl shadow-2xl flex items-center gap-2 border border-rose-100">
+                              <Heart size={14} fill="currentColor" />
+                              <span className="text-[10px] font-black">{p.likes || 0}</span>
+                           </div>
+                        </div>
+                        <h4 className="text-xl font-black font-display italic mt-4">{p.name}</h4>
+                        <p className="text-[9px] text-[#D4AF37] font-black uppercase tracking-widest mt-1">Especialista Signature</p>
+                     </div>
+                   ))}
+                </div>
+             </section>
+
+             {/* 6. Nossa História (Sobre) */}
+             <section className="mb-24 py-16 border-y border-white/5">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                   <div className="space-y-8">
+                      <div>
+                        <h4 className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.4em] mb-4">Tradição & Excelência</h4>
+                        <h2 className="text-4xl md:text-5xl font-black font-display italic leading-tight">{config.aboutTitle}</h2>
+                      </div>
+                      <p className="text-zinc-500 leading-relaxed italic text-lg">{config.aboutText}</p>
+                      <div className="flex items-center gap-10">
+                         <div className="flex flex-col"><span className="text-[9px] font-black uppercase text-zinc-600 mb-1">Inaugurado em</span><span className="text-xl font-black italic">1995</span></div>
+                         <div className="flex flex-col"><span className="text-[9px] font-black uppercase text-zinc-600 mb-1">Localização</span><span className="text-xl font-black italic">{config.city}</span></div>
+                      </div>
+                   </div>
+                   <div className="aspect-square rounded-[3rem] overflow-hidden border-8 border-white/5 shadow-2xl">
+                      <img src={config.loginBackground} className="w-full h-full object-cover grayscale opacity-60" alt="" />
+                   </div>
+                </div>
+             </section>
+
+          </main>
+        </div>
       )}
 
       {view === 'LOGIN' && (
-        <div className="flex-1 flex items-center justify-center p-6 animate-in fade-in">
-           <div className="cartao-vidro w-full max-w-md rounded-[3rem] p-12 space-y-10 border-[#D4AF37]/20 shadow-2xl">
-              <div className="text-center space-y-6">
-                 <div className="w-20 h-20 rounded-2xl mx-auto overflow-hidden shadow-xl border-2 border-[#D4AF37]/30">
-                    <img src={config.logo} className="w-full h-full object-cover" alt="Logo" />
-                 </div>
-                 <div>
-                    <h2 className="text-3xl font-black font-display italic">Portal do Membro</h2>
-                    <p className="text-color-sec text-[10px] font-black uppercase tracking-widest mt-2">Acesso Exclusivo</p>
-                 </div>
+        <div className="flex-1 flex items-center justify-center p-6 animate-in zoom-in">
+           <div className="cartao-vidro w-full max-w-md rounded-[3rem] p-12 space-y-10 border-[#D4AF37]/30 shadow-2xl relative">
+              <button onClick={() => setView('HOME')} className="absolute top-8 left-8 text-zinc-600 hover:text-white"><ChevronLeft size={24}/></button>
+              <div className="text-center space-y-4">
+                 <div className="w-16 h-16 gradiente-ouro rounded-2xl mx-auto flex items-center justify-center"><User size={32} className="text-black"/></div>
+                 <h2 className="text-3xl font-black font-display italic">Portal do Membro</h2>
+                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Identifique-se para acessar seu histórico</p>
               </div>
               <div className="space-y-6">
-                 <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]" size={20}/>
-                    <input type="text" placeholder="E-mail ou WhatsApp cadastrado" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl outline-none text-color-main font-bold focus:border-[#D4AF37] transition-all" />
+                 <div className="space-y-2">
+                    <label className="text-[9px] font-black text-zinc-600 uppercase tracking-widest ml-1">E-mail ou Celular</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]" size={18}/>
+                      <input type="text" placeholder="email@exemplo.com ou (21)..." value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className="w-full bg-white/5 border border-white/10 p-5 pl-12 rounded-2xl text-sm font-bold outline-none focus:border-[#D4AF37]"/>
+                    </div>
                  </div>
-                 <button onClick={handleLoginPortal} className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl hover:scale-105 transition-all">
-                    Acessar Portal
-                 </button>
-                 <button onClick={() => setView('HOME')} className="w-full text-color-sec text-[10px] font-black uppercase tracking-widest hover:text-[#D4AF37] transition-all">
-                    Voltar ao Início
-                 </button>
+                 <button onClick={handleLoginPortal} className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl">ENTRAR NO PORTAL</button>
               </div>
            </div>
         </div>
       )}
 
       {view === 'CLIENT_DASHBOARD' && loggedClient && (
-        <div className="flex-1 max-w-6xl mx-auto w-full p-6 pb-20 space-y-10 animate-in fade-in">
-           <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 pb-40 animate-in fade-in">
+           <header className="flex items-center justify-between mb-12">
+              <div className="flex items-center gap-5">
                  <div className="relative group">
-                    <img src={loggedClient.avatar || 'https://i.pravatar.cc/150'} className="w-20 h-20 rounded-2xl object-cover border-2 border-[#D4AF37]/30 shadow-xl" alt="" />
-                    <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center rounded-2xl cursor-pointer">
-                       <Upload size={20} className="text-white"/>
-                       <input type="file" accept="image/*" className="hidden" onChange={handleUpdateProfilePhoto} />
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden gradiente-ouro p-0.5 shadow-2xl">
+                      <img src={loggedClient.avatar || `https://ui-avatars.com/api/?name=${loggedClient.name}&background=D4AF37&color=000`} className="w-full h-full object-cover rounded-[1.1rem]" alt="Profile" />
+                    </div>
+                    <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-2xl cursor-pointer transition-all">
+                       <Upload className="text-[#D4AF37]" size={24}/>
+                       <input type="file" accept="image/*" className="hidden" onChange={handleUpdateProfilePhoto}/>
                     </label>
                  </div>
                  <div>
-                    <h1 className="text-3xl font-black font-display italic text-color-main">Olá, {loggedClient.name.split(' ')[0]}</h1>
-                    <p className="text-color-sec text-[10px] font-black uppercase tracking-widest">Membro Signature</p>
+                    <h2 className="text-3xl font-black font-display italic tracking-tight">{loggedClient.name}</h2>
+                    <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest">Seja bem-vindo de volta!</p>
                  </div>
               </div>
-              <button onClick={() => { setLoggedClient(null); setView('HOME'); }} className="p-4 bg-white/5 text-color-sec rounded-2xl hover:text-red-500 transition-all">
-                 <LogOut size={20}/>
-              </button>
-           </div>
+              <button onClick={handleLogout} className="p-4 bg-white/5 rounded-2xl text-zinc-500 hover:text-red-500 transition-all"><LogOut size={24}/></button>
+           </header>
 
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="cartao-vidro rounded-[2rem] p-8 border-white/5 text-center">
-                 <p className="text-[9px] text-color-sec font-black uppercase tracking-widest mb-2">Total Investido</p>
-                 <p className="text-3xl font-black text-[#D4AF37] italic font-display">R$ {loggedClient.totalSpent.toFixed(2)}</p>
-              </div>
-              <div className="cartao-vidro rounded-[2rem] p-8 border-white/5 text-center">
-                 <p className="text-[9px] text-color-sec font-black uppercase tracking-widest mb-2">Sessões Concluídas</p>
-                 <p className="text-3xl font-black text-color-main italic font-display">{clientAppointments.past.length}</p>
-              </div>
-              <div className="cartao-vidro rounded-[2rem] p-8 border-white/5 text-center">
-                 <p className="text-[9px] text-color-sec font-black uppercase tracking-widest mb-2">Próximos Rituais</p>
-                 <p className="text-3xl font-black text-color-main italic font-display">{clientAppointments.future.length}</p>
-              </div>
-           </div>
-
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="cartao-vidro rounded-[2.5rem] p-8 border-white/5 space-y-6">
-                 <h3 className="text-xl font-black font-display italic flex items-center gap-3"><Lock className="text-[#D4AF37]"/> Perfil Privado</h3>
-                 <div className="space-y-4">
-                    <input type="text" placeholder="Nome" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-color-main font-bold focus:border-[#D4AF37]" />
-                    <input type="tel" placeholder="WhatsApp" value={editData.phone} onChange={e => setEditData({...editData, phone: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-color-main font-bold focus:border-[#D4AF37]" />
-                    <input type="email" placeholder="E-mail" value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-color-main font-bold focus:border-[#D4AF37]" />
-                    <button onClick={handleSaveProfile} disabled={loading} className="w-full gradiente-ouro text-black py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2">
-                       <Save size={16}/> {loading ? 'Salvando...' : 'Salvar Alterações'}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+              <div className="cartao-vidro p-8 rounded-[2.5rem] border-white/5 space-y-6">
+                 <h3 className="text-xl font-black font-display italic flex items-center gap-3"><Star className="text-[#D4AF37]"/> Seu Feedback</h3>
+                 {config.reviews?.some(r => r.clientPhone === loggedClient.phone) ? (
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-500 font-black text-[10px] uppercase text-center">Sua avaliação está no site!</div>
+                 ) : (
+                    <button onClick={() => setShowReviewModal(true)} className="w-full bg-[#D4AF37] text-black py-4 rounded-xl font-black uppercase text-[10px]">AVALIAR BARBEARIA</button>
+                 )}
+                 <div className="pt-6 border-t border-white/5">
+                    <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-3 block">Sugestão para o Admin</label>
+                    <textarea rows={3} value={suggestionText} onChange={e => setSuggestionText(e.target.value)} placeholder="Como podemos melhorar seu ritual?" className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-[#D4AF37] mb-4"/>
+                    <button onClick={handleSendSuggestion} disabled={loading} className="w-full bg-white/5 border border-white/10 text-white py-3 rounded-xl font-black uppercase text-[9px] flex items-center justify-center gap-2">
+                       <Send size={14}/> ENVIAR SUGESTÃO
                     </button>
                  </div>
               </div>
 
-              <div className="cartao-vidro rounded-[2.5rem] p-8 border-white/5 space-y-6">
-                 <h3 className="text-xl font-black font-display italic flex items-center gap-3"><MessageSquare className="text-[#D4AF37]"/> Sugestões</h3>
-                 <textarea rows={5} placeholder="Envie sua sugestão, elogio ou crítica..." value={suggestionText} onChange={e => setSuggestionText(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-color-main font-medium resize-none focus:border-[#D4AF37]" />
-                 <button onClick={handleSendSuggestion} disabled={loading} className="w-full gradiente-ouro text-black py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2">
-                    <Send size={16}/> {loading ? 'Enviando...' : 'Enviar Sugestão'}
-                 </button>
+              <div className="cartao-vidro p-8 rounded-[2.5rem] border-white/5 space-y-6">
+                 <h3 className="text-xl font-black font-display italic flex items-center gap-3"><Heart className="text-[#D4AF37]"/> Curtir Barbeiro</h3>
+                 <p className="text-zinc-500 text-xs italic">Deixe seu like para seus barbeiros favoritos:</p>
+                 <div className="grid grid-cols-2 gap-4">
+                    {professionals.map(p => (
+                       <button key={p.id} onClick={() => { likeProfessional(p.id); alert(`Você curtiu o trabalho de ${p.name}!`); }} className="flex flex-col items-center gap-3 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5">
+                          <img src={p.avatar} className="w-12 h-12 rounded-xl object-cover grayscale" alt="" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">{p.name.split(' ')[0]}</span>
+                          <Heart size={16} className="text-[#D4AF37]"/>
+                       </button>
+                    ))}
+                 </div>
               </div>
            </div>
 
            <div className="space-y-6">
-              <h3 className="text-2xl font-black font-display italic flex items-center gap-3"><Calendar className="text-[#D4AF37]"/> Meus Agendamentos</h3>
+              <h3 className="text-xl font-black font-display italic flex items-center gap-3"><History size={24} className="text-[#D4AF37]"/> Histórico de Rituais</h3>
               <div className="space-y-4">
-                 {clientAppointments.future.map(app => (
-                    <div key={app.id} className="cartao-vidro rounded-[2rem] p-6 border-[#D4AF37]/20 flex items-center justify-between">
-                       <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37]"><Calendar size={20}/></div>
+                 {appointments.filter(a => a.clientId === loggedClient.id || a.clientPhone === loggedClient.phone).length === 0 && <p className="text-center py-20 text-zinc-600 italic">Ainda não há agendamentos concluídos.</p>}
+                 {appointments.filter(a => a.clientId === loggedClient.id || a.clientPhone === loggedClient.phone).map(app => (
+                    <div key={app.id} className="cartao-vidro p-6 rounded-[2rem] border-white/5 flex items-center justify-between group">
+                       <div className="flex items-center gap-6">
+                          <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center text-[#D4AF37]"><Scissors size={24}/></div>
                           <div>
                              <p className="text-lg font-black italic">{app.serviceName}</p>
                              <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">{new Date(app.date).toLocaleDateString('pt-BR')} • {app.startTime} com {app.professionalName}</p>
@@ -586,32 +497,11 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     ))}
                  </div>
                  <textarea rows={4} placeholder="Conte-nos como foi..." value={newReview.comment} onChange={e => setNewReview({...newReview, comment: e.target.value})} className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none font-medium text-white focus:border-[#D4AF37]"/>
-                 <div className="space-y-2">
-                    <input type="text" placeholder="Seu nome (opcional)" value={newReview.userName} onChange={e => setNewReview({...newReview, userName: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-sm font-bold text-white focus:border-[#D4AF37]"/>
-                    <input type="tel" placeholder="WhatsApp (opcional)" value={newReview.clientPhone} onChange={e => setNewReview({...newReview, clientPhone: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none text-sm font-bold text-white focus:border-[#D4AF37]"/>
-                 </div>
               </div>
               <div className="flex gap-4">
                  <button onClick={() => setShowReviewModal(false)} className="flex-1 bg-white/5 py-5 rounded-xl text-[10px] font-black uppercase text-zinc-500">Voltar</button>
                  <button onClick={handleAddReview} className="flex-1 gradiente-ouro text-black py-5 rounded-xl text-[10px] font-black uppercase shadow-xl">Enviar</button>
               </div>
-           </div>
-        </div>
-      )}
-
-      {success && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
-           <div className="cartao-vidro w-full max-w-md rounded-[3rem] p-12 space-y-8 border-[#D4AF37]/30 shadow-2xl text-center">
-              <div className="w-20 h-20 rounded-full bg-[#D4AF37] flex items-center justify-center mx-auto shadow-2xl">
-                 <Check className="text-black" size={40} strokeWidth={4}/>
-              </div>
-              <div className="space-y-4">
-                 <h2 className="text-3xl font-black font-display italic">Ritual Confirmado!</h2>
-                 <p className="text-color-sec leading-relaxed">Seu agendamento foi realizado com sucesso. Em breve você receberá uma confirmação via WhatsApp.</p>
-              </div>
-              <button onClick={() => { setSuccess(false); setView('HOME'); setSelecao({ serviceId: '', professionalId: '', date: '', time: '', clientName: '', clientPhone: '', clientEmail: '' }); setPasso(1); }} className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl">
-                 Voltar ao Início
-              </button>
            </div>
         </div>
       )}
