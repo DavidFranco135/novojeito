@@ -13,15 +13,15 @@ const Settings: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Função genérica para upload de imagens únicas (Logo, Capa, etc)
-  const uploadImageToStorage = async (file: File, path: string) => {
-    const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
-    const reader = new FileReader();
-    
+  // Função auxiliar para fazer upload e retornar a URL
+  const handleFileUpload = async (file: File, folder: string) => {
+    const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
     return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          await uploadString(storageRef, reader.result as string, 'data_url');
+          const base64 = reader.result as string;
+          await uploadString(storageRef, base64, 'data_url');
           const url = await getDownloadURL(storageRef);
           resolve(url);
         } catch (err) { reject(err); }
@@ -35,11 +35,11 @@ const Settings: React.FC = () => {
     if (file) {
       setLoading(true);
       try {
-        const url = await uploadImageToStorage(file, 'configuracoes');
+        const url = await handleFileUpload(file, 'config');
         setFormData(prev => ({ ...prev, [field]: url }));
         if (field === 'logo') setUserData(prev => ({ ...prev, avatar: url }));
       } catch (err) {
-        alert("Erro no upload da imagem");
+        alert("Erro ao carregar imagem.");
       } finally {
         setLoading(false);
       }
@@ -51,13 +51,13 @@ const Settings: React.FC = () => {
     if (file) {
       setLoading(true);
       try {
-        const url = await uploadImageToStorage(file, 'galeria');
+        const url = await handleFileUpload(file, 'gallery');
         setFormData(prev => ({ 
           ...prev, 
           gallery: [...(prev.gallery || []), url] 
         }));
       } catch (err) {
-        alert("Erro ao adicionar foto na galeria");
+        alert("Erro no upload da galeria.");
       } finally {
         setLoading(false);
       }
@@ -76,11 +76,8 @@ const Settings: React.FC = () => {
       await updateConfig(updatedConfig);
       updateUser(userData);
       alert("Configurações Master Sincronizadas!");
-    } catch (err) { 
-      alert("Erro ao sincronizar dados."); 
-    } finally { 
-      setLoading(false); 
-    }
+    } catch (err) { alert("Erro ao sincronizar."); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -105,13 +102,13 @@ const Settings: React.FC = () => {
                <div className="relative group w-40 h-40">
                   <img src={userData.avatar} className="w-full h-full rounded-[3rem] object-cover border-4 border-[#D4AF37]/30 shadow-2xl" alt="Avatar" />
                   <label className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center rounded-[3rem] cursor-pointer text-[10px] font-black uppercase tracking-widest gap-2 text-white">
-                    <Upload size={24} /> {loading ? 'Subindo...' : 'Trocar Foto'}
-                    <input type="file" accept="image/*" className="hidden" disabled={loading} onChange={e => handleImageChange('logo', e)} />
+                    <Upload size={24} /> {loading ? '...' : 'Trocar Foto'}
+                    <input type="file" accept="image/*" className="hidden" onChange={e => handleImageChange('logo', e)} />
                   </label>
                </div>
                <div className="flex-1 space-y-6 w-full">
                   <div className="space-y-3">
-                    <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Assinatura Digital (Seu Nome)</label>
+                    <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Assinatura Digital</label>
                     <input type="text" value={userData.name} onChange={e => setUserData({...userData, name: e.target.value})} className="w-full bg-white/5 border-2 border-white/10 p-6 rounded-3xl outline-none font-black text-xl"/>
                   </div>
                </div>
@@ -123,7 +120,7 @@ const Settings: React.FC = () => {
             <div className="flex items-center justify-between">
                <h3 className="text-2xl font-black font-display italic flex items-center gap-4"><ImageIcon className="text-[#D4AF37]" /> Nosso Ambiente (Slides)</h3>
                <label className="gradiente-ouro text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase cursor-pointer flex items-center gap-2 shadow-lg">
-                 {loading ? 'CARREGANDO...' : <><Plus size={16}/> ADICIONAR FOTO</>}
+                 <Plus size={16}/> {loading ? 'CARREGANDO...' : 'ADICIONAR FOTO'}
                  <input type="file" accept="image/*" className="hidden" disabled={loading} onChange={handleGalleryUpload}/>
                </label>
             </div>
@@ -136,12 +133,9 @@ const Settings: React.FC = () => {
                ))}
             </div>
           </div>
-          
-          {/* ... Demais campos de Identidade e Contato permanecem como você já tinha ... */}
-
         </div>
 
-        {/* Sidebar com Imagens */}
+        {/* Sidebar */}
         <aside className="space-y-10">
           <div className="cartao-vidro rounded-[3.5rem] p-12 border-white/10 text-center flex flex-col items-center">
             <h3 className="text-2xl font-black font-display italic mb-10">Logo Master</h3>
