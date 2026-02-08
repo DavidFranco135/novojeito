@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sr. José | Gestão de Barbearia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,400&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primario-ouro: #D4AF37;
+        --fundo: #050505;
+        --texto: #f9fafb;
+        --texto-secundario: #9ca3af;
+        --cartao: rgba(18, 18, 18, 0.8);
+        --borda: rgba(255, 255, 255, 0.08);
+      }
+
+      .light-theme {
+        --fundo: #F3F4F6;
+        --texto: #000000; /* Preto puro para contraste máximo */
+        --texto-secundario: #374151; /* Cinza escuro */
+        --cartao: #FFFFFF;
+        --borda: rgba(0, 0, 0, 0.15);
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--fundo);
+        color: var(--texto);
+        -webkit-font-smoothing: antialiased;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        margin: 0;
+        font-size: 16px; /* Aumento da base */
+      }
+
+      .font-display {
+        font-family: 'Fraunces', serif;
+      }
+
+      .gradiente-ouro {
+        background: linear-gradient(135deg, #E5C76B 0%, #D4AF37 50%, #B8860B 100%);
+      }
+
+      .cartao-vidro {
+        background: var(--cartao);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--borda);
+        color: var(--texto);
+      }
+
+      .text-color-main { color: var(--texto); }
+      .text-color-sec { color: var(--texto-secundario); }
+
+      /* Melhoria de legibilidade para inputs */
+      input, select, textarea {
+        font-size: 16px !important; /* Evita zoom no iOS */
+        color: var(--texto) !important;
+      }
+
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      .theme-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+      
+      /* Estilo para fotos com espaçamento automático */
+      .img-container {
+        aspect-ratio: 1/1;
+        overflow: hidden;
+        border-radius: 1.5rem;
+        background-color: #111;
+      }
+      .img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "firebase/": "https://esm.sh/firebase@^12.9.0/"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
