@@ -9,6 +9,7 @@ const Services: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedDescriptions, setExpandedDescriptions] = useState<{[key: string]: boolean}>({});
 
   const categories = useMemo(() => ['Todos', ...Array.from(new Set(services.map(s => s.category)))], [services]);
 
@@ -81,7 +82,15 @@ const Services: React.FC = () => {
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div>
                 <h3 className="text-sm font-black italic">{s.name}</h3>
-                <p className="text-[10px] text-zinc-500 line-clamp-1">{s.description}</p>
+                <p className={`text-[10px] text-zinc-500 ${expandedDescriptions[s.id] ? '' : 'line-clamp-1'}`}>{s.description}</p>
+                {s.description && s.description.length > 50 && (
+                  <button 
+                    onClick={() => setExpandedDescriptions({...expandedDescriptions, [s.id]: !expandedDescriptions[s.id]})}
+                    className="text-[9px] font-black text-[#D4AF37] hover:text-[#D4AF37]/80 mt-1 transition-all"
+                  >
+                    {expandedDescriptions[s.id] ? 'Ver menos' : 'Ver mais'}
+                  </button>
+                )}
                 <div className="flex gap-3 mt-2">
                    <span className="text-[9px] font-black text-[#D4AF37]">R$ {s.price}</span>
                    <span className="text-[9px] font-black text-zinc-500">{s.durationMinutes} min</span>
