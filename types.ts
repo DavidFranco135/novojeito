@@ -1,4 +1,3 @@
-
 export type UserRole = 'ADMIN' | 'PROFISSIONAL' | 'CLIENTE';
 
 export interface User {
@@ -28,6 +27,7 @@ export interface Professional {
   avatar: string;
   commission: number;
   likes: number;
+  specialty?: string;
   workingHours: {
     start: string;
     end: string;
@@ -44,6 +44,7 @@ export interface Client {
   totalSpent: number;
   lastVisit?: string;
   createdAt: string;
+  likedProfessionals?: string[];
 }
 
 export interface Review {
@@ -111,10 +112,12 @@ export interface ShopConfig {
   logo: string;
   coverImage: string;
   loginBackground: string;
+  heroBackground?: string;
   locationUrl: string;
   openingTime: string;
   closingTime: string;
   email: string;
+  phone?: string;
   cnpj: string;
   gallery: string[];
   reviews: Review[];
