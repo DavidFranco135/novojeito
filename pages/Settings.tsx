@@ -26,7 +26,7 @@ const Settings: React.FC = () => {
     throw new Error('Erro no upload');
   };
 
-  const handleImageChange = async (field: 'logo' | 'coverImage' | 'loginBackground', e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (field: 'logo' | 'coverImage' | 'loginBackground' | 'aboutImage', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setLoading(true);
@@ -107,6 +107,16 @@ const Settings: React.FC = () => {
               <div className="space-y-3"><label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Resumo Header (Slogan)</label><input type="text" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-white/5 border-2 border-white/10 p-6 rounded-3xl font-black"/></div>
               <div className="md:col-span-2 space-y-3"><label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Título Seção Sobre</label><input type="text" value={formData.aboutTitle} onChange={e => setFormData({...formData, aboutTitle: e.target.value})} className="w-full bg-white/5 border-2 border-white/10 p-6 rounded-3xl font-black"/></div>
               <div className="md:col-span-2 space-y-3"><label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">História / Conteúdo Sobre</label><textarea rows={5} value={formData.aboutText} onChange={e => setFormData({...formData, aboutText: e.target.value})} className="w-full bg-white/5 border-2 border-white/10 p-6 rounded-3xl font-medium resize-none"/></div>
+              <div className="md:col-span-2 space-y-3">
+                <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Imagem da Seção Sobre</label>
+                <div className="relative group w-full h-64 rounded-3xl overflow-hidden border-2 border-white/10 shadow-xl">
+                  <img src={formData.aboutImage || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800'} className="w-full h-full object-cover" alt="Imagem Sobre" />
+                  <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center cursor-pointer text-white text-xs font-black uppercase tracking-widest gap-2">
+                    <Upload size={28} /> {loading ? 'Enviando...' : 'Mudar Imagem'}
+                    <input type="file" accept="image/*" className="hidden" onChange={e => handleImageChange('aboutImage', e)} disabled={loading} />
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
