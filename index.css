@@ -1,6 +1,8 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities;/* Reset e Base Styles */
+@tailwind utilities;
+
+/* Reset e Base Styles */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -8,7 +10,7 @@
 }
 
 :root {
-  --primario-ouro: #D4AF37;
+  --primario-ouro: #B8860B;
   --fundo: #050505;
   --texto: #f9fafb;
   --texto-secundario: #9ca3af;
@@ -41,7 +43,14 @@ body {
 }
 
 .gradiente-ouro {
-  background: linear-gradient(135deg, #E5C76B 0%, #D4AF37 50%, #B8860B 100%);
+  background: linear-gradient(135deg, #C9A961 0%, #B8860B 50%, #8B6914 100%);
+}
+
+.gradiente-texto-ouro {
+  background: linear-gradient(135deg, #C9A961 0%, #B8860B 50%, #8B6914 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .cartao-vidro {
@@ -194,4 +203,40 @@ input:focus, select:focus, textarea:focus {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ========================================
+   CORREÇÃO DO FLASH DE IMAGENS 
+   ======================================== */
+
+/* Placeholder suave para todas as imagens */
+img {
+  background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%);
+  background-size: 200% 100%;
+}
+
+/* Animação de carregamento (shimmer) */
+img:not([src]), img[src=""] {
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Fade-in suave quando a imagem carrega */
+img {
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+
+img[src]:not([src=""]) {
+  opacity: 1;
+}
+
+/* Garantir que o root tenha fundo desde o início */
+#root {
+  min-height: 100vh;
+  background: #050505;
 }
