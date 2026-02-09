@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
   ChevronLeft, ChevronRight, Plus, Clock, Check, X, 
@@ -14,6 +13,7 @@ const Appointments: React.FC = () => {
   } = useBarberStore();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [compactView, setCompactView] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState<Appointment | null>(null);
@@ -64,6 +64,11 @@ const Appointments: React.FC = () => {
           <div className="flex gap-2 mt-2">
              <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-zinc-500'}`}><LayoutGrid size={16}/></button>
              <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-zinc-500'}`}><List size={16}/></button>
+             {viewMode === 'grid' && (
+               <button onClick={() => setCompactView(!compactView)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase ${compactView ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
+                 Compacto
+               </button>
+             )}
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -78,9 +83,9 @@ const Appointments: React.FC = () => {
 
       <div className="flex-1 cartao-vidro rounded-[2rem] border-white/5 shadow-2xl overflow-hidden flex flex-col">
         {viewMode === 'grid' ? (
-          <div className="overflow-auto h-full scrollbar-hide">
+          <div className={`overflow-auto h-full scrollbar-hide ${compactView ? '' : ''}`}>
             <div className="min-w-[900px]">
-              <div className="grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] border-b border-white/5 bg-white/[0.02]">
+              <div className="grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] border-b border-white/5 bg-white/[0.02] sticky top-0 z-10">
                 <div className="p-4 flex items-center justify-center text-zinc-500"><Clock size={18} /></div>
                 {professionals.map(prof => (
                   <div key={prof.id} className="p-4 flex items-center justify-center gap-3 border-r border-white/5">
@@ -90,22 +95,22 @@ const Appointments: React.FC = () => {
                 ))}
               </div>
               {hours.map(hour => (
-                <div key={hour} className="grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] border-b border-white/[0.03] min-h-[100px]">
+                <div key={hour} className={`grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] border-b border-white/[0.03] ${compactView ? 'min-h-[60px]' : 'min-h-[100px]'}`}>
                   <div className="flex items-center justify-center border-r border-white/5 bg-white/[0.01]"><span className="text-[10px] font-black text-zinc-600">{hour}</span></div>
                   {professionals.map(prof => {
                     const app = appointmentsToday.find(a => a.professionalId === prof.id && a.startTime.split(':')[0] === hour.split(':')[0] && a.status !== 'CANCELADO');
                     return (
                       <div key={prof.id} className="p-2 border-r border-white/5 last:border-r-0">
                         {app && (
-                          <div className={`h-full w-full rounded-2xl border p-3 flex flex-col justify-between transition-all group ${app.status === 'CONCLUIDO_PAGO' ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-[#D4AF37]/30 bg-[#D4AF37]/5'}`}>
+                          <div className={`h-full w-full rounded-2xl border p-3 flex flex-col justify-between transition-all group ${app.status === 'CONCLUIDO_PAGO' ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-[#D4AF37]/30 bg-[#D4AF37]/5'} ${compactView ? 'p-2' : 'p-3'}`}>
                             <div className="truncate">
-                              <h4 className="text-[11px] font-black uppercase truncate text-color-main">{app.clientName}</h4>
-                              <p className="text-[9px] font-black opacity-50 uppercase mt-1 truncate">{app.serviceName}</p>
+                              <h4 className={`font-black uppercase truncate text-color-main ${compactView ? 'text-[9px]' : 'text-[11px]'}`}>{app.clientName}</h4>
+                              {!compactView && <p className="text-[9px] font-black opacity-50 uppercase mt-1 truncate">{app.serviceName}</p>}
                             </div>
-                            <div className="flex items-center justify-end gap-1 mt-2">
-                               <button onClick={() => updateAppointmentStatus(app.id, 'CONCLUIDO_PAGO')} className={`p-1.5 rounded-lg transition-all ${app.status === 'CONCLUIDO_PAGO' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-zinc-500 hover:text-white'}`} title="Marcar como Pago"><DollarSign size={12}/></button>
-                               <button onClick={() => setShowRescheduleModal(app)} className="p-1.5 bg-white/10 text-zinc-500 hover:text-white rounded-lg transition-all" title="Reagendar"><RefreshCw size={12}/></button>
-                               <button onClick={() => updateAppointmentStatus(app.id, 'CANCELADO')} className="p-1.5 bg-white/10 text-zinc-500 hover:text-red-500 rounded-lg transition-all" title="Cancelar"><X size={12}/></button>
+                            <div className={`flex items-center justify-end gap-1 ${compactView ? 'mt-1' : 'mt-2'}`}>
+                               <button onClick={() => updateAppointmentStatus(app.id, 'CONCLUIDO_PAGO')} className={`rounded-lg transition-all ${app.status === 'CONCLUIDO_PAGO' ? 'bg-emerald-500 text-white' : 'bg-white/10 text-zinc-500 hover:text-white'} ${compactView ? 'p-1' : 'p-1.5'}`} title="Marcar como Pago"><DollarSign size={compactView ? 10 : 12}/></button>
+                               <button onClick={() => setShowRescheduleModal(app)} className={`bg-white/10 text-zinc-500 hover:text-white rounded-lg transition-all ${compactView ? 'p-1' : 'p-1.5'}`} title="Reagendar"><RefreshCw size={compactView ? 10 : 12}/></button>
+                               <button onClick={() => updateAppointmentStatus(app.id, 'CANCELADO')} className={`bg-white/10 text-zinc-500 hover:text-red-500 rounded-lg transition-all ${compactView ? 'p-1' : 'p-1.5'}`} title="Cancelar"><X size={compactView ? 10 : 12}/></button>
                             </div>
                           </div>
                         )}
