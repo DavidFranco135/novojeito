@@ -65,7 +65,17 @@ const Appointments: React.FC = () => {
              <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-zinc-500'}`}><LayoutGrid size={16}/></button>
              <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-zinc-500'}`}><List size={16}/></button>
              {viewMode === 'grid' && (
-               <button onClick={() => setCompactView(!compactView)} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase ${compactView ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}>
+               <button 
+                 onClick={() => {
+                   setCompactView(!compactView);
+                   if (!compactView) {
+                     document.documentElement.requestFullscreen?.();
+                   } else {
+                     document.exitFullscreen?.();
+                   }
+                 }} 
+                 className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase ${compactView ? 'bg-purple-600 text-white' : 'bg-white/5 text-zinc-500'}`}
+               >
                  Compacto
                </button>
              )}
