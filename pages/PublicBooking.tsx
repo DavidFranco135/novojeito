@@ -31,7 +31,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
   const [suggestionText, setSuggestionText] = useState('');
   const [editData, setEditData] = useState({ name: '', phone: '', email: '' });
 
-  // NOVO: State para modal de história do barbeiro
+  // State para modal de história do barbeiro
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   const [showProfessionalModal, setShowProfessionalModal] = useState(false);
 
@@ -194,12 +194,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     setView('HOME');
   };
 
-  // NOVA FUNÇÃO: Abrir modal de história do barbeiro
-  const handleShowProfessionalStory = (prof: Professional) => {
-    setSelectedProfessional(prof);
-    setShowProfessionalModal(true);
-  };
-
   if (success) return (
     <div className={`min-h-screen flex items-center justify-center p-6 animate-in zoom-in ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
       <div className={`w-full max-w-lg p-12 rounded-[3rem] text-center space-y-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
@@ -235,175 +229,191 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                      <div key={svc.id} className={`snap-center flex-shrink-0 w-64 md:w-72 rounded-[2.5rem] overflow-hidden group shadow-2xl transition-all ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/30'}`}>
                         <div className="h-48 overflow-hidden"><img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="" /></div>
                         <div className="p-6">
-                           <h3 className={`text-xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{svc.name}</h3>
-                           <p className={`text-[10px] mb-4 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{svc.description}</p>
-                           <div className="flex items-center justify-between">
-                              <span className="text-[#D4AF37] font-black text-xl italic font-display">R$ {svc.price}</span>
-                              <button onClick={() => handleBookingStart(svc)} className="bg-[#D4AF37] text-black px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg transition-all hover:scale-105 active:scale-95">Agendar <ArrowRight size={14}/></button>
-                           </div>
+                           <h3 className={`text-xl font-black font-display italic leading-tight ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{svc.name}</h3>
+                           <p className={`text-[9px] font-black mt-2 ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>R$ {svc.price.toFixed(2)} • {svc.durationMinutes} min</p>
+                           <button onClick={() => handleBookingStart(svc)} className="w-full mt-6 gradiente-ouro text-black py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl">RESERVAR</button>
                         </div>
                      </div>
                    ))}
                 </div>
              </section>
 
-             {/* 2. Sobre */}
-             <section className="mb-20">
-                <div className={`rounded-[3rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
-                   <div className="grid md:grid-cols-2 gap-0">
-                      {/* NOVA: Imagem da seção sobre */}
-                      <div className="h-80 md:h-auto overflow-hidden">
-                         <img 
-                           src={config.aboutImage || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800'} 
-                           className="w-full h-full object-cover" 
-                           alt="Sobre nós" 
-                         />
-                      </div>
-                      <div className="p-10 md:p-14 flex flex-col justify-center">
-                         <h2 className={`text-3xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.aboutTitle}</h2>
-                         <p className={`text-sm leading-relaxed ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>{config.aboutText}</p>
-                      </div>
-                   </div>
+             {/* 2. Nossos Rituais - CATEGORIAS EXPANSÍVEIS */}
+             <section className="mb-24" id="catalogo">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                   <h2 className={`text-2xl font-black font-display italic flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Todos os serviços <div className="h-1 w-10 gradiente-ouro opacity-10"></div></h2>
                 </div>
-             </section>
-
-             {/* 3. Barbeiros */}
-             <section className="mb-20">
-                <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Mestres Barbeiros <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                   {professionals.map(p => (
-                     <div key={p.id} className={`rounded-[2rem] p-6 text-center space-y-4 group transition-all ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/30'}`}>
-                        <div 
-                          className="relative mx-auto w-24 h-24 cursor-pointer" 
-                          onClick={() => handleShowProfessionalStory(p)}
-                        >
-                           <img src={p.avatar} className="w-full h-full rounded-2xl object-cover border-2 border-white/10 group-hover:border-[#D4AF37]/50 transition-all shadow-xl" alt="" />
-                           <div className="absolute -bottom-2 -right-2 bg-[#D4AF37] text-black text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1"><Heart size={8} fill="currentColor"/> {p.likes || 0}</div>
-                        </div>
-                        <div>
-                           <p className={`font-black text-sm ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{p.name}</p>
-                           <p className={`text-[8px] uppercase tracking-widest font-black mt-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Mestre Artífice</p>
-                        </div>
-                     </div>
-                   ))}
-                </div>
-             </section>
-
-             {/* 4. Galeria */}
-             {config.gallery && config.gallery.length > 0 && (
-               <section className="mb-20">
-                  <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nosso Espaço <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                     {config.gallery.map((img, i) => (
-                        <div key={i} className="aspect-video rounded-2xl overflow-hidden shadow-xl">
-                           <img src={img} className="w-full h-full object-cover hover:scale-110 transition-all duration-700" alt="" />
-                        </div>
-                     ))}
-                  </div>
-               </section>
-             )}
-
-             {/* 5. Catálogo de Serviços */}
-             <section className="mb-20">
-                <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Catálogo Completo <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
-                <div className="flex gap-3 mb-8 overflow-x-auto pb-4 scrollbar-hide">
-                   {categories.map(cat => (
-                     <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === cat ? 'bg-[#D4AF37] text-black shadow-lg' : theme === 'light' ? 'bg-white border border-zinc-300 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border border-white/10 text-zinc-500 hover:border-[#D4AF37]/50'}`}>{cat}</button>
-                   ))}
-                </div>
-                <div className="space-y-6">
-                   {Array.from(new Set(filteredServices.map(s => s.category))).map(cat => {
-                      const categoryServices = filteredServices.filter(s => s.category === cat);
-                      const isExpanded = expandedCategories.includes(cat);
-                      return (
-                        <div key={cat} className={`rounded-[2rem] overflow-hidden transition-all ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
-                           <button onClick={() => toggleCategory(cat)} className="w-full p-6 flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                 <Scissors className="text-[#D4AF37]" size={20}/>
-                                 <h3 className={`text-xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{cat}</h3>
-                              </div>
-                              <ChevronRight className={`transition-all ${isExpanded ? 'rotate-90' : ''} ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-600'}`} size={20}/>
-                           </button>
-                           {isExpanded && (
-                              <div className="px-6 pb-6 space-y-3">
-                                 {categoryServices.map(svc => (
-                                    <div key={svc.id} className={`p-5 rounded-2xl flex items-center justify-between gap-4 transition-all ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200 hover:border-blue-300' : 'bg-white/5 border border-white/5 hover:border-[#D4AF37]/30'}`}>
-                                       <div className="flex-1">
-                                          <h4 className={`font-black text-sm mb-1 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{svc.name}</h4>
-                                          <p className={`text-[10px] ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{svc.description}</p>
-                                       </div>
-                                       <div className="text-right flex items-center gap-4">
-                                          <div>
-                                             <p className="text-[#D4AF37] font-black text-lg italic font-display">R$ {svc.price}</p>
-                                             <p className={`text-[8px] uppercase tracking-widest font-black ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>{svc.durationMinutes} min</p>
-                                          </div>
-                                          <button onClick={() => handleBookingStart(svc)} className="bg-[#D4AF37] text-black px-5 py-2.5 rounded-xl text-[9px] font-black uppercase">Agendar</button>
+                <div className="space-y-4">
+                   {categories.filter(cat => cat !== 'Todos').map(cat => {
+                     const categoryServices = services.filter(s => s.category === cat);
+                     const isExpanded = expandedCategories.includes(cat);
+                     
+                     return (
+                       <div key={cat} className={`rounded-2xl overflow-hidden transition-all ${theme === 'light' ? 'bg-white border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
+                          {/* Header da Categoria */}
+                          <button 
+                            onClick={() => toggleCategory(cat)}
+                            className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-all"
+                          >
+                             <span className={`text-lg font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{cat}</span>
+                             <ChevronRight 
+                               className={`transition-transform ${isExpanded ? 'rotate-90' : ''} ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`} 
+                               size={20}
+                             />
+                          </button>
+                          
+                          {/* Lista de Serviços Expansível */}
+                          {isExpanded && (
+                            <div className={`border-t animate-in slide-in-from-top-2 ${theme === 'light' ? 'border-zinc-200' : 'border-white/10'}`}>
+                               {categoryServices.map(svc => (
+                                 <div key={svc.id} className={`p-6 border-b last:border-b-0 flex items-center justify-between hover:bg-white/5 transition-all ${theme === 'light' ? 'border-zinc-200' : 'border-white/10'}`}>
+                                    <div className="flex-1">
+                                       <h4 className={`text-base font-bold mb-1 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{svc.name}</h4>
+                                       <p className={`text-xs mb-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>{svc.description}</p>
+                                       <div className="flex gap-4">
+                                          <span className={`text-xs font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#B8860B]'}`}>R$ {svc.price.toFixed(2)}</span>
+                                          <span className={`text-xs font-black ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>{svc.durationMinutes} min</span>
                                        </div>
                                     </div>
-                                 ))}
-                              </div>
-                           )}
-                        </div>
-                      );
+                                    <button 
+                                      onClick={() => handleBookingStart(svc)} 
+                                      className="ml-4 gradiente-ouro text-black px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
+                                    >
+                                       Agendar
+                                    </button>
+                                 </div>
+                               ))}
+                            </div>
+                          )}
+                       </div>
+                     );
                    })}
                 </div>
              </section>
 
-             {/* 6. Avaliações */}
-             {config.reviews && config.reviews.length > 0 && (
-               <section className="mb-20">
-                  <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>O Que Dizem <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
-                  <div className="grid md:grid-cols-2 gap-6">
-                     {config.reviews.map((rev, i) => (
-                        <div key={i} className={`rounded-[2rem] p-8 space-y-4 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
-                           <div className="flex items-center gap-4">
-                              <Quote className="text-[#D4AF37]" size={24}/>
-                              <div className="flex gap-1">{Array.from({length: 5}).map((_, si) => <Star key={si} size={14} className={si < rev.rating ? 'text-[#D4AF37] fill-current' : theme === 'light' ? 'text-zinc-300' : 'text-zinc-800'}/>)}</div>
-                           </div>
-                           <p className={`text-sm italic ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>"{rev.comment}"</p>
-                           <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>— {rev.userName}</p>
-                        </div>
-                     ))}
-                  </div>
-               </section>
-             )}
+             {/* 3. A Experiência Signature (Galeria) */}
+             <section className="mb-24">
+                <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>A Experiência Signature <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                   {(Array.isArray(config.gallery) ? config.gallery : []).map((img, i) => (
+                     <div key={i} className={`snap-center flex-shrink-0 w-80 md:w-[500px] h-64 md:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl transition-all hover:scale-[1.02] ${theme === 'light' ? 'border-4 border-zinc-200' : 'border-4 border-white/5'}`}>
+                        <img src={img} className="w-full h-full object-cover" alt="" />
+                     </div>
+                   ))}
+                   {(!config.gallery || config.gallery.length === 0) && <p className={`italic py-10 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Em breve, novas fotos do nosso ambiente.</p>}
+                </div>
+             </section>
 
-             {/* 7. Localização */}
-             <section>
-                <div className={`rounded-[3rem] p-10 md:p-14 space-y-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
-                   <div className="grid md:grid-cols-2 gap-10">
-                      <div className="space-y-6">
-                         <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Onde Estamos</h2>
-                         <div className="space-y-4">
-                            <div className="flex items-start gap-4"><MapPin className="text-[#D4AF37] flex-shrink-0 mt-1" size={20}/><div><p className={`font-bold ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.address}</p><p className={`text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{config.city}, {config.state}</p></div></div>
-                            <div className="flex items-center gap-4"><Clock className="text-[#D4AF37]" size={20}/><p className={`text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>{config.openingTime} às {config.closingTime}</p></div>
-                            <div className="flex items-center gap-4"><Phone className="text-[#D4AF37]" size={20}/><p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.whatsapp}</p></div>
-                            <div className="flex items-center gap-4"><Instagram className="text-[#D4AF37]" size={20}/><p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>@{config.instagram}</p></div>
+             {/* 4. Voz dos Membros (Avaliações) */}
+             <section className="mb-24 py-10">
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Voz dos Membros <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
+                   {config.reviews?.length === 0 && <p className={`italic py-10 text-center w-full ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Aguardando seu feedback para brilhar aqui.</p>}
+                   {config.reviews?.map((rev, i) => (
+                      <div key={i} className={`snap-center flex-shrink-0 w-80 p-8 rounded-[2rem] relative group ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
+                         <div className="absolute -top-4 -left-4 w-10 h-10 gradiente-ouro rounded-full flex items-center justify-center text-black shadow-lg"><Quote size={18} fill="currentColor"/></div>
+                         <div className="flex gap-1 mb-4">
+                            {[1,2,3,4,5].map(s => (
+                               <Star key={s} size={14} fill={s <= rev.rating ? '#D4AF37' : 'none'} className={s <= rev.rating ? 'text-[#D4AF37]' : theme === 'light' ? 'text-zinc-300' : 'text-zinc-800'}/>
+                            ))}
+                         </div>
+                         <p className={`text-sm italic leading-relaxed mb-6 ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>"{rev.comment}"</p>
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#D4AF37]/20 flex items-center justify-center">
+                               <User size={18} className="text-[#D4AF37]"/>
+                            </div>
+                            <p className={`text-[10px] font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{rev.userName}</p>
                          </div>
                       </div>
-                      <div className="h-80 rounded-2xl overflow-hidden shadow-xl">
-                         <iframe src={config.locationUrl} className="w-full h-full" loading="lazy"></iframe>
+                   ))}
+                </div>
+             </section>
+
+             {/* 5. Nossos Artífices */}
+             <section className="mb-24">
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nossos Artífices <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                   {professionals.map(prof => (
+                      <div key={prof.id} className={`rounded-[2rem] p-6 text-center space-y-4 group transition-all hover:scale-105 ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/30'}`}>
+                         <div className="relative mx-auto w-24 h-24">
+                            <img 
+                              src={prof.avatar} 
+                              className="w-full h-full rounded-2xl object-cover border-2 border-[#D4AF37] cursor-pointer" 
+                              alt="" 
+                              onClick={() => { setSelectedProfessional(prof); setShowProfessionalModal(true); }}
+                            />
+                            <button onClick={() => likeProfessional(prof.id)} className="absolute -bottom-2 -right-2 bg-[#D4AF37] text-black text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg hover:scale-110 transition-all">
+                               <Heart size={8} fill="currentColor"/> {prof.likes || 0}
+                            </button>
+                         </div>
+                         <div>
+                            <p className={`font-black text-sm ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{prof.name}</p>
+                            <p className={`text-[8px] uppercase tracking-widest font-black mt-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>{prof.specialty}</p>
+                         </div>
                       </div>
+                   ))}
+                </div>
+             </section>
+
+             {/* 6. Onde Nos Encontrar */}
+             <section className="mb-24">
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Onde Nos Encontrar <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className={`rounded-[2.5rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'border border-zinc-200' : 'border border-white/5'}`}>
+                   <div className="aspect-video bg-zinc-900 flex items-center justify-center">
+                      <MapPin className="text-[#D4AF37]" size={48}/>
+                   </div>
+                   <div className={`p-8 ${theme === 'light' ? 'bg-white' : 'bg-white/5'}`}>
+                      <p className={`text-sm font-bold mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.address}</p>
+                      <p className={`text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{config.phone}</p>
+                   </div>
+                </div>
+             </section>
+
+             {/* 7. Redes Sociais */}
+             <section className="mb-20 text-center">
+                <h2 className={`text-2xl font-black font-display italic mb-10 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Conecte-se Conosco</h2>
+                <a href={config.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-full font-black text-xs uppercase shadow-2xl hover:scale-105 transition-all">
+                   <Instagram size={20}/> Siga no Instagram
+                </a>
+             </section>
+
+             {/* 8. Quem Somos */}
+             <section className="mb-24">
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.aboutTitle || 'Quem Somos'} <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
+                <div className={`rounded-[2.5rem] p-8 md:p-12 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
+                   <div className="grid md:grid-cols-2 gap-8 items-center">
+                      {config.aboutImage && (
+                        <div className="h-64 md:h-80 rounded-2xl overflow-hidden">
+                           <img src={config.aboutImage} className="w-full h-full object-cover" alt="Sobre nós" />
+                        </div>
+                      )}
+                      <p className={`text-base leading-relaxed ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                         {config.aboutText || 'Tradição, estilo e excelência em cada serviço. Nossa barbearia é mais que um lugar para cortar cabelo - é um espaço de encontro, cultura e cuidado pessoal.'}
+                      </p>
                    </div>
                 </div>
              </section>
           </main>
+
+          <footer className={`py-10 text-center border-t ${theme === 'light' ? 'border-zinc-200 bg-zinc-50 text-zinc-600' : 'border-white/5 bg-white/[0.01] text-zinc-600'}`}>
+             <p className="text-[10px] font-black uppercase tracking-widest">© 2025 {config.name}. Todos os direitos reservados.</p>
+          </footer>
         </div>
       )}
 
       {view === 'LOGIN' && (
-        <div className="flex-1 flex items-center justify-center p-6 animate-in fade-in">
-           <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-10 shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
+        <div className="flex-1 flex items-center justify-center p-6 animate-in fade-in zoom-in">
+           <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-10 shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/20'}`}>
               <div className="text-center space-y-4">
-                 <div className="w-16 h-16 gradiente-ouro rounded-2xl mx-auto flex items-center justify-center"><Lock className="text-black" size={28}/></div>
+                 <div className="w-16 h-16 rounded-2xl gradiente-ouro p-1 mx-auto"><div className="w-full h-full rounded-[1.8rem] bg-black overflow-hidden flex items-center justify-center"><Lock className="text-[#D4AF37]" size={24}/></div></div>
                  <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Portal do Membro</h2>
-                 <p className={`text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Acesso exclusivo para membros cadastrados</p>
+                 <p className={`text-[10px] uppercase tracking-widest font-black ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Acesse com seu e-mail ou celular</p>
               </div>
               <div className="space-y-6">
-                 <div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]"/><input type="text" placeholder="E-mail ou Celular" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} /></div>
-                 <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]"/><input type="password" placeholder="Senha" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} /></div>
+                 <input type="text" placeholder="E-mail ou WhatsApp" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                 <input type="password" placeholder="Senha" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                 <button onClick={handleLoginPortal} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all">ACESSAR PORTAL</button>
               </div>
-              <button onClick={handleLoginPortal} className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl">Acessar Portal</button>
               <button onClick={() => setView('HOME')} className={`w-full text-[10px] font-black uppercase tracking-widest transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#D4AF37]'}`}>Voltar ao Início</button>
            </div>
         </div>
@@ -463,10 +473,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     const isLiked = loggedClient.likedProfessionals?.includes(prof.id);
                     return (
                       <div key={prof.id} className={`rounded-2xl p-4 text-center space-y-3 transition-all ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
-                         <div 
-                           className="relative mx-auto w-20 h-20 cursor-pointer" 
-                           onClick={() => handleShowProfessionalStory(prof)}
-                         >
+                         <div className="relative mx-auto w-20 h-20">
                             <img src={prof.avatar} className="w-full h-full rounded-xl object-cover border-2 border-[#B8860B]" alt="" />
                          </div>
                          <div>
@@ -628,7 +635,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
         </div>
       )}
 
-      {/* NOVO: Modal de História do Barbeiro */}
+      {/* Modal de História do Barbeiro */}
       {showProfessionalModal && selectedProfessional && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in-95 ${theme === 'light' ? 'bg-black/70' : 'bg-black/95'}`}>
            <div className={`w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
