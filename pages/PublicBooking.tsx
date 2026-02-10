@@ -507,7 +507,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
           </main>
 
           <footer className={`py-10 text-center border-t ${theme === 'light' ? 'border-zinc-200 bg-zinc-50 text-zinc-600' : 'border-white/5 bg-white/[0.01] text-zinc-600'}`}>
-             <p className="text-[10px] font-black uppercase tracking-widest">© 2025 {config.name}. Todos os direitos reservados.<br> PRODUZIDO POR ©NIKLAUS.</p>
+             <p className="text-[10px] font-black uppercase tracking-widest">© 2025 {config.name}. Todos os direitos reservados.<br> PRODUZIDO POR ©NIKLAUS.</br></p>
           </footer>
         </div>
       )}
