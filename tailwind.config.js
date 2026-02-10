@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        'ouro': '#B8860B',
+        'ouro': '#8f5900',
       }
     },
   },
