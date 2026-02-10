@@ -107,6 +107,16 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
   const categories = useMemo(() => ['Todos', ...Array.from(new Set(services.map(s => s.category)))], [services]);
   const filteredServices = useMemo(() => selectedCategory === 'Todos' ? services : services.filter(s => s.category === selectedCategory), [services, selectedCategory]);
 
+  // --- ALTERAÇÃO SOLICITADA: ORDENAÇÃO POR AGENDAMENTOS + RESTANTE ---
+  const sortedDestaques = useMemo(() => {
+    const stats = services.map(s => ({
+      ...s,
+      count: appointments.filter(a => a.serviceId === s.id).length
+    }));
+    return [...stats].sort((a, b) => b.count - a.count);
+  }, [services, appointments]);
+  // -----------------------------------------------------------------
+
   const handleConfirmBooking = async () => {
     if (!selecao.date || !selecao.time || !selecao.professionalId || !selecao.clientName || !selecao.clientPhone || !selecao.clientEmail) {
       alert("Por favor, preencha todos os dados de identificação.");
@@ -142,7 +152,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       setEditData({ name: client.name, phone: client.phone, email: client.email });
       setNewReview(prev => ({ ...prev, userName: client.name, clientPhone: client.phone }));
       setView('CLIENT_DASHBOARD');
-      setLoginPassword(''); // Limpa senha após login
+      setLoginPassword(''); 
     } else if (client && client.password !== loginPassword) {
       alert("Senha incorreta.");
     } else {
@@ -155,23 +165,15 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       alert("Faça login para curtir um barbeiro.");
       return;
     }
-    
-    // Verifica se o cliente já curtiu este profissional
     const alreadyLiked = loggedClient.likedProfessionals?.includes(profId);
-    
     if (alreadyLiked) {
       alert("Você já curtiu este barbeiro!");
       return;
     }
-    
-    // Adiciona like no store
     await likeProfessional(profId);
-    
-    // Atualiza lista de profissionais curtidos pelo cliente
     const updatedLikedProfessionals = [...(loggedClient.likedProfessionals || []), profId];
     await updateClient(loggedClient.id, { likedProfessionals: updatedLikedProfessionals });
     setLoggedClient({ ...loggedClient, likedProfessionals: updatedLikedProfessionals });
-    
     alert("Curtida registrada com sucesso!");
   };
 
@@ -251,11 +253,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
           </header>
 
           <main className="max-w-6xl mx-auto w-full px-6 flex-1 -mt-10 relative z-30 pb-40">
-             {/* 1. Destaques da Casa */}
              <section className="mb-20 pt-10">
                 <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Destaques da Casa <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="relative group">
-                  {/* Seta Esquerda */}
                   <button 
                     onClick={() => destaqueRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
                     className={`hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-xl ${theme === 'light' ? 'bg-white border-2 border-zinc-300 text-zinc-900 hover:bg-zinc-50' : 'bg-black/50 backdrop-blur-sm border-2 border-white/20 text-white hover:bg-black/70'}`}
@@ -263,7 +263,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     <ChevronLeft size={24} />
                   </button>
                   
-                  {/* Seta Direita */}
                   <button 
                     onClick={() => destaqueRef.current?.scrollBy({ left: 300, behavior: 'smooth' })}
                     className={`hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-xl ${theme === 'light' ? 'bg-white border-2 border-zinc-300 text-zinc-900 hover:bg-zinc-50' : 'bg-black/50 backdrop-blur-sm border-2 border-white/20 text-white hover:bg-black/70'}`}
@@ -280,7 +279,8 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     onMouseUp={handleMouseUp}
                     onMouseMove={(e) => handleMouseMove(e, destaqueRef)}
                   >
-                   {services.slice(0, 6).map(svc => (
+                   {/* MAPA DOS SERVIÇOS ORDENADOS (MAIS AGENDADOS PRIMEIRO) */}
+                   {sortedDestaques.map(svc => (
                      <div key={svc.id} className={`snap-center flex-shrink-0 w-64 md:w-72 rounded-[2.5rem] overflow-hidden group shadow-2xl transition-all ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/30'}`}>
                         <div className="h-48 overflow-hidden"><img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="" /></div>
                         <div className="p-6">
@@ -294,7 +294,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
              </section>
 
-             {/* 2. Nossos Rituais - CATEGORIAS EXPANSÍVEIS */}
              <section className="mb-24" id="catalogo">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
                    <h2 className={`text-2xl font-black font-display italic flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Todos os serviços <div className="h-1 w-10 gradiente-ouro opacity-10"></div></h2>
@@ -306,7 +305,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                      
                      return (
                        <div key={cat} className={`rounded-2xl overflow-hidden transition-all ${theme === 'light' ? 'bg-white border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
-                          {/* Header da Categoria */}
                           <button 
                             onClick={() => toggleCategory(cat)}
                             className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-all"
@@ -318,7 +316,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                              />
                           </button>
                           
-                          {/* Lista de Serviços Expansível */}
                           {isExpanded && (
                             <div className={`border-t animate-in slide-in-from-top-2 ${theme === 'light' ? 'border-zinc-200' : 'border-white/10'}`}>
                                {categoryServices.map(svc => (
@@ -347,11 +344,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 </div>
              </section>
 
-             {/* 3. A Experiência Signature (Galeria) */}
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>A Experiência Signature <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="relative group">
-                  {/* Seta Esquerda */}
                   <button 
                     onClick={() => experienciaRef.current?.scrollBy({ left: -500, behavior: 'smooth' })}
                     className={`hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-xl ${theme === 'light' ? 'bg-white border-2 border-zinc-300 text-zinc-900 hover:bg-zinc-50' : 'bg-black/50 backdrop-blur-sm border-2 border-white/20 text-white hover:bg-black/70'}`}
@@ -359,7 +354,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     <ChevronLeft size={24} />
                   </button>
                   
-                  {/* Seta Direita */}
                   <button 
                     onClick={() => experienciaRef.current?.scrollBy({ left: 500, behavior: 'smooth' })}
                     className={`hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-xl ${theme === 'light' ? 'bg-white border-2 border-zinc-300 text-zinc-900 hover:bg-zinc-50' : 'bg-black/50 backdrop-blur-sm border-2 border-white/20 text-white hover:bg-black/70'}`}
@@ -386,11 +380,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
              </section>
 
-             {/* 4. Voz dos Membros (Avaliações) */}
              <section className="mb-24 py-10 -mx-6 px-6 bg-black">
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 text-white`}>Voz dos Membros <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="relative group">
-                  {/* Seta Esquerda */}
                   <button 
                     onClick={() => membroRef.current?.scrollBy({ left: -400, behavior: 'smooth' })}
                     className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm border-2 border-white/20 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-all shadow-xl"
@@ -398,7 +390,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     <ChevronLeft size={24} />
                   </button>
                   
-                  {/* Seta Direita */}
                   <button 
                     onClick={() => membroRef.current?.scrollBy({ left: 400, behavior: 'smooth' })}
                     className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm border-2 border-white/20 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-all shadow-xl"
@@ -437,7 +428,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
              </section>
 
-             {/* 5. Nossos Artífices */}
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nossos Artífices <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -463,7 +453,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 </div>
              </section>
 
-             {/* 6. Onde Nos Encontrar */}
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Onde Nos Encontrar <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className={`rounded-[2.5rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'border border-zinc-200' : 'border border-white/5'}`}>
@@ -481,7 +470,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 </div>
              </section>
 
-             {/* 7. Redes Sociais */}
              <section className="mb-20 text-center">
                 <h2 className={`text-2xl font-black font-display italic mb-10 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Conecte-se Conosco</h2>
                 <a href={config.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-full font-black text-xs uppercase shadow-2xl hover:scale-105 transition-all">
@@ -489,7 +477,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 </a>
              </section>
 
-             {/* 8. Quem Somos */}
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.aboutTitle || 'Quem Somos'} <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className={`rounded-[2.5rem] p-8 md:p-12 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
@@ -577,7 +564,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
            </div>
 
-           {/* Curtir Barbeiros */}
            <div className={`rounded-[2rem] p-8 mb-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
               <h3 className={`text-lg font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nossos Barbeiros</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -755,7 +741,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
         </div>
       )}
 
-      {/* Modal de História do Barbeiro */}
       {showProfessionalModal && selectedProfessional && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in-95 ${theme === 'light' ? 'bg-black/70' : 'bg-black/95'}`}>
            <div className={`w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
