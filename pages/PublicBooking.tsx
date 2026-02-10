@@ -469,6 +469,51 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
            </div>
 
+           {/* Minhas Sugestões */}
+           <div className={`rounded-[2rem] p-8 mb-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
+              <h3 className={`text-lg font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Minhas Sugestões</h3>
+              <div className="space-y-4">
+                 {suggestions.filter(s => s.clientPhone === loggedClient.phone).length === 0 && (
+                    <p className={`text-center py-10 italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Você ainda não enviou nenhuma sugestão.</p>
+                 )}
+                 {suggestions.filter(s => s.clientPhone === loggedClient.phone).map(suggestion => (
+                    <div key={suggestion.id} className={`p-6 rounded-2xl border transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+                       <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                             <MessageSquare className="text-[#D4AF37]" size={20} />
+                             <div>
+                                <p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Sua Sugestão</p>
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>{suggestion.date}</p>
+                             </div>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase ${
+                             suggestion.response 
+                               ? 'bg-emerald-500/10 text-emerald-500' 
+                               : 'bg-yellow-500/10 text-yellow-500'
+                          }`}>
+                             {suggestion.response ? 'Respondida' : 'Aguardando'}
+                          </div>
+                       </div>
+                       <p className={`text-sm mb-4 ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>{suggestion.text}</p>
+                       
+                       {suggestion.response && (
+                          <div className={`mt-4 pt-4 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/10'}`}>
+                             <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-[#D4AF37] flex items-center justify-center flex-shrink-0">
+                                   <User size={16} className="text-black" />
+                                </div>
+                                <div className="flex-1">
+                                   <p className={`text-xs font-black mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Resposta do Sr. José</p>
+                                   <p className={`text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>{suggestion.response}</p>
+                                </div>
+                             </div>
+                          </div>
+                       )}
+                    </div>
+                 ))}
+              </div>
+           </div>
+
            {/* Curtir Barbeiros */}
            <div className={`rounded-[2rem] p-8 mb-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
               <h3 className={`text-lg font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nossos Barbeiros</h3>
