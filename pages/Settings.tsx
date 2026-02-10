@@ -166,7 +166,7 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          <div className="cartao-vidro rounded-[3.5rem] p-10 md:p-14 border-white/10 space-y-6">
+          <div className="cartao-vidro rounded-[3.5rem] p-5 md:p-7 border-white/5 space-y-3">
             <h3 className="text-2xl font-black font-display italic flex items-center gap-4"><UserIcon className="text-[#D4AF37]" /> Gestão de Barbeiros</h3>
             <p className="text-sm text-zinc-400">Reinicie os contadores de curtidas de todos os profissionais.</p>
             <button 
