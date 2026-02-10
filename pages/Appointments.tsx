@@ -66,9 +66,9 @@ const Appointments: React.FC = () => {
             <h1 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Agenda - Modo Compacto</h1>
             <button 
               onClick={() => setCompactView(false)} 
-              className="px-4 py-2 rounded-lg text-xs font-black uppercase bg-red-500 text-white hover:bg-red-600 transition-all"
+              className="px-2 py-1 rounded-lg text-xs font-black uppercase bg-red-500 text-white hover:bg-red-600 transition-all"
             >
-              Sair Tela Cheia
+              Sair Da Tela Cheia
             </button>
           </div>
           
