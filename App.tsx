@@ -87,7 +87,7 @@ const App: React.FC = () => {
     return (
       <div className={`relative min-h-screen theme-transition ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
         <div className="fixed bottom-8 left-8 z-[100] flex gap-3">
-          <button onClick={toggleTheme} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-600 hover:text-zinc-900' : 'bg-[#D4AF37] text-black border-transparent'}`}>
+          <button onClick={toggleTheme} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-600 hover:text-zinc-900' : 'bg-[#66360f] text-black border-transparent'}`}>
             {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
           </button>
           <button onClick={() => setIsPublicView(false)} className={`p-4 rounded-2xl border shadow-2xl transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-600 hover:text-zinc-900' : 'bg-zinc-900 border-white/10 text-white hover:bg-zinc-800'}`}>
