@@ -48,8 +48,36 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     }
   }, [user, clients, initialView]);
 
-  const categories = useMemo(() => ['Todos', ...Array.from(new Set(services.map(s => s.category)))], [services]);
-  const filteredServices = useMemo(() => selectedCategory === 'Todos' ? services : services.filter(s => s.category === selectedCategory), [services, selectedCategory]);
+  // Estados para drag scroll
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const destaqueRef = React.useRef<HTMLDivElement>(null);
+  const experienciaRef = React.useRef<HTMLDivElement>(null);
+  const membroRef = React.useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement>) => {
+    if (!ref.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - ref.current.offsetLeft);
+    setScrollLeft(ref.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement>) => {
+    if (!isDragging || !ref.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    const walk = (x - startX) * 1;
+    ref.current.scrollLeft = scrollLeft - walk;
+  };
 
   const handleBookingStart = (svc: Service) => {
     setSelecao(prev => ({ ...prev, serviceId: svc.id }));
@@ -224,7 +252,14 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
              {/* 1. Destaques da Casa */}
              <section className="mb-20 pt-10">
                 <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Destaques da Casa <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
-                <div className="flex gap-4 overflow-x-auto pb-6 snap-x">
+                <div 
+                  ref={destaqueRef}
+                  className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing"
+                  onMouseDown={(e) => handleMouseDown(e, destaqueRef)}
+                  onMouseLeave={handleMouseLeave}
+                  onMouseUp={handleMouseUp}
+                  onMouseMove={(e) => handleMouseMove(e, destaqueRef)}
+                >
                    {services.slice(0, 6).map(svc => (
                      <div key={svc.id} className={`snap-center flex-shrink-0 w-64 md:w-72 rounded-[2.5rem] overflow-hidden group shadow-2xl transition-all ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/30'}`}>
                         <div className="h-48 overflow-hidden"><img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="" /></div>
@@ -294,7 +329,14 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
              {/* 3. A Experiência Signature (Galeria) */}
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>A Experiência Signature <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
-                <div className="flex gap-4 overflow-x-auto pb-6 snap-x">
+                <div 
+                  ref={experienciaRef}
+                  className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing"
+                  onMouseDown={(e) => handleMouseDown(e, experienciaRef)}
+                  onMouseLeave={handleMouseLeave}
+                  onMouseUp={handleMouseUp}
+                  onMouseMove={(e) => handleMouseMove(e, experienciaRef)}
+                >
                    {(Array.isArray(config.gallery) ? config.gallery : []).map((img, i) => (
                      <div key={i} className={`snap-center flex-shrink-0 w-80 md:w-[500px] h-64 md:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl transition-all hover:scale-[1.02] ${theme === 'light' ? 'border-4 border-zinc-200' : 'border-4 border-white/5'}`}>
                         <img src={img} className="w-full h-full object-cover" alt="" />
@@ -307,7 +349,14 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
              {/* 4. Voz dos Membros (Avaliações) */}
              <section className="mb-24 py-10 -mx-6 px-6 bg-black">
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 text-white`}>Voz dos Membros <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
-                <div className="flex gap-6 overflow-x-auto pb-6 snap-x">
+                <div 
+                  ref={membroRef}
+                  className="flex gap-6 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing"
+                  onMouseDown={(e) => handleMouseDown(e, membroRef)}
+                  onMouseLeave={handleMouseLeave}
+                  onMouseUp={handleMouseUp}
+                  onMouseMove={(e) => handleMouseMove(e, membroRef)}
+                >
                    {config.reviews?.length === 0 && <p className={`italic py-10 text-center w-full text-zinc-500`}>Aguardando seu feedback para brilhar aqui.</p>}
                    {config.reviews?.map((rev, i) => (
                       <div key={i} className={`snap-center flex-shrink-0 w-80 p-8 rounded-[2rem] relative group cartao-vidro border-white/5`}>
@@ -342,8 +391,8 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                               alt="" 
                               onClick={() => { setSelectedProfessional(prof); setShowProfessionalModal(true); }}
                             />
-                            <button disabled className="absolute -bottom-2 -right-2 bg-[#D4AF37] text-black text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg transition-all cursor-not-allowed opacity-60">
-                               <Heart size={8} fill="currentColor"/> {prof.likes || 0}
+                            <button disabled className="absolute -bottom-2 -right-2 bg-transparent text-red-500 text-[10px] font-black px-1 py-0.5 rounded-lg flex items-center gap-0.5 shadow-lg transition-all cursor-not-allowed">
+                               <Heart size={12} fill="currentColor"/> <span className="text-red-500">{prof.likes || 0}</span>
                             </button>
                          </div>
                          <div>
@@ -484,8 +533,8 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                               alt="" 
                               onClick={() => { setSelectedProfessional(prof); setShowProfessionalModal(true); }}
                             />
-                            <div className="absolute -bottom-2 -right-2 bg-[#D4AF37] text-black text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1">
-                               <Heart size={8} fill="currentColor"/> {prof.likes || 0}
+                            <div className="absolute -bottom-2 -right-2 bg-transparent text-red-500 text-[10px] font-black px-1 py-0.5 rounded-lg flex items-center gap-0.5">
+                               <Heart size={10} fill="currentColor"/> <span className="text-red-500">{prof.likes || 0}</span>
                             </div>
                          </div>
                          <div>
