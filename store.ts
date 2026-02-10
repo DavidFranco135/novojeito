@@ -89,8 +89,8 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [config, setConfig] = useState<ShopConfig>({
-    name: "Barbearia Sr. José",
-    description: "Tradição em São Gonçalo",
+    name: "Barbearia Sr. JosÃ©",
+    description: "TradiÃ§Ã£o em SÃ£o GonÃ§alo",
     aboutTitle: "",
     aboutText: "",
     address: "",
@@ -155,14 +155,14 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   const login = async (id: string, pass: string) => {
     if (id === 'srjoseadm@gmail.com' && pass === '654321') {
-      setUser({ id: 'admin', name: 'Sr. José', email: id, role: 'ADMIN' });
+      setUser({ id: 'admin', name: 'Sr. JosÃ©', email: id, role: 'ADMIN' });
       return;
     }
     const client = clients.find(c => (c.phone === id || c.email === id) && c.password === pass);
     if (client) {
       setUser({ id: client.id, name: client.name, email: client.email, role: 'CLIENTE', phone: client.phone });
     } else {
-      throw new Error('Credenciais inválidas');
+      throw new Error('Credenciais invÃ¡lidas');
     }
   };
 
@@ -208,6 +208,13 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   const deleteProfessional = async (id: string) => {
     await deleteDoc(doc(db, COLLECTIONS.PROFESSIONALS, id));
+  };
+
+  const likeProfessional = async (id: string) => {
+    const professional = professionals.find(p => p.id === id);
+    if (professional) {
+      await updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, id), { likes: (professional.likes || 0) + 1 });
+    }
   };
 
   const addAppointment = async (data: any, isPublic = false) => {
@@ -283,7 +290,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
       user, clients, professionals, services, appointments, financialEntries, notifications, suggestions, config, loading, theme,
       toggleTheme, login, logout, updateUser, addClient, updateClient, deleteClient,
       addService, updateService, deleteService,
-      addProfessional, updateProfessional, deleteProfessional, likeProfessional: (id) => {},
+      addProfessional, updateProfessional, deleteProfessional, likeProfessional,
       addAppointment, updateAppointmentStatus, rescheduleAppointment, deleteAppointment,
       addFinancialEntry, deleteFinancialEntry, addSuggestion, updateSuggestion, deleteSuggestion,
       markNotificationAsRead, clearNotifications, updateConfig, addShopReview
