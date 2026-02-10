@@ -256,7 +256,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Destaques da Casa <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div 
                   ref={destaqueRef}
-                  className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing"
+                  className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing scrollbar-hide"
                   onMouseDown={(e) => handleMouseDown(e, destaqueRef)}
                   onMouseLeave={handleMouseLeave}
                   onMouseUp={handleMouseUp}
@@ -333,7 +333,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>A Experiência Signature <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div 
                   ref={experienciaRef}
-                  className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing"
+                  className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing scrollbar-hide"
                   onMouseDown={(e) => handleMouseDown(e, experienciaRef)}
                   onMouseLeave={handleMouseLeave}
                   onMouseUp={handleMouseUp}
@@ -353,7 +353,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 text-white`}>Voz dos Membros <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div 
                   ref={membroRef}
-                  className="flex gap-6 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing"
+                  className="flex gap-6 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing scrollbar-hide"
                   onMouseDown={(e) => handleMouseDown(e, membroRef)}
                   onMouseLeave={handleMouseLeave}
                   onMouseUp={handleMouseUp}
@@ -386,16 +386,16 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                    {professionals.map(prof => (
                       <div key={prof.id} className={`rounded-[2rem] p-6 text-center space-y-4 group transition-all hover:scale-105 ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/30'}`}>
-                         <div className="relative mx-auto w-24 h-24">
+                         <div className="relative mx-auto w-24 h-24 flex items-center gap-2 justify-center">
                             <img 
                               src={prof.avatar} 
                               className="w-full h-full rounded-2xl object-cover border-2 border-[#D4AF37] cursor-pointer" 
                               alt="" 
                               onClick={() => { setSelectedProfessional(prof); setShowProfessionalModal(true); }}
                             />
-                            <button disabled className="absolute -bottom-2 -right-2 bg-transparent text-red-500 text-[10px] font-black px-1 py-0.5 rounded-lg flex items-center gap-0.5 shadow-lg transition-all cursor-not-allowed">
-                               <Heart size={12} fill="currentColor"/> <span className="text-red-500">{prof.likes || 0}</span>
-                            </button>
+                            <div className="absolute -right-6 top-0 text-red-500 text-xs font-black flex items-center gap-0.5">
+                               <Heart size={12} fill="currentColor" /> <span className="text-red-500">{prof.likes || 0}</span>
+                            </div>
                          </div>
                          <div>
                             <p className={`font-black text-sm ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{prof.name}</p>
@@ -528,15 +528,15 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     const isLiked = loggedClient.likedProfessionals?.includes(prof.id);
                     return (
                       <div key={prof.id} className={`rounded-2xl p-4 text-center space-y-3 transition-all ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
-                         <div className="relative mx-auto w-20 h-20">
+                         <div className="relative mx-auto w-20 h-20 flex items-center gap-1 justify-center">
                             <img 
                               src={prof.avatar} 
                               className="w-full h-full rounded-xl object-cover border-2 border-[#B8860B] cursor-pointer" 
                               alt="" 
                               onClick={() => { setSelectedProfessional(prof); setShowProfessionalModal(true); }}
                             />
-                            <div className="absolute -bottom-2 -right-2 bg-transparent text-red-500 text-[10px] font-black px-1 py-0.5 rounded-lg flex items-center gap-0.5">
-                               <Heart size={10} fill="currentColor"/> <span className="text-red-500">{prof.likes || 0}</span>
+                            <div className="absolute -right-5 top-0 text-red-500 text-[8px] font-black flex items-center gap-0.5">
+                               <Heart size={8} fill="currentColor"/> <span className="text-red-500">{prof.likes || 0}</span>
                             </div>
                          </div>
                          <div>
