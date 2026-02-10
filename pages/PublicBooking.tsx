@@ -120,7 +120,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     }
   };
 
-  const handleLikeProfessional = (profId: string) => {
+  const handleLikeProfessional = async (profId: string) => {
     if (!loggedClient) {
       alert("Faça login para curtir um barbeiro.");
       return;
@@ -134,12 +134,12 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       return;
     }
     
-    // Adiciona like
-    likeProfessional(profId);
+    // Adiciona like no store
+    await likeProfessional(profId);
     
     // Atualiza lista de profissionais curtidos pelo cliente
     const updatedLikedProfessionals = [...(loggedClient.likedProfessionals || []), profId];
-    updateClient(loggedClient.id, { likedProfessionals: updatedLikedProfessionals });
+    await updateClient(loggedClient.id, { likedProfessionals: updatedLikedProfessionals });
     setLoggedClient({ ...loggedClient, likedProfessionals: updatedLikedProfessionals });
     
     alert("Curtida registrada com sucesso!");
@@ -359,8 +359,12 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Onde Nos Encontrar <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className={`rounded-[2.5rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'border border-zinc-200' : 'border border-white/5'}`}>
-                   <div className="aspect-video bg-zinc-900 flex items-center justify-center">
-                      <MapPin className="text-[#D4AF37]" size={48}/>
+                   <div className="aspect-video bg-zinc-900 flex items-center justify-center overflow-hidden">
+                      {config.locationImage ? (
+                        <img src={config.locationImage} className="w-full h-full object-cover" alt="Nossa localização" />
+                      ) : (
+                        <MapPin className="text-[#D4AF37]" size={48}/>
+                      )}
                    </div>
                    <div className={`p-8 ${theme === 'light' ? 'bg-white' : 'bg-white/5'}`}>
                       <p className={`text-sm font-bold mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.address}</p>
