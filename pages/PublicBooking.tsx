@@ -257,6 +257,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <div 
                   ref={destaqueRef}
                   className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing scrollbar-hide"
+                  style={{ scrollBehavior: 'smooth' }}
                   onMouseDown={(e) => handleMouseDown(e, destaqueRef)}
                   onMouseLeave={handleMouseLeave}
                   onMouseUp={handleMouseUp}
@@ -334,6 +335,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <div 
                   ref={experienciaRef}
                   className="flex gap-4 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing scrollbar-hide"
+                  style={{ scrollBehavior: 'smooth' }}
                   onMouseDown={(e) => handleMouseDown(e, experienciaRef)}
                   onMouseLeave={handleMouseLeave}
                   onMouseUp={handleMouseUp}
@@ -354,6 +356,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <div 
                   ref={membroRef}
                   className="flex gap-6 overflow-x-auto pb-6 snap-x cursor-grab active:cursor-grabbing scrollbar-hide"
+                  style={{ scrollBehavior: 'smooth' }}
                   onMouseDown={(e) => handleMouseDown(e, membroRef)}
                   onMouseLeave={handleMouseLeave}
                   onMouseUp={handleMouseUp}
@@ -702,9 +705,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       {showProfessionalModal && selectedProfessional && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in-95 ${theme === 'light' ? 'bg-black/70' : 'bg-black/95'}`}>
            <div className={`w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
-              <div className="relative h-64">
-                 <img src={selectedProfessional.avatar} className="w-full h-full object-cover" alt={selectedProfessional.name} />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="relative h-96">
+                 <img src={selectedProfessional.avatar} className="w-full h-full object-contain bg-black" alt={selectedProfessional.name} />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
                  <button 
                    onClick={() => setShowProfessionalModal(false)} 
                    className="absolute top-4 right-4 p-3 bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-black/70 transition-all"
