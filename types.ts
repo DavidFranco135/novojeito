@@ -115,9 +115,9 @@ export interface VipPlan {
 
 export interface ShopConfig {
   name: string;
-  description: string; // Resumo do Header
-  aboutTitle: string;  // Título da seção Sobre
-  aboutText: string;   // Texto detalhado da seção Sobre
+  description: string;
+  aboutTitle: string;
+  aboutText: string;
   address: string;
   city: string;
   state: string;
@@ -126,16 +126,9 @@ export interface ShopConfig {
   logo: string;
   coverImage: string;
   loginBackground: string;
-  heroBackground?: string;
-  aboutImage?: string;
-  locationImage?: string;
-  locationUrl: string;
-  openingTime: string;
-  closingTime: string;
-  email: string;
-  phone?: string;
-  cnpj: string;
+  aboutImage: string;
+  locationImage: string;
   gallery: string[];
   reviews: Review[];
-  vipPlans?: VipPlan[];
+  vipPlans: VipPlan[];
 }
