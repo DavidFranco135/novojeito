@@ -32,6 +32,7 @@ export interface Professional {
     start: string;
     end: string;
   };
+  description?: string;
 }
 
 export interface Client {
@@ -76,7 +77,7 @@ export interface Appointment {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'AGENDADO' | 'CONCLUIDO_PAGO' | 'PENDENTE_PAGAMENTO' | 'REAGENDADO' | 'CANCELADO';
+  status: 'AGENDADO' | 'CONCLUIDO_PAGO' | 'PENDENTE_PAGAMENTO' | 'REAGENDADO' | 'CANCELADO' | 'PENDENTE';
   price: number;
 }
 
@@ -97,6 +98,19 @@ export interface Notification {
   time: string;
   read: boolean;
   targetId?: string;
+  type?: 'appointment' | 'suggestion' | 'general';
+  clientPhone?: string;
+}
+
+export interface VipPlan {
+  id: string;
+  name: string;
+  price: number;
+  duration: 'MENSAL' | 'ANUAL';
+  benefits: string[];
+  discount: number;
+  image?: string;
+  active: boolean;
 }
 
 export interface ShopConfig {
@@ -113,6 +127,8 @@ export interface ShopConfig {
   coverImage: string;
   loginBackground: string;
   heroBackground?: string;
+  aboutImage?: string;
+  locationImage?: string;
   locationUrl: string;
   openingTime: string;
   closingTime: string;
@@ -121,4 +137,5 @@ export interface ShopConfig {
   cnpj: string;
   gallery: string[];
   reviews: Review[];
+  vipPlans?: VipPlan[];
 }
