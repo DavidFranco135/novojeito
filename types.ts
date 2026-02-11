@@ -76,7 +76,7 @@ export interface Appointment {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'AGENDADO' | 'CONCLUIDO_PAGO' | 'PENDENTE_PAGAMENTO' | 'REAGENDADO' | 'CANCELADO';
+  status: 'AGENDADO' | 'CONCLUIDO_PAGO' | 'PENDENTE_PAGAMENTO' | 'REAGENDADO' | 'CANCELADO' | 'PENDENTE';
   price: number;
 }
 
@@ -97,6 +97,8 @@ export interface Notification {
   time: string;
   read: boolean;
   targetId?: string;
+  type?: 'appointment' | 'suggestion' | 'general';
+  clientPhone?: string;
 }
 
 export interface VipPlan {
@@ -111,9 +113,9 @@ export interface VipPlan {
 
 export interface ShopConfig {
   name: string;
-  description: string; // Resumo do Header
-  aboutTitle: string;  // Título da seção Sobre
-  aboutText: string;   // Texto detalhado da seção Sobre
+  description: string;
+  aboutTitle: string;
+  aboutText: string;
   address: string;
   city: string;
   state: string;
@@ -123,6 +125,8 @@ export interface ShopConfig {
   coverImage: string;
   loginBackground: string;
   heroBackground?: string;
+  aboutImage?: string;
+  locationImage?: string;
   locationUrl: string;
   openingTime: string;
   closingTime: string;
@@ -132,4 +136,5 @@ export interface ShopConfig {
   gallery: string[];
   reviews: Review[];
   vipPlans?: VipPlan[];
+  adminName?: string;  // ✅ NOVO: Nome do admin salvo no Firebase
 }
