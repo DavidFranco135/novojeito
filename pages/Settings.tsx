@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Store, Upload, ImageIcon, User as UserIcon, Trash2, Plus, Info, Clock, MapPin, Share2, RotateCcw } from 'lucide-react';
+import { Save, Store, Upload, ImageIcon, User as UserIcon, Trash2, Plus, Info, Clock, MapPin, Share2, RotateCcw, Zap } from 'lucide-react';
 import { useBarberStore } from '../store';
 
 const Settings: React.FC = () => {
@@ -10,6 +10,12 @@ const Settings: React.FC = () => {
     avatar: user?.avatar || config.logo || 'https://i.pravatar.cc/150' 
   });
   const [loading, setLoading] = useState(false);
+  const [vipPlans, setVipPlans] = useState(config.vipPlans || [
+    { id: '1', name: 'Plano Mensal', price: 99.90, duration: 'Mensal', features: ['Descontos exclusivos', '10% off em serviços'] },
+    { id: '2', name: 'Plano Anual', price: 999.90, duration: 'Anual', features: ['Descontos exclusivos', '15% off em serviços', 'Agendamento prioritário'] }
+  ]);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [newFeature, setNewFeature] = useState('');
 
   const IMGBB_API_KEY = 'da736db48f154b9108b23a36d4393848';
 
@@ -54,11 +60,42 @@ const Settings: React.FC = () => {
     setFormData(prev => ({ ...prev, gallery: (prev.gallery || []).filter((_, i) => i !== index) }));
   };
 
+  const handleAddPlan = () => {
+    const newPlan = {
+      id: Date.now().toString(),
+      name: '',
+      price: 0,
+      duration: 'Mensal',
+      features: []
+    };
+    setVipPlans([...vipPlans, newPlan]);
+    setEditingPlan(newPlan.id);
+  };
+
+  const handleDeletePlan = (id: string) => {
+    setVipPlans(vipPlans.filter(p => p.id !== id));
+  };
+
+  const handleUpdatePlan = (id: string, field: string, value: any) => {
+    setVipPlans(vipPlans.map(p => p.id === id ? { ...p, [field]: value } : p));
+  };
+
+  const handleAddFeature = (planId: string) => {
+    if (newFeature.trim()) {
+      setVipPlans(vipPlans.map(p => p.id === planId ? { ...p, features: [...p.features, newFeature] } : p));
+      setNewFeature('');
+    }
+  };
+
+  const handleRemoveFeature = (planId: string, index: number) => {
+    setVipPlans(vipPlans.map(p => p.id === planId ? { ...p, features: p.features.filter((_, i) => i !== index) } : p));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const updatedConfig = { ...formData, logo: userData.avatar };
+      const updatedConfig = { ...formData, logo: userData.avatar, vipPlans };
       await updateConfig(updatedConfig);
       updateUser(userData);
       alert("Configurações Master Sincronizadas!");
@@ -142,6 +179,93 @@ const Settings: React.FC = () => {
                 <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Endereço Completo</label>
                 <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
               </div>
+            </div>
+          </div>
+
+          <div className={`rounded-[3.5rem] p-10 md:p-14 border-2 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'} space-y-10`}>
+            <div className="flex items-center justify-between">
+              <h3 className={`text-2xl font-black font-display italic flex items-center gap-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}><Zap className="text-[#D4AF37]" /> Planos VIP</h3>
+              <button 
+                type="button"
+                onClick={handleAddPlan}
+                className="p-3 border-2 rounded-xl transition-all flex items-center gap-2"
+                style={{ backgroundColor: '#66360f20', borderColor: '#66360f', color: '#66360f' }}
+              >
+                <Plus size={20} /> Novo Plano
+              </button>
+            </div>
+            <div className="space-y-6">
+              {vipPlans.map(plan => (
+                <div key={plan.id} className={`p-6 rounded-2xl border-2 space-y-4 ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input 
+                      type="text" 
+                      placeholder="Nome do Plano" 
+                      value={plan.name}
+                      onChange={e => handleUpdatePlan(plan.id, 'name', e.target.value)}
+                      className={`border-2 p-4 rounded-xl font-black ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Preço" 
+                      value={plan.price}
+                      onChange={e => handleUpdatePlan(plan.id, 'price', parseFloat(e.target.value))}
+                      className={`border-2 p-4 rounded-xl font-black ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                    />
+                    <select 
+                      value={plan.duration}
+                      onChange={e => handleUpdatePlan(plan.id, 'duration', e.target.value)}
+                      className={`border-2 p-4 rounded-xl font-black ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                    >
+                      <option value="Mensal">Mensal</option>
+                      <option value="Anual">Anual</option>
+                      <option value="Trimestral">Trimestral</option>
+                      <option value="Semestral">Semestral</option>
+                    </select>
+                  </div>
+                  <div className="space-y-3">
+                    <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Benefícios</label>
+                    <div className="space-y-2">
+                      {plan.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-white/10 rounded-lg">
+                          <span className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{feature}</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleRemoveFeature(plan.id, idx)}
+                            className="text-red-500 hover:text-red-700 transition-all"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="Novo benefício" 
+                        value={editingPlan === plan.id ? newFeature : ''}
+                        onChange={e => setNewFeature(e.target.value)}
+                        onFocus={() => setEditingPlan(plan.id)}
+                        className={`flex-1 border-2 p-3 rounded-lg text-sm font-black ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => handleAddFeature(plan.id)}
+                        className="px-4 py-3 bg-[#D4AF37] text-black rounded-lg font-black text-xs uppercase"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => handleDeletePlan(plan.id)}
+                    className="w-full p-3 border-2 border-red-500/20 text-red-500 rounded-xl hover:bg-red-500/10 transition-all font-black text-xs uppercase"
+                  >
+                    Deletar Plano
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
