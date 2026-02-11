@@ -65,29 +65,34 @@ const Settings: React.FC = () => {
   };
 
   const handleSave = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  try {
-    // 1. Atualizar configurações
-    const updatedConfig = { ...formData, logo: userData.avatar };
-    await updateConfig(updatedConfig);
-    
-    // 2. Atualizar dados do usuário (CORREÇÃO)
-    updateUser(userData);
-    
-    // 3. Persistir no localStorage (NOVO)
-    if (user) {
-      const updatedUser = { ...user, name: userData.name, avatar: userData.avatar };
-      localStorage.setItem('brb_user', JSON.stringify(updatedUser));
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // 1. Atualizar configurações no Firebase
+      const updatedConfig = { ...formData, logo: userData.avatar };
+      await updateConfig(updatedConfig);
+      
+      // 2. Atualizar dados do usuário no contexto
+      if (user) {
+        const updatedUserData = {
+          ...user,
+          name: userData.name,
+          avatar: userData.avatar
+        };
+        updateUser(updatedUserData);
+        
+        // 3. Persistir TAMBÉM no localStorage para garantir que salva
+        localStorage.setItem('brb_user', JSON.stringify(updatedUserData));
+      }
+      
+      alert("Configurações Master Sincronizadas!");
+    } catch (err) { 
+      console.error('Erro ao salvar:', err);
+      alert("Erro ao sincronizar."); 
+    } finally { 
+      setLoading(false); 
     }
-    
-    alert("Configurações Master Sincronizadas!");
-  } catch (err) { 
-    alert("Erro ao sincronizar."); 
-  } finally { 
-    setLoading(false); 
-  }
-};
+  };
 
   const handleSaveVipPlan = () => {
     if (!newPlan.name || !newPlan.price || !newPlan.benefits || newPlan.benefits.filter(b => b.trim()).length === 0) {
@@ -97,19 +102,19 @@ const Settings: React.FC = () => {
 
     const plan: VipPlan = {
       id: editingPlan?.id || `vip${Date.now()}`,
-      name: newPlan.name,
-      price: newPlan.price,
-      period: newPlan.period as 'MENSAL' | 'ANUAL',
-      benefits: newPlan.benefits.filter(b => b.trim()),
+      name: newPlan.name!,
+      price: newPlan.price!,
+      period: newPlan.period!,
+      benefits: newPlan.benefits!.filter(b => b.trim()),
       discount: newPlan.discount,
-      status: newPlan.status as 'ATIVO' | 'INATIVO'
+      status: newPlan.status!
     };
 
     const currentPlans = formData.vipPlans || [];
-    let updatedPlans;
+    let updatedPlans: VipPlan[];
 
     if (editingPlan) {
-      updatedPlans = currentPlans.map(p => p.id === plan.id ? plan : p);
+      updatedPlans = currentPlans.map(p => p.id === editingPlan.id ? plan : p);
     } else {
       updatedPlans = [...currentPlans, plan];
     }
@@ -127,15 +132,35 @@ const Settings: React.FC = () => {
   };
 
   const handleDeletePlan = (planId: string) => {
-    if (confirm('Deseja realmente excluir este plano VIP?')) {
-      setFormData(prev => ({ ...prev, vipPlans: (prev.vipPlans || []).filter(p => p.id !== planId) }));
+    if (confirm('Deseja excluir este plano?')) {
+      const updatedPlans = (formData.vipPlans || []).filter(p => p.id !== planId);
+      setFormData(prev => ({ ...prev, vipPlans: updatedPlans }));
     }
   };
 
-  const handleAddNewPlan = () => {
-    setEditingPlan(null);
-    setNewPlan({ name: '', price: 0, period: 'MENSAL', benefits: [''], status: 'ATIVO' });
-    setShowVipPlanModal(true);
+  const handleTogglePlanStatus = (planId: string) => {
+    const updatedPlans = (formData.vipPlans || []).map(p =>
+      p.id === planId ? { ...p, status: p.status === 'ATIVO' ? 'INATIVO' as const : 'ATIVO' as const } : p
+    );
+    setFormData(prev => ({ ...prev, vipPlans: updatedPlans }));
+  };
+
+  const addBenefit = () => {
+    setNewPlan(prev => ({
+      ...prev,
+      benefits: [...(prev.benefits || []), '']
+    }));
+  };
+
+  const updateBenefit = (index: number, value: string) => {
+    const updatedBenefits = [...(newPlan.benefits || [])];
+    updatedBenefits[index] = value;
+    setNewPlan(prev => ({ ...prev, benefits: updatedBenefits }));
+  };
+
+  const removeBenefit = (index: number) => {
+    const updatedBenefits = (newPlan.benefits || []).filter((_, i) => i !== index);
+    setNewPlan(prev => ({ ...prev, benefits: updatedBenefits }));
   };
 
   return (
@@ -171,7 +196,13 @@ const Settings: React.FC = () => {
                <div className="flex-1 space-y-6 w-full">
                   <div className="space-y-3">
                     <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Assinatura Digital (Seu Nome)</label>
-                    <input type="text" value={userData.name} onChange={e => setUserData({...userData, name: e.target.value})} className={`w-full border-2 p-6 rounded-3xl outline-none font-black text-xl ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
+                    <input 
+                      type="text" 
+                      value={userData.name} 
+                      onChange={e => setUserData({...userData, name: e.target.value})} 
+                      className={`w-full border-2 p-6 rounded-3xl outline-none font-black text-xl ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                      placeholder="Digite seu nome"
+                    />
                   </div>
                </div>
             </div>
@@ -224,59 +255,55 @@ const Settings: React.FC = () => {
               </h3>
               <button 
                 type="button"
-                onClick={handleAddNewPlan}
-                className="flex items-center gap-2 bg-[#D4AF37] text-black px-4 py-2 rounded-xl text-xs font-black uppercase transition-all hover:scale-105"
+                onClick={() => {
+                  setEditingPlan(null);
+                  setNewPlan({ name: '', price: 0, period: 'MENSAL', benefits: [''], status: 'ATIVO' });
+                  setShowVipPlanModal(true);
+                }}
+                className="flex items-center gap-2 gradiente-ouro text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
               >
-                <Plus size={16} /> Novo Plano
+                <Plus size={16}/> Adicionar
               </button>
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-4">
               {(!formData.vipPlans || formData.vipPlans.length === 0) && (
-                <p className={`col-span-2 text-center py-6 italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>
-                  Nenhum plano VIP cadastrado ainda.
+                <p className={`text-center py-10 italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>
+                  Nenhum plano VIP cadastrado.
                 </p>
               )}
               {formData.vipPlans?.map(plan => (
-                <div key={plan.id} className={`rounded-2xl p-6 border-2 ${plan.status === 'ATIVO' ? 'border-[#D4AF37]/30' : 'border-zinc-300/30 opacity-60'} ${theme === 'light' ? 'bg-zinc-50' : 'bg-white/5'}`}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h4 className={`font-black text-lg ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</h4>
-                      <p className={`text-xs font-black mt-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                        R$ {plan.price.toFixed(2)} / {plan.period === 'MENSAL' ? 'Mês' : 'Ano'}
+                <div key={plan.id} className={`rounded-2xl p-6 border transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className={`text-lg font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</h4>
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase ${plan.status === 'ATIVO' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                          {plan.status}
+                        </span>
+                      </div>
+                      <p className={`text-2xl font-black mb-2 ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>
+                        R$ {plan.price.toFixed(2)} <span className="text-sm">/{plan.period === 'MENSAL' ? 'mês' : 'ano'}</span>
                       </p>
+                      <div className="space-y-1">
+                        {plan.benefits.slice(0, 3).map((b, i) => (
+                          <p key={i} className={`text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>• {b}</p>
+                        ))}
+                        {plan.benefits.length > 3 && (
+                          <p className={`text-xs italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>+{plan.benefits.length - 3} benefícios</p>
+                        )}
+                      </div>
                     </div>
-                    <span className={`text-[8px] font-black px-2 py-1 rounded uppercase ${plan.status === 'ATIVO' ? 'bg-emerald-500/20 text-emerald-600' : 'bg-zinc-500/20 text-zinc-600'}`}>
-                      {plan.status}
-                    </span>
-                  </div>
-                  <ul className="space-y-1 mb-4">
-                    {plan.benefits.slice(0, 3).map((benefit, i) => (
-                      <li key={i} className={`text-xs flex items-start gap-2 ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                        <Check size={12} className="text-[#D4AF37] flex-shrink-0 mt-0.5" />
-                        {benefit}
-                      </li>
-                    ))}
-                    {plan.benefits.length > 3 && (
-                      <li className={`text-xs italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>
-                        +{plan.benefits.length - 3} benefícios
-                      </li>
-                    )}
-                  </ul>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEditPlan(plan)}
-                      className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase ${theme === 'light' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePlan(plan.id)}
-                      className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase ${theme === 'light' ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-600 text-white hover:bg-red-700'}`}
-                    >
-                      Excluir
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button type="button" onClick={() => handleEditPlan(plan)} className={`p-2 rounded-xl border transition-all ${theme === 'light' ? 'bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'}`}>
+                        <Save size={16}/>
+                      </button>
+                      <button type="button" onClick={() => handleTogglePlanStatus(plan.id)} className={`p-2 rounded-xl border transition-all ${plan.status === 'ATIVO' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' : 'bg-red-500/10 border-red-500 text-red-500'}`}>
+                        <Crown size={16}/>
+                      </button>
+                      <button type="button" onClick={() => handleDeletePlan(plan.id)} className="p-2 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl hover:bg-red-500/20 transition-all">
+                        <Trash2 size={16}/>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -316,139 +343,112 @@ const Settings: React.FC = () => {
       </form>
 
       {showVipPlanModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl max-h-[90vh] overflow-y-auto ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
-            <div className="flex items-center justify-between mb-8">
-              <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                {editingPlan ? 'Editar' : 'Novo'} Plano VIP
-              </h3>
-              <button 
-                onClick={() => {
-                  setShowVipPlanModal(false);
-                  setEditingPlan(null);
-                  setNewPlan({ name: '', price: 0, period: 'MENSAL', benefits: [''], status: 'ATIVO' });
-                }}
-                className="p-2 rounded-xl hover:bg-white/10 transition-all"
-              >
-                <X size={24} className={theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'} />
+        <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-xl ${theme === 'light' ? 'bg-black/70' : 'bg-black/95'}`}>
+          <div className={`w-full max-w-2xl rounded-[3rem] p-12 space-y-8 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
+            <div className="flex items-center justify-between">
+              <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                {editingPlan ? 'Editar Plano' : 'Novo Plano VIP'}
+              </h2>
+              <button onClick={() => setShowVipPlanModal(false)} className="p-2 rounded-xl hover:bg-white/5">
+                <X className={theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'} size={24}/>
               </button>
             </div>
 
             <div className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Nome do Plano</label>
+                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Nome do Plano</label>
                   <input 
                     type="text" 
-                    value={newPlan.name} 
+                    value={newPlan.name || ''}
                     onChange={e => setNewPlan({...newPlan, name: e.target.value})}
-                    className={`w-full border-2 p-4 rounded-2xl font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                    className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                     placeholder="Ex: Plano Premium"
                   />
                 </div>
-
+                
                 <div className="space-y-2">
-                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Preço (R$)</label>
-                  <input 
-                    type="number" 
-                    value={newPlan.price} 
-                    onChange={e => setNewPlan({...newPlan, price: parseFloat(e.target.value)})}
-                    className={`w-full border-2 p-4 rounded-2xl font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
-                    placeholder="199.00"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Período</label>
-                  <select 
-                    value={newPlan.period} 
+                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Período</label>
+                  <select
+                    value={newPlan.period || 'MENSAL'}
                     onChange={e => setNewPlan({...newPlan, period: e.target.value as 'MENSAL' | 'ANUAL'})}
-                    className={`w-full border-2 p-4 rounded-2xl font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                    className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                   >
                     <option value="MENSAL">Mensal</option>
                     <option value="ANUAL">Anual</option>
                   </select>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Status</label>
-                  <select 
-                    value={newPlan.status} 
-                    onChange={e => setNewPlan({...newPlan, status: e.target.value as 'ATIVO' | 'INATIVO'})}
-                    className={`w-full border-2 p-4 rounded-2xl font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
-                  >
-                    <option value="ATIVO">Ativo</option>
-                    <option value="INATIVO">Inativo</option>
-                  </select>
+                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Preço (R$)</label>
+                  <input 
+                    type="number" 
+                    min="0"
+                    step="0.01"
+                    value={newPlan.price || 0}
+                    onChange={e => setNewPlan({...newPlan, price: parseFloat(e.target.value) || 0})}
+                    className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Desconto (%)</label>
+                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Desconto (%)</label>
                   <input 
                     type="number" 
-                    value={newPlan.discount || ''} 
-                    onChange={e => setNewPlan({...newPlan, discount: e.target.value ? parseFloat(e.target.value) : undefined})}
-                    className={`w-full border-2 p-4 rounded-2xl font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
-                    placeholder="Opcional"
+                    min="0"
+                    max="100"
+                    value={newPlan.discount || 0}
+                    onChange={e => setNewPlan({...newPlan, discount: parseInt(e.target.value) || undefined})}
+                    className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                   />
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Benefícios</label>
-                  <button
-                    type="button"
-                    onClick={handleAddBenefit}
-                    className="flex items-center gap-1 bg-[#D4AF37] text-black px-3 py-1 rounded-lg text-[9px] font-black uppercase"
-                  >
-                    <Plus size={12} /> Adicionar
+                  <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Benefícios</label>
+                  <button type="button" onClick={addBenefit} className="text-[#D4AF37] text-xs font-black flex items-center gap-1 hover:opacity-80">
+                    <Plus size={14}/> Adicionar
                   </button>
                 </div>
-                <div className="space-y-2">
-                  {newPlan.benefits?.map((benefit, index) => (
+                <div className="space-y-3">
+                  {(newPlan.benefits || ['']).map((benefit, index) => (
                     <div key={index} className="flex gap-2">
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={benefit}
-                        onChange={e => handleBenefitChange(index, e.target.value)}
-                        className={`flex-1 border-2 p-3 rounded-xl text-sm ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                        onChange={e => updateBenefit(index, e.target.value)}
+                        className={`flex-1 border-2 p-3 rounded-xl outline-none text-sm ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                         placeholder={`Benefício ${index + 1}`}
                       />
-                      {newPlan.benefits && newPlan.benefits.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveBenefit(index)}
-                          className={`p-3 rounded-xl ${theme === 'light' ? 'bg-red-500 text-white' : 'bg-red-600 text-white'}`}
-                        >
-                          <Trash2 size={14} />
+                      {(newPlan.benefits || []).length > 1 && (
+                        <button type="button" onClick={() => removeBenefit(index)} className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl hover:bg-red-500/20 transition-all">
+                          <Trash2 size={16}/>
                         </button>
                       )}
                     </div>
                   ))}
                 </div>
               </div>
+            </div>
 
-              <div className="flex gap-4 pt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowVipPlanModal(false);
-                    setEditingPlan(null);
-                    setNewPlan({ name: '', price: 0, period: 'MENSAL', benefits: [''], status: 'ATIVO' });
-                  }}
-                  className={`flex-1 py-4 rounded-xl text-xs font-black uppercase ${theme === 'light' ? 'bg-zinc-100 text-zinc-700' : 'bg-white/5 text-zinc-500'}`}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveVipPlan}
-                  className="flex-1 gradiente-ouro text-black py-4 rounded-xl text-xs font-black uppercase shadow-xl"
-                >
-                  Salvar Plano
-                </button>
-              </div>
+            <div className="flex gap-4">
+              <button 
+                type="button"
+                onClick={() => setShowVipPlanModal(false)}
+                className={`flex-1 py-4 rounded-2xl text-xs font-black uppercase ${theme === 'light' ? 'bg-zinc-100 text-zinc-700' : 'bg-white/5 text-zinc-500'}`}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                onClick={handleSaveVipPlan}
+                className="flex-1 gradiente-ouro text-black py-4 rounded-2xl text-xs font-black uppercase shadow-xl"
+              >
+                {editingPlan ? 'Atualizar' : 'Salvar'} Plano
+              </button>
             </div>
           </div>
         </div>
