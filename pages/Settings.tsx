@@ -65,32 +65,29 @@ const Settings: React.FC = () => {
   };
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const updatedConfig = { ...formData, logo: userData.avatar };
-      await updateConfig(updatedConfig);
-      updateUser(userData);
-      alert("Configurações Master Sincronizadas!");
-    } catch (err) { alert("Erro ao sincronizar."); }
-    finally { setLoading(false); }
-  };
-
-  const handleAddBenefit = () => {
-    setNewPlan(prev => ({ ...prev, benefits: [...(prev.benefits || []), ''] }));
-  };
-
-  const handleRemoveBenefit = (index: number) => {
-    setNewPlan(prev => ({ ...prev, benefits: prev.benefits?.filter((_, i) => i !== index) || [] }));
-  };
-
-  const handleBenefitChange = (index: number, value: string) => {
-    setNewPlan(prev => {
-      const newBenefits = [...(prev.benefits || [])];
-      newBenefits[index] = value;
-      return { ...prev, benefits: newBenefits };
-    });
-  };
+  e.preventDefault();
+  setLoading(true);
+  try {
+    // 1. Atualizar configurações
+    const updatedConfig = { ...formData, logo: userData.avatar };
+    await updateConfig(updatedConfig);
+    
+    // 2. Atualizar dados do usuário (CORREÇÃO)
+    updateUser(userData);
+    
+    // 3. Persistir no localStorage (NOVO)
+    if (user) {
+      const updatedUser = { ...user, name: userData.name, avatar: userData.avatar };
+      localStorage.setItem('brb_user', JSON.stringify(updatedUser));
+    }
+    
+    alert("Configurações Master Sincronizadas!");
+  } catch (err) { 
+    alert("Erro ao sincronizar."); 
+  } finally { 
+    setLoading(false); 
+  }
+};
 
   const handleSaveVipPlan = () => {
     if (!newPlan.name || !newPlan.price || !newPlan.benefits || newPlan.benefits.filter(b => b.trim()).length === 0) {
