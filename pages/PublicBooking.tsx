@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Scissors, Calendar, Check, MapPin, ChevronLeft, ChevronRight, ArrowRight, Clock, User, Phone, 
-  History, Sparkles, Instagram, Star, Heart, LogOut, MessageSquare, Quote, Mail, Upload, Save, Lock, Send, X, MessageCircle, Crown
+  History, Sparkles, Instagram, Star, Heart, LogOut, MessageSquare, Quote, Mail, Upload, Save, Lock, Send, X
 } from 'lucide-react';
 import { useBarberStore } from '../store';
 import { Service, Review, Professional, Client } from '../types';
@@ -161,7 +161,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     } else if (client && client.password !== loginPassword) {
       alert("Senha incorreta.");
     } else {
-      alert("Cliente não encontrado. Verifique seu e-mail ou celular cadastrado.");
+      alert("Membro não encontrado. Verifique seu e-mail ou celular cadastrado.");
     }
   };
 
@@ -236,7 +236,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       <div className={`w-full max-w-lg p-12 rounded-[3rem] text-center space-y-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
         <div className="w-20 h-20 gradiente-ouro rounded-full mx-auto flex items-center justify-center"><Check className="w-10 h-10 text-black" /></div>
         <h2 className="text-3xl font-black font-display italic text-[#D4AF37]">Reserva Confirmada!</h2>
-        <p className={`text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Aguardamos você para o sua melhor experiência da sua vida..</p>
+        <p className={`text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Aguardamos você para o seu ritual signature.</p>
         <button onClick={() => window.location.reload()} className="bg-[#D4AF37] text-black px-10 py-4 rounded-xl text-[10px] font-black uppercase">Voltar à Início</button>
       </div>
     </div>
@@ -249,7 +249,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
           <header className="relative h-[65vh] overflow-hidden flex flex-col items-center justify-center">
             <img src={config.coverImage} className="absolute inset-0 w-full h-full object-cover brightness-50" alt="Capa" />
             <div className={`absolute inset-0 bg-gradient-to-t ${theme === 'light' ? 'from-[#F8F9FA] via-transparent to-transparent' : 'from-[#050505] via-transparent to-transparent'}`}></div>
-            <div className="absolute top-6 right-6 z-[100]"><button onClick={() => setView('LOGIN')} className="bg-[#D4AF37] text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95"><History size={16}/> PORTAL DO CLIENTE</button></div>
+            <div className="absolute top-6 right-6 z-[100]"><button onClick={() => setView('LOGIN')} className="bg-[#D4AF37] text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95"><History size={16}/> PORTAL DO MEMBRO</button></div>
             <div className="relative z-20 text-center px-6 mt-10">
                <div className="w-28 h-28 rounded-3xl gradiente-ouro p-1 mx-auto mb-6"><div className="w-full h-full rounded-[2.2rem] bg-black overflow-hidden"><img src={config.logo} className="w-full h-full object-cover" alt="Logo" /></div></div>
                <h1 className={`text-5xl md:text-7xl font-black font-display italic tracking-tight ${theme === 'light' ? 'text-white drop-shadow-lg' : 'text-white'}`}>{config.name}</h1>
@@ -260,10 +260,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
           <main className="max-w-6xl mx-auto w-full px-6 flex-1 -mt-10 relative z-30 pb-40">
              {/* 1. Destaques da Casa */}
              <section className="mb-20 pt-10">
-                <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  Destaques da Casa 
-                  <span className="h-1 flex-1 gradiente-ouro opacity-10"></span>
-                </h2>
+                <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Destaques da Casa <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="relative group">
                   <button 
                     onClick={() => destaqueRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
@@ -306,10 +303,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
              {/* 2. Nossos Rituais */}
              <section className="mb-24" id="catalogo">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-                   <h2 className={`text-2xl font-black font-display italic flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                     Todos os serviços 
-                     <span className="h-1 w-10 gradiente-ouro opacity-10"></span>
-                   </h2>
+                   <h2 className={`text-2xl font-black font-display italic flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Todos os serviços <div className="h-1 w-10 gradiente-ouro opacity-10"></div></h2>
                 </div>
                 <div className="space-y-4">
                    {categories.filter(cat => cat !== 'Todos').map(cat => {
@@ -358,67 +352,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 </div>
              </section>
 
-             {/* 2.5. Planos VIP */}
-             {config.vipPlans && config.vipPlans.filter(p => p.status === 'ATIVO').length > 0 && (
-             <section className="mb-24" id="planos-vip">
-                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  <Crown className="text-[#D4AF37]" size={28} />
-                  Planos VIP
-                  <span className="h-1 flex-1 gradiente-ouro opacity-10"></span>
-                </h2>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {config.vipPlans.filter(p => p.status === 'ATIVO').map(plan => (
-                    <div key={plan.id} className={`rounded-[2.5rem] overflow-hidden shadow-2xl transition-all hover:scale-105 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
-                      <div className={`p-8 text-center ${plan.period === 'ANUAL' ? 'bg-gradient-to-br from-[#D4AF37]/20 to-[#B8860B]/10' : ''}`}>
-                        <h3 className={`text-2xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                          {plan.name}
-                        </h3>
-                        <div className="flex items-end justify-center gap-2 mb-2">
-                          <span className={`text-4xl font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>
-                            R$ {plan.price.toFixed(2)}
-                          </span>
-                          <span className={`text-sm font-black mb-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                            /{plan.period === 'MENSAL' ? 'mês' : 'ano'}
-                          </span>
-                        </div>
-                        {plan.discount && (
-                          <p className="text-xs font-black text-emerald-500 uppercase">
-                            Economia de {plan.discount}%
-                          </p>
-                        )}
-                      </div>
-                      <div className={`p-8 ${theme === 'light' ? 'bg-zinc-50' : 'bg-white/5'}`}>
-                        <ul className="space-y-3 mb-6">
-                          {plan.benefits.map((benefit, i) => (
-                            <li key={i} className="flex items-start gap-3">
-                              <Check className="text-[#D4AF37] flex-shrink-0 mt-0.5" size={16} />
-                              <span className={`text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                                {benefit}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                        <a
-                          href={`https://wa.me/5521964340031?text=Olá! Gostaria de assinar o ${plan.name}.`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full block text-center gradiente-ouro text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
-                        >
-                          Assinar Agora
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-             </section>
-             )}
-
              {/* 3. A Experiência Signature */}
              <section className="mb-24">
-                <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  Nosso Ambiente. 
-                  <span className="h-1 flex-1 gradiente-ouro opacity-10"></span>
-                </h2>
+                <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>A Experiência Signature <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="relative group">
                   <button 
                     onClick={() => experienciaRef.current?.scrollBy({ left: -500, behavior: 'smooth' })}
@@ -454,10 +390,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
              {/* 4. Voz dos Membros */}
              <section className="mb-24 py-10 -mx-6 px-6 bg-black">
-                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 text-white`}>
-                  Avaliações dos clientes 
-                  <span className="h-1 flex-1 gradiente-ouro opacity-10"></span>
-                </h2>
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 text-white`}>Voz dos Membros <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="relative group">
                   <button 
                     onClick={() => membroRef.current?.scrollBy({ left: -400, behavior: 'smooth' })}
@@ -503,12 +436,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
              </section>
 
-             {/* 5. Nossos Profissionais */}
+             {/* 5. Nossos Artífices */}
              <section className="mb-24">
-                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  Nossos Artífices 
-                  <span className="h-1 flex-1 gradiente-ouro opacity-10"></span>
-                </h2>
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nossos Artífices <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                    {professionals.map(prof => (
                       <div key={prof.id} className={`rounded-[2rem] p-6 text-center space-y-4 group transition-all hover:scale-105 ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/30'}`}>
@@ -534,10 +464,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
              {/* 6. Onde Nos Encontrar */}
              <section className="mb-24">
-                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  Onde Nos Encontrar 
-                  <span className="h-1 flex-1 gradiente-ouro opacity-10"></span>
-                </h2>
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Onde Nos Encontrar <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className={`rounded-[2.5rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'border border-zinc-200' : 'border border-white/5'}`}>
                    <div className="h-48 bg-zinc-900 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-all" onClick={() => config.locationUrl && window.open(config.locationUrl, '_blank')}>
                       {config.locationImage ? (
@@ -556,32 +483,14 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
              {/* 7. Redes Sociais */}
              <section className="mb-20 text-center">
                 <h2 className={`text-2xl font-black font-display italic mb-10 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Conecte-se Conosco</h2>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <a 
-                    href="https://www.instagram.com/srjosebarberpub/" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-full font-black text-xs uppercase shadow-2xl hover:scale-105 transition-all"
-                  >
-                    <Instagram size={20}/> Siga no Instagram
-                  </a>
-                  <a 
-                    href="https://wa.me/5521964340031?text=Olá! Vim através do site."
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="inline-flex items-center gap-3 bg-gradient-to-r from-green-600 to-green-500 text-white px-10 py-4 rounded-full font-black text-xs uppercase shadow-2xl hover:scale-105 transition-all"
-                  >
-                    <MessageCircle size={20}/> WhatsApp
-                  </a>
-                </div>
+                <a href={config.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-full font-black text-xs uppercase shadow-2xl hover:scale-105 transition-all">
+                   <Instagram size={20}/> Siga no Instagram
+                </a>
              </section>
 
              {/* 8. Quem Somos */}
              <section className="mb-24">
-                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  {config.aboutTitle || 'Quem Somos'} 
-                  <span className="h-1 flex-1 gradiente-ouro opacity-10"></span>
-                </h2>
+                <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.aboutTitle || 'Quem Somos'} <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className={`rounded-[2.5rem] p-8 md:p-12 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
                    <div className="grid md:grid-cols-2 gap-8 items-center">
                       {config.aboutImage && (
@@ -598,7 +507,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
           </main>
 
           <footer className={`py-10 text-center border-t ${theme === 'light' ? 'border-zinc-200 bg-zinc-50 text-zinc-600' : 'border-white/5 bg-white/[0.01] text-zinc-600'}`}>
-             <p className="text-[10px] font-black uppercase tracking-widest">© 2025 {config.name}. Todos os direitos reservados.<br> PRODUZIDO POR ©NIKLAUS.</br></p>
+             <p className="text-[10px] font-black uppercase tracking-widest">© 2025 {config.name}. PRODUZIDO POR ©NIKLAUS. Todos os direitos reservados.</p>
           </footer>
         </div>
       )}
@@ -608,7 +517,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
            <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-10 shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#D4AF37]/20'}`}>
               <div className="text-center space-y-4">
                  <div className="w-16 h-16 rounded-2xl gradiente-ouro p-1 mx-auto"><div className="w-full h-full rounded-[1.8rem] bg-black overflow-hidden flex items-center justify-center"><Lock className="text-[#D4AF37]" size={24}/></div></div>
-                 <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Portal do Cliente</h2>
+                 <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Portal do Membro</h2>
                  <p className={`text-[10px] uppercase tracking-widest font-black ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Acesse com seu e-mail ou celular</p>
               </div>
               <div className="space-y-6">
@@ -641,7 +550,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                  </div>
                  <div>
                     <p className={`text-xl font-black font-display ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{loggedClient.name}</p>
-                    <p className={`text-[9px] uppercase tracking-widest font-black mt-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Cliente  Exclusivo</p>
+                    <p className={`text-[9px] uppercase tracking-widest font-black mt-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Membro Exclusivo</p>
                  </div>
                  <div className={`space-y-2 text-left ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
                     <p className="text-xs flex items-center gap-2"><Phone size={12} className="text-[#D4AF37]"/> {loggedClient.phone}</p>
@@ -666,57 +575,6 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                  </div>
               </div>
            </div>
-
-           {config.vipPlans && config.vipPlans.filter(p => p.status === 'ATIVO').length > 0 && (
-           <div className={`rounded-[2rem] p-8 mb-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
-              <h3 className={`text-lg font-black font-display italic mb-6 flex items-center gap-3 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                <Crown className="text-[#D4AF37]" size={24} />
-                Planos VIP Exclusivos
-              </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                {config.vipPlans.filter(p => p.status === 'ATIVO').map(plan => (
-                  <div key={plan.id} className={`rounded-xl p-6 transition-all ${plan.period === 'ANUAL' ? 'border-2 border-[#D4AF37]' : ''} ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className={`font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                        {plan.name}
-                      </h4>
-                      {plan.period === 'ANUAL' && (
-                        <span className="bg-[#D4AF37] text-black text-[8px] font-black px-2 py-1 rounded uppercase">
-                          Melhor Valor
-                        </span>
-                      )}
-                    </div>
-                    <div className="mb-4">
-                      <span className={`text-2xl font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>
-                        R$ {plan.price.toFixed(2)}
-                      </span>
-                      <span className={`text-xs font-black ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                        /{plan.period === 'MENSAL' ? 'mês' : 'ano'}
-                      </span>
-                    </div>
-                    <ul className="space-y-2 mb-4">
-                      {plan.benefits.map((benefit, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs">
-                          <Check className="text-[#D4AF37] flex-shrink-0 mt-0.5" size={12} />
-                          <span className={theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}>
-                            {benefit}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <a
-                      href={`https://wa.me/5521964340031?text=Olá! Sou ${loggedClient.name} e gostaria de assinar o ${plan.name}.`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full block text-center gradiente-ouro text-black py-3 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
-                    >
-                      Assinar
-                    </a>
-                  </div>
-                ))}
-              </div>
-           </div>
-           )}
 
            <div className={`rounded-[2rem] p-8 mb-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
               <h3 className={`text-lg font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nossos Barbeiros</h3>
@@ -835,10 +693,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     <div className="space-y-6">
                       {(Object.entries(turnos) as [string, string[]][]).map(([turno, horarios]) => (
                         <div key={turno} className="space-y-4">
-                          <h4 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-4 ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>
-                            {turno === 'manha' ? 'Manhã' : turno === 'tarde' ? 'Tarde' : 'Noite'} 
-                            <span className={`h-px flex-1 ${theme === 'light' ? 'bg-zinc-200' : 'bg-white/5'}`}></span>
-                          </h4>
+                          <h4 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-4 ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>{turno === 'manha' ? 'Manhã' : turno === 'tarde' ? 'Tarde' : 'Noite'} <div className={`h-px flex-1 ${theme === 'light' ? 'bg-zinc-200' : 'bg-white/5'}`}></div></h4>
                           <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                             {horarios.map(t => {
                                const isOccupied = checkAvailability(selecao.date, t, selecao.professionalId);
@@ -928,14 +783,14 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                  {selectedProfessional.description ? (
                    <>
                      <h3 className={`text-xl font-black font-display italic mb-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>História</h3>
-                     <div className={`text-sm leading-relaxed whitespace-pre-line ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
+                     <p className={`text-sm leading-relaxed whitespace-pre-line ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
                        {selectedProfessional.description}
-                     </div>
+                     </p>
                    </>
                  ) : (
-                   <div className={`text-sm italic text-center py-6 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>
+                   <p className={`text-sm italic text-center py-6 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>
                      Este profissional ainda não compartilhou sua história.
-                   </div>
+                   </p>
                  )}
                  
                  <button 
