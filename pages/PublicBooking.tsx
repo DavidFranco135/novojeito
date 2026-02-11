@@ -351,58 +351,177 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                    })}
                 </div>
              </section>
-             {/* Seção Planos VIP no Portal do Membro */}
-           {config.vipPlans && config.vipPlans.filter(p => p.active).length > 0 && (
-           <div className={`rounded-[2rem] p-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
-              <h3 className={`text-lg font-black font-display italic mb-6 flex items-center gap-3 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                 <Crown className="text-[#D4AF37]"/> Planos VIP
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 {config.vipPlans.filter(plan => plan.active).map(plan => (
-                    <div key={plan.id} className={`rounded-2xl p-6 space-y-4 transition-all hover:scale-105 ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
-                       <div className="flex items-center gap-2">
-                          <Crown className="text-[#D4AF37]" size={20}/>
-                          <h4 className={`text-lg font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</h4>
-                       </div>
-                       <div className="flex items-baseline gap-2">
-                          <span className={`text-2xl font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>R$ {plan.price.toFixed(2)}</span>
-                          <span className={`text-xs font-black ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>/{plan.duration === 'MENSAL' ? 'mês' : 'ano'}</span>
-                       </div>
-                       {plan.discount > 0 && (
-                          <div className="inline-block bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded-full text-[9px] font-black">
-                             <Gift size={10} className="inline mr-1"/> {plan.discount}% OFF
-                          </div>
-                       )}
-                       <div className="space-y-2">
-                          {plan.benefits.slice(0, 3).map((benefit, idx) => (
-                             <div key={idx} className="flex items-start gap-2">
-                                <Check className="text-emerald-500 flex-shrink-0 mt-0.5" size={14}/>
-                                <p className={`text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>{benefit}</p>
-                             </div>
-                          ))}
-                          {plan.benefits.length > 3 && (
-                             <p className={`text-[9px] italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                +{plan.benefits.length - 3} benefícios
-                             </p>
-                          )}
-                       </div>
-                       <button 
-                          onClick={() => {
-                             const message = `Olá! Gostaria de assinar o plano ${plan.name} (${plan.duration})`;
-                             window.open(`https://wa.me/5521964340031?text=${encodeURIComponent(message)}`, '_blank');
-                          }}
-                          className="w-full gradiente-ouro text-black py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
-                       >
-                          Assinar
-                       </button>
+            {/* 2. Planos VIP */}
+            {config.vipPlans && config.vipPlans.length > 0 && (
+              <section id="vip" className="relative">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                  <div className="space-y-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Membro Exclusive</span>
                     </div>
-                 ))}
-              </div>
-           </div>
-           )}
-        </div>
-      )}
+                    <h2 className={`text-4xl md:text-5xl font-black italic uppercase tracking-tighter ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                      Planos <span className="text-amber-500">VIP</span>
+                    </h2>
+                    <p className="text-zinc-500 max-w-xl text-lg uppercase text-sm font-medium tracking-wide">
+                      Eleve sua experiência ao nível máximo com nossos planos de assinatura exclusivos.
+                    </p>
+                  </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {config.vipPlans.map((plan) => (
+                    <div
+                      key={plan.id}
+                      className={`group relative overflow-hidden rounded-3xl border transition-all duration-500 ${
+                        theme === 'light' 
+                          ? 'bg-white border-zinc-200 hover:border-amber-500/50' 
+                          : 'bg-zinc-900/50 border-white/5 hover:border-amber-500/50'
+                      }`}
+                    >
+                      {plan.image && (
+                        <div className="aspect-[16/9] overflow-hidden">
+                          <img 
+                            src={plan.image} 
+                            alt={plan.name}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
+                        </div>
+                      )}
+                      
+                      <div className="p-8 space-y-6 relative">
+                        <div>
+                          <h3 className="text-2xl font-black italic uppercase tracking-tight text-white mb-2">{plan.name}</h3>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-3xl font-black text-amber-500">R$ {plan.price}</span>
+                            <span className="text-zinc-500 text-sm font-bold uppercase tracking-widest">/{plan.duration.toLowerCase()}</span>
+                          </div>
+                        </div>
+
+                        <ul className="space-y-3">
+                          {plan.benefits.map((benefit, index) => (
+                            <li key={index} className="flex items-center gap-3 text-zinc-400">
+                              <div className="w-5 h-5 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                                <Check className="w-3 h-3 text-amber-500" />
+                              </div>
+                              <span className="text-sm font-medium uppercase tracking-wide">{benefit}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <button className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black italic uppercase tracking-widest transition-all duration-300 transform group-hover:translate-y-[-4px]">
+                          Assinar Agora
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* 3. A Experiência Signature */}
+            <section id="sobre" className="relative py-24 overflow-hidden">
+              {/* ... (mantenha todo o conteúdo da seção Sobre) */}
+            </section>
+
+            {/* 4. Localização */}
+            <section id="localizacao" className="py-24 relative overflow-hidden">
+               <div className="max-w-7xl mx-auto px-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                     <div className="space-y-8">
+                        <div>
+                           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4">
+                              <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Localização</span>
+                           </div>
+                           <h2 className={`text-4xl md:text-5xl font-black italic uppercase tracking-tighter mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                              Onde o Estilo <span className="text-amber-500">Acontece</span>
+                           </h2>
+                           <p className="text-zinc-500 text-lg uppercase text-sm font-medium tracking-wide">
+                              Ambiente exclusivo, climatizado e preparado para oferecer o melhor em cuidados masculinos.
+                           </p>
+                        </div>
+
+                        <div className="space-y-4">
+                           <div className={`p-6 rounded-3xl border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+                              <div className="flex gap-4">
+                                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                                    <MapPin className="w-6 h-6 text-amber-500" />
+                                 </div>
+                                 <div>
+                                    <p className={`font-black italic uppercase tracking-tight mb-1 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Endereço</p>
+                                    <p className="text-zinc-500 uppercase text-xs font-bold tracking-widest leading-relaxed">
+                                       {config.address}<br />
+                                       {config.city} - {config.state}
+                                    </p>
+                                 </div>
+                              </div>
+                           </div>
+
+                           <div className={`p-6 rounded-3xl border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+                              <div className="flex gap-4">
+                                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                                    <Clock className="w-6 h-6 text-amber-500" />
+                                 </div>
+                                 <div>
+                                    <p className={`font-black italic uppercase tracking-tight mb-1 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Horário de Atendimento</p>
+                                    <p className="text-zinc-500 uppercase text-xs font-bold tracking-widest">
+                                       Segunda a Sábado: {config.openingTime} às {config.closingTime}
+                                    </p>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                        <a 
+                           href={config.locationUrl}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-black font-black italic uppercase tracking-widest hover:bg-amber-500 transition-all duration-300 group"
+                        >
+                           Ver no Google Maps
+                           <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                        </a>
+                     </div>
+
+                     <div className="h-[400px] lg:h-full min-h-[400px] rounded-3xl overflow-hidden border border-white/5 relative group">
+                        <iframe 
+                           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.1975823485!2d-46.6623652!3d-23.5613497!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce59ceb1eb771f%3A0xe549a0397556f8!2sAv.%20Paulista%2C%20S%C3%A3o%20Paulo%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1709664532144!5m2!1spt-BR!2sbr"
+                           className="w-full h-full border-0 grayscale invert opacity-80 group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-700"
+                           allowFullScreen
+                           loading="lazy"
+                        />
+                     </div>
+                  </div>
+
+                  <div className="mt-24 pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+                     <div className="flex items-center gap-8">
+                        <a href={config.instagram} className="text-zinc-500 hover:text-amber-500 transition-colors">
+                           <Instagram className="w-6 h-6" />
+                        </a>
+                        <a href={`https://wa.me/${config.whatsapp}`} className="text-zinc-500 hover:text-amber-500 transition-colors">
+                           <MessageCircle className="w-6 h-6" />
+                        </a>
+                        <a href={`mailto:${config.email}`} className="text-zinc-500 hover:text-amber-500 transition-colors">
+                           <Mail className="w-6 h-6" />
+                        </a>
+                     </div>
+                     <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
+                        Luxury Grooming Experience
+                     </p>
+                  </div>
+               </div>
+            </section>
+          </div>
+        </main>
+
+        <footer className={`py-10 text-center border-t ${theme === 'light' ? 'border-zinc-200 bg-zinc-50 text-zinc-600' : 'border-white/5 bg-white/[0.01] text-zinc-600'}`}>
+          <p className="text-[10px] font-black uppercase tracking-widest">© 2025 {config.name}. PRODUZIDO POR ©NIKLAUS. Todos os direitos reservados.</p>
+        </footer>
+      </div>
+    );
+}
              {/* 3. A Experiência Signature */}
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-8 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>A Experiência Signature <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
