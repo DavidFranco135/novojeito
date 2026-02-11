@@ -351,6 +351,57 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                    })}
                 </div>
              </section>
+             {/* Seção Planos VIP no Portal do Membro */}
+           {config.vipPlans && config.vipPlans.filter(p => p.active).length > 0 && (
+           <div className={`rounded-[2rem] p-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
+              <h3 className={`text-lg font-black font-display italic mb-6 flex items-center gap-3 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                 <Crown className="text-[#D4AF37]"/> Planos VIP
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {config.vipPlans.filter(plan => plan.active).map(plan => (
+                    <div key={plan.id} className={`rounded-2xl p-6 space-y-4 transition-all hover:scale-105 ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
+                       <div className="flex items-center gap-2">
+                          <Crown className="text-[#D4AF37]" size={20}/>
+                          <h4 className={`text-lg font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</h4>
+                       </div>
+                       <div className="flex items-baseline gap-2">
+                          <span className={`text-2xl font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>R$ {plan.price.toFixed(2)}</span>
+                          <span className={`text-xs font-black ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>/{plan.duration === 'MENSAL' ? 'mês' : 'ano'}</span>
+                       </div>
+                       {plan.discount > 0 && (
+                          <div className="inline-block bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded-full text-[9px] font-black">
+                             <Gift size={10} className="inline mr-1"/> {plan.discount}% OFF
+                          </div>
+                       )}
+                       <div className="space-y-2">
+                          {plan.benefits.slice(0, 3).map((benefit, idx) => (
+                             <div key={idx} className="flex items-start gap-2">
+                                <Check className="text-emerald-500 flex-shrink-0 mt-0.5" size={14}/>
+                                <p className={`text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>{benefit}</p>
+                             </div>
+                          ))}
+                          {plan.benefits.length > 3 && (
+                             <p className={`text-[9px] italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                                +{plan.benefits.length - 3} benefícios
+                             </p>
+                          )}
+                       </div>
+                       <button 
+                          onClick={() => {
+                             const message = `Olá! Gostaria de assinar o plano ${plan.name} (${plan.duration})`;
+                             window.open(`https://wa.me/5521964340031?text=${encodeURIComponent(message)}`, '_blank');
+                          }}
+                          className="w-full gradiente-ouro text-black py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
+                       >
+                          Assinar
+                       </button>
+                    </div>
+                 ))}
+              </div>
+           </div>
+           )}
+        </div>
+      )}
 
              {/* 3. A Experiência Signature */}
              <section className="mb-24">
@@ -703,57 +754,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
            </div>
 
-           {/* Seção Planos VIP no Portal do Membro */}
-           {config.vipPlans && config.vipPlans.filter(p => p.active).length > 0 && (
-           <div className={`rounded-[2rem] p-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
-              <h3 className={`text-lg font-black font-display italic mb-6 flex items-center gap-3 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                 <Crown className="text-[#D4AF37]"/> Planos VIP
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 {config.vipPlans.filter(plan => plan.active).map(plan => (
-                    <div key={plan.id} className={`rounded-2xl p-6 space-y-4 transition-all hover:scale-105 ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
-                       <div className="flex items-center gap-2">
-                          <Crown className="text-[#D4AF37]" size={20}/>
-                          <h4 className={`text-lg font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</h4>
-                       </div>
-                       <div className="flex items-baseline gap-2">
-                          <span className={`text-2xl font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>R$ {plan.price.toFixed(2)}</span>
-                          <span className={`text-xs font-black ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>/{plan.duration === 'MENSAL' ? 'mês' : 'ano'}</span>
-                       </div>
-                       {plan.discount > 0 && (
-                          <div className="inline-block bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded-full text-[9px] font-black">
-                             <Gift size={10} className="inline mr-1"/> {plan.discount}% OFF
-                          </div>
-                       )}
-                       <div className="space-y-2">
-                          {plan.benefits.slice(0, 3).map((benefit, idx) => (
-                             <div key={idx} className="flex items-start gap-2">
-                                <Check className="text-emerald-500 flex-shrink-0 mt-0.5" size={14}/>
-                                <p className={`text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>{benefit}</p>
-                             </div>
-                          ))}
-                          {plan.benefits.length > 3 && (
-                             <p className={`text-[9px] italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                +{plan.benefits.length - 3} benefícios
-                             </p>
-                          )}
-                       </div>
-                       <button 
-                          onClick={() => {
-                             const message = `Olá! Gostaria de assinar o plano ${plan.name} (${plan.duration})`;
-                             window.open(`https://wa.me/5521964340031?text=${encodeURIComponent(message)}`, '_blank');
-                          }}
-                          className="w-full gradiente-ouro text-black py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
-                       >
-                          Assinar
-                       </button>
-                    </div>
-                 ))}
-              </div>
-           </div>
-           )}
-        </div>
-      )}
+          
 
       {view === 'BOOKING' && (
         <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 pb-20 animate-in fade-in">
