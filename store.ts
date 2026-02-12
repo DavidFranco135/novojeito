@@ -115,6 +115,27 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     localStorage.setItem('brb_theme', theme);
   }, [theme]);
 
+  // NOTIFICAÇÃO SONORA QUANDO NOVAS NOTIFICAÇÕES CHEGAM
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const lastNotification = notifications[0];
+      if (!lastNotification.read && lastNotification.type === 'appointment') {
+        try {
+          fetch('https://res.cloudinary.com/dk54i7mei/video/upload/v1770868691/iphone_hkkuz7.mp3')
+            .then(response => response.blob())
+            .then(blob => {
+              const audio = new Audio(URL.createObjectURL(blob));
+              audio.volume = 0.7;
+              audio.play().catch(e => console.log('Erro ao tocar som:', e));
+            })
+            .catch(e => console.log('Erro ao buscar áudio:', e));
+        } catch (error) {
+          console.log('Erro na notificação sonora:', error);
+        }
+      }
+    }
+  }, [notifications]);
+
   useEffect(() => {
     if (user) localStorage.setItem('brb_user', JSON.stringify(user));
     else localStorage.removeItem('brb_user');
