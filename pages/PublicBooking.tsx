@@ -377,7 +377,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                              ))}
                           </ul>
                           <a 
-                            href={`https://wa.me/5521964340031${config.whatsapp}?text=Olá! Tenho interesse no plano ${encodeURIComponent(plan.name)} - R$ ${plan.price}`}
+                            href={`https://wa.me/5521964340031?text=Olá! Tenho interesse no plano ${encodeURIComponent(plan.name)} - R$ ${plan.price}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block w-full gradiente-ouro text-black py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl text-center hover:scale-105 transition-all"
