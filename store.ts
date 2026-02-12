@@ -115,27 +115,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     localStorage.setItem('brb_theme', theme);
   }, [theme]);
 
-  // NOTIFICAÇÃO SONORA QUANDO NOVAS NOTIFICAÇÕES CHEGAM
-  useEffect(() => {
-    if (notifications.length > 0) {
-      const lastNotification = notifications[0];
-      if (!lastNotification.read && lastNotification.type === 'appointment') {
-        try {
-          fetch('https://res.cloudinary.com/dk54i7mei/video/upload/v1770868691/iphone_hkkuz7.mp3')
-            .then(response => response.blob())
-            .then(blob => {
-              const audio = new Audio(URL.createObjectURL(blob));
-              audio.volume = 0.7;
-              audio.play().catch(e => console.log('Erro ao tocar som:', e));
-            })
-            .catch(e => console.log('Erro ao buscar áudio:', e));
-        } catch (error) {
-          console.log('Erro na notificação sonora:', error);
-        }
-      }
-    }
-  }, [notifications]);
-
   useEffect(() => {
     if (user) localStorage.setItem('brb_user', JSON.stringify(user));
     else localStorage.removeItem('brb_user');
@@ -169,7 +148,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
           const configData = doc.data() as ShopConfig;
           setConfig(configData);
           
-          // ✅ CORREÇÃO: Se houver usuário admin logado, atualizar com o nome do Firebase
+          // âœ… CORREÃ‡ÃƒO: Se houver usuÃ¡rio admin logado, atualizar com o nome do Firebase
           const savedUser = localStorage.getItem('brb_user');
           if (savedUser) {
             const parsedUser = JSON.parse(savedUser);
@@ -195,8 +174,8 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   const login = async (id: string, pass: string) => {
     if (id === 'srjoseadm@gmail.com' && pass === '654321') {
-      // ✅ CORREÇÃO: Carregar nome do Firebase ao fazer login
-      const adminName = config.adminName || 'Sr. José';
+      // âœ… CORREÃ‡ÃƒO: Carregar nome do Firebase ao fazer login
+      const adminName = config.adminName || 'Sr. JosÃ©';
       const adminAvatar = config.logo || 'https://i.pravatar.cc/150';
       
       setUser({ 
@@ -212,7 +191,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     if (client) {
       setUser({ id: client.id, name: client.name, email: client.email, role: 'CLIENTE', phone: client.phone });
     } else {
-      throw new Error('Credenciais inválidas');
+      throw new Error('Credenciais invÃ¡lidas');
     }
   };
 
@@ -298,7 +277,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const updateAppointmentStatus = async (id: string, status: any) => {
     await updateDoc(doc(db, COLLECTIONS.APPOINTMENTS, id), { status });
     
-    // Criar receita automática ao marcar como CONCLUÍDO_PAGO
+    // Criar receita automÃ¡tica ao marcar como CONCLUÃDO_PAGO
     if (status === 'CONCLUIDO_PAGO') {
       const appointment = appointments.find(a => a.id === id);
       if (appointment) {
@@ -313,14 +292,14 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
             description: entryDescription,
             amount: appointment.price,
             type: 'RECEITA',
-            category: 'Serviços',
+            category: 'ServiÃ§os',
             date: new Date().toISOString().split('T')[0],
             appointmentId: id
           });
           
-          console.log(`✅ Receita criada automaticamente: R$ ${appointment.price}`);
+          console.log(`âœ… Receita criada automaticamente: R$ ${appointment.price}`);
         } else {
-          console.log('ℹ️ Receita já existe para este agendamento');
+          console.log('â„¹ï¸ Receita jÃ¡ existe para este agendamento');
         }
       }
     }
@@ -348,8 +327,8 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
       date: new Date().toLocaleDateString('pt-BR')
     });
     await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
-      title: 'Nova Sugestão',
-      message: `${data.clientName} enviou uma sugestão`,
+      title: 'Nova SugestÃ£o',
+      message: `${data.clientName} enviou uma sugestÃ£o`,
       time: new Date().toISOString(),
       read: false,
       type: 'suggestion',
