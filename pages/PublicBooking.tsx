@@ -130,696 +130,468 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
     setLoading(true);
     setBookingError(null);
+    const selectedService = services.find(s => s.id === selecao.serviceId);
+    const selectedProf = professionals.find(p => p.id === selecao.professionalId);
 
-    const service = services.find(s => s.id === selecao.serviceId);
-    const prof = professionals.find(p => p.id === selecao.professionalId);
-    
-    if (!service || !prof) {
-      alert("Erro ao processar serviço ou profissional.");
+    if (!selectedService || !selectedProf) {
+      setBookingError("Serviço ou profissional não encontrado");
       setLoading(false);
       return;
     }
 
-    try {
-      const [h, m] = selecao.time.split(':').map(Number);
-      const totalMinutes = h * 60 + m + service.durationMinutes;
-      const endTime = `${Math.floor(totalMinutes / 60).toString().padStart(2, '0')}:${(totalMinutes % 60).toString().padStart(2, '0')}`;
+    const durationMin = selectedService.durationMinutes;
+    const [hour, min] = selecao.time.split(':').map(Number);
+    const endDate = new Date();
+    endDate.setHours(hour, min + durationMin);
+    const endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
 
+    const existingClient = clients.find(c => c.phone === selecao.clientPhone || c.email === selecao.clientEmail);
+    let clientId = existingClient?.id;
+
+    if (!existingClient) {
+      try {
+        const newClient = await addClient({
+          name: selecao.clientName,
+          phone: selecao.clientPhone,
+          email: selecao.clientEmail,
+          password: Math.random().toString(36).substring(7)
+        } as any);
+        clientId = newClient.id;
+      } catch (err) {
+        setBookingError("Erro ao registrar cliente");
+        setLoading(false);
+        return;
+      }
+    }
+
+    try {
       await addAppointment({
+        serviceId: selecao.serviceId,
+        professionalId: selecao.professionalId,
+        clientId: clientId!,
         clientName: selecao.clientName,
         clientPhone: selecao.clientPhone,
-        clientId: '',
-        serviceId: selecao.serviceId,
-        serviceName: service.name,
-        professionalId: selecao.professionalId,
-        professionalName: prof.name,
         date: selecao.date,
         startTime: selecao.time,
         endTime,
-        price: service.price
+        serviceName: selectedService.name,
+        professionalName: selectedProf.name,
+        price: selectedService.price
       }, true);
-
       setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setView('HOME');
-        setPasso(1);
-        setSelecao({ serviceId: '', professionalId: '', date: '', time: '', clientName: '', clientPhone: '', clientEmail: '' });
-      }, 3000);
+      setTimeout(() => { setSuccess(false); setView('HOME'); setPasso(1); }, 4000);
     } catch (err) {
-      setBookingError("Erro ao confirmar o agendamento.");
+      setBookingError("Erro ao criar agendamento");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddReview = async () => {
-    if (newReview.comment.trim() && newReview.rating > 0) {
-      await addShopReview(newReview);
-      setShowReviewModal(false);
-      setNewReview({ rating: 5, comment: '', userName: loggedClient?.name || '', clientPhone: loggedClient?.phone || '' });
+  const handleClientLogin = () => {
+    const client = clients.find(c => (c.phone === loginIdentifier || c.email === loginIdentifier) && c.password === loginPassword);
+    if (client) {
+      setLoggedClient(client);
+      setEditData({ name: client.name, phone: client.phone, email: client.email });
+      setNewReview(prev => ({ ...prev, userName: client.name, clientPhone: client.phone }));
+      setView('CLIENT_DASHBOARD');
+    } else {
+      alert("Credenciais inválidas");
     }
   };
 
-  const handleSendSuggestion = async () => {
-    if (!suggestionText.trim() || !loggedClient) return;
-    await addSuggestion({
-      clientName: loggedClient.name,
-      clientPhone: loggedClient.phone,
-      text: suggestionText
-    });
-    setSuggestionText('');
-    alert("Sugestão enviada com sucesso!");
-  };
-
-  const handleSaveProfile = async () => {
+  const handleUpdateProfile = async () => {
     if (!loggedClient) return;
-    await updateClient(loggedClient.id, editData);
-    alert("Perfil atualizado!");
+    try {
+      await updateClient(loggedClient.id, editData);
+      alert("Perfil atualizado com sucesso!");
+    } catch (err) {
+      alert("Erro ao atualizar perfil");
+    }
   };
 
-  const clientAppointments = useMemo(() => {
-    if (!loggedClient) return { past: [], future: [] };
-    const filtered = appointments.filter(a => a.clientPhone === loggedClient.phone)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    const now = new Date();
-    now.setHours(0,0,0,0);
+  const handleAddSuggestion = async () => {
+    if (!suggestionText.trim() || !loggedClient) return;
+    try {
+      await addSuggestion({ clientName: loggedClient.name, clientPhone: loggedClient.phone, message: suggestionText });
+      setSuggestionText('');
+      alert("Sugestão enviada com sucesso! Obrigado.");
+    } catch (err) {
+      alert("Erro ao enviar sugestão");
+    }
+  };
 
-    return {
-      past: filtered.filter(a => new Date(a.date) < now || a.status === 'CONCLUIDO_PAGO'),
-      future: filtered.filter(a => new Date(a.date) >= now && a.status !== 'CONCLUIDO_PAGO' && a.status !== 'CANCELADO')
-    };
-  }, [loggedClient, appointments]);
+  const handleAddReview = async () => {
+    if (!newReview.comment.trim() || !newReview.userName || !newReview.clientPhone) {
+      alert("Preencha todos os campos da avaliação.");
+      return;
+    }
+    await addShopReview({ rating: newReview.rating, comment: newReview.comment, userName: newReview.userName, clientPhone: newReview.clientPhone });
+    setShowReviewModal(false);
+    setNewReview({ rating: 5, comment: '', userName: loggedClient?.name || '', clientPhone: loggedClient?.phone || '' });
+    alert("Avaliação enviada com sucesso!");
+  };
 
-  // ✅ NOVO: Filtrar sugestões do cliente logado
-  const clientSuggestions = useMemo(() => {
-    if (!loggedClient) return [];
-    return suggestions.filter(s => s.clientPhone === loggedClient.phone);
-  }, [loggedClient, suggestions]);
+  const handleLogout = () => {
+    setLoggedClient(null);
+    logout();
+    setView('HOME');
+  };
 
-  const [clientDashboardTab, setClientDashboardTab] = useState<'appointments' | 'profile' | 'suggestions'>('appointments');
-
-  const servicosAgrupados = useMemo(() => {
-    const groups: { [key: string]: Service[] } = {};
-    services.forEach(s => {
-      if (!groups[s.category]) groups[s.category] = [];
-      groups[s.category].push(s);
-    });
-    return groups;
-  }, [services]);
-
-  const hoje = useMemo(() => {
-    const d = new Date();
-    return d.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  }, []);
-
-  const nextDays = useMemo(() => Array.from({ length: 14 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    return d;
-  }), []);
-
-  // ✅ CORREÇÃO: Filtrar apenas planos VIP ativos
-  const activePlans = useMemo(() => {
-    return (config.vipPlans || []).filter(plan => plan.status === 'ATIVO');
-  }, [config.vipPlans]);
+  const handleProfessionalClick = (prof: Professional) => {
+    setSelectedProfessional(prof);
+    setShowProfessionalModal(true);
+  };
 
   if (view === 'CLIENT_DASHBOARD' && loggedClient) {
+    const clientAppointments = appointments.filter(a => a.clientId === loggedClient.id);
+    const vipPlans = config.vipPlans || [];
+
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
-        <div className="max-w-6xl mx-auto p-6 md:p-12 space-y-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-[#D4AF37] flex items-center justify-center text-black text-3xl font-black italic">
-                {loggedClient.name.charAt(0)}
-              </div>
-              <div>
-                <h1 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  Olá, {loggedClient.name}
-                </h1>
-                <p className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                  Portal do Membro
-                </p>
-              </div>
+        <div className="max-w-6xl mx-auto p-6 md:p-12">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h1 className={`text-4xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Portal do Membro</h1>
+              <p className={`text-xs font-black uppercase tracking-widest mt-2 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>Bem-vindo, {loggedClient.name}</p>
             </div>
-            <button onClick={() => { logout(); setView('HOME'); }} className={`p-3 rounded-xl border ${theme === 'light' ? 'bg-zinc-100 border-zinc-200 text-zinc-600' : 'bg-white/5 border-white/10 text-zinc-400'}`}>
-              <LogOut size={20}/>
-            </button>
+            <div className="flex gap-3">
+              <button onClick={() => setView('HOME')} className={`px-6 py-3 rounded-2xl border font-black text-xs uppercase transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/10 text-white hover:border-[#D4AF37]'}`}>Início</button>
+              <button onClick={handleLogout} className="flex items-center gap-2 bg-red-500/10 text-red-500 px-6 py-3 rounded-2xl font-black text-xs uppercase"><LogOut size={14} /> Sair</button>
+            </div>
           </div>
 
-          <div className="flex gap-3 border-b border-white/10 pb-4">
-            <button onClick={() => setClientDashboardTab('appointments')} className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${clientDashboardTab === 'appointments' ? 'bg-[#D4AF37] text-black' : theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-              Agendamentos
-            </button>
-            <button onClick={() => setClientDashboardTab('profile')} className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${clientDashboardTab === 'profile' ? 'bg-[#D4AF37] text-black' : theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-              Perfil
-            </button>
-            <button onClick={() => setClientDashboardTab('suggestions')} className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${clientDashboardTab === 'suggestions' ? 'bg-[#D4AF37] text-black' : theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-              Sugestões
-            </button>
-          </div>
-
-          {clientDashboardTab === 'appointments' && (
-            <div className="space-y-8">
-              <div>
-                <h2 className={`text-xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Próximos Agendamentos</h2>
-                {clientAppointments.future.length === 0 ? (
-                  <p className={`text-center py-10 text-sm italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Nenhum agendamento futuro.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {clientAppointments.future.map(app => (
-                      <div key={app.id} className={`rounded-2xl p-6 border ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{app.serviceName}</p>
-                            <p className={`text-xs mt-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                              {new Date(app.date).toLocaleDateString('pt-BR')} às {app.startTime} • {app.professionalName}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className={`text-lg font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>R$ {app.price}</p>
-                            <p className="text-xs font-black text-blue-500 uppercase tracking-widest">Confirmado</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h2 className={`text-xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Histórico</h2>
-                {clientAppointments.past.length === 0 ? (
-                  <p className={`text-center py-10 text-sm italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Nenhum histórico ainda.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {clientAppointments.past.map(app => (
-                      <div key={app.id} className={`rounded-xl p-4 border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className={`text-xs font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{app.serviceName}</p>
-                            <p className={`text-[10px] mt-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                              {new Date(app.date).toLocaleDateString('pt-BR')} • {app.professionalName}
-                            </p>
-                          </div>
-                          <p className={`text-xs font-black ${app.status === 'CONCLUIDO_PAGO' ? 'text-emerald-500' : theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                            {app.status.replace('_', ' ')}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {clientDashboardTab === 'profile' && (
-            <div className="space-y-8">
-              <div className={`rounded-2xl p-8 border ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
-                <h2 className={`text-xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Editar Perfil</h2>
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <label className={`text-xs font-black uppercase tracking-widest mb-2 block ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Nome</label>
-                    <input 
-                      type="text" 
-                      value={editData.name} 
-                      onChange={e => setEditData({...editData, name: e.target.value})} 
-                      className={`w-full p-4 rounded-xl border outline-none ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`text-xs font-black uppercase tracking-widest mb-2 block ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>WhatsApp</label>
-                    <input 
-                      type="tel" 
-                      value={editData.phone} 
-                      onChange={e => setEditData({...editData, phone: e.target.value})} 
-                      className={`w-full p-4 rounded-xl border outline-none ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
-                    />
-                  </div>
-                  <div>
-                    <label className={`text-xs font-black uppercase tracking-widest mb-2 block ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>E-mail</label>
-                    <input 
-                      type="email" 
-                      value={editData.email} 
-                      onChange={e => setEditData({...editData, email: e.target.value})} 
-                      className={`w-full p-4 rounded-xl border outline-none ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
-                    />
-                  </div>
-                  <button onClick={handleSaveProfile} className="w-full gradiente-ouro text-black py-4 rounded-xl font-black uppercase text-xs tracking-widest">
-                    Salvar Alterações
-                  </button>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <div className={`p-8 rounded-[2rem] border ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/5'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-[#D4AF37] rounded-2xl flex items-center justify-center"><Calendar className="text-black" size={20} /></div>
+                <div>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>Agendamentos</p>
+                  <p className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{clientAppointments.length}</p>
                 </div>
               </div>
+            </div>
 
-              <div className={`rounded-2xl p-8 border ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
-                <h2 className={`text-xl font-black font-display italic mb-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Avaliação da Barbearia</h2>
-                <p className={`text-sm mb-6 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>Compartilhe sua experiência conosco</p>
-                <button onClick={() => setShowReviewModal(true)} className="gradiente-ouro text-black px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest">
-                  Avaliar Agora
-                </button>
+            <div className={`p-8 rounded-[2rem] border ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/5'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center"><Check className="text-white" size={20} /></div>
+                <div>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>Concluídos</p>
+                  <p className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{clientAppointments.filter(a => a.status === 'CONCLUIDO_PAGO' || a.status === 'CONCLUIDO').length}</p>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* ✅ NOVA ABA: Sugestões com Respostas do Admin */}
-          {clientDashboardTab === 'suggestions' && (
-            <div className="space-y-8">
-              <div className={`rounded-2xl p-8 border ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
-                <h2 className={`text-xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nova Sugestão</h2>
-                <textarea 
-                  rows={4} 
-                  placeholder="Deixe sua sugestão ou feedback..." 
-                  value={suggestionText} 
-                  onChange={e => setSuggestionText(e.target.value)} 
-                  className={`w-full p-4 rounded-xl border outline-none resize-none ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder:text-zinc-400' : 'bg-white/5 border-white/10 text-white placeholder:text-zinc-600'}`}
-                />
-                <button onClick={handleSendSuggestion} disabled={!suggestionText.trim()} className="w-full mt-4 gradiente-ouro text-black py-4 rounded-xl font-black uppercase text-xs tracking-widest disabled:opacity-50">
-                  Enviar Sugestão
-                </button>
+            <div className={`p-8 rounded-[2rem] border ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/5'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center"><Clock className="text-white" size={20} /></div>
+                <div>
+                  <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>Próximos</p>
+                  <p className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{clientAppointments.filter(a => a.status === 'PENDENTE' || a.status === 'CONFIRMADO').length}</p>
+                </div>
               </div>
+            </div>
+          </div>
 
-              <div>
-                <h2 className={`text-xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Minhas Sugestões</h2>
-                {clientSuggestions.length === 0 ? (
-                  <p className={`text-center py-10 text-sm italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Você ainda não enviou nenhuma sugestão.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {clientSuggestions.map(sug => (
-                      <div key={sug.id} className={`rounded-2xl p-6 border ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-white/5 border-white/10'}`}>
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <p className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                              Enviada em {sug.date}
-                            </p>
-                          </div>
-                          {sug.response && (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 size={14} className="text-[#D4AF37]" />
-                              <span className="text-[9px] font-black text-[#D4AF37] uppercase tracking-widest">Respondida</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className={`p-4 rounded-xl border italic text-sm mb-4 ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700' : 'bg-white/5 border-white/5 text-zinc-300'}`}>
-                          "{sug.text}"
-                        </div>
-
-                        {sug.response && (
-                          <div className={`p-4 rounded-xl border-l-4 border-l-[#D4AF37] ${theme === 'light' ? 'bg-amber-50 border border-amber-200' : 'bg-[#D4AF37]/5 border border-[#D4AF37]/20'}`}>
-                            <p className={`text-xs font-black uppercase tracking-widest mb-2 ${theme === 'light' ? 'text-amber-700' : 'text-[#D4AF37]'}`}>
-                              Resposta da Administração:
-                            </p>
-                            <p className={`text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                              {sug.response}
-                            </p>
-                            {sug.responseDate && (
-                              <p className={`text-[10px] font-black uppercase tracking-widest mt-2 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                                Respondido em {sug.responseDate}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+          {vipPlans.length > 0 && (
+            <div className="mb-12">
+              <h2 className={`text-2xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Planos VIP Exclusivos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {vipPlans.filter(plan => plan.status === 'ATIVO').map(plan => (
+                  <div key={plan.id} className={`p-8 rounded-[2rem] border relative overflow-hidden ${theme === 'light' ? 'bg-white border-zinc-200 shadow-lg' : 'cartao-vidro border-[#D4AF37]/30'}`}>
+                    <div className="absolute top-4 right-4">
+                      <Crown className="text-[#D4AF37]" size={24} />
+                    </div>
+                    <h3 className={`text-2xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</h3>
+                    <div className="flex items-baseline gap-2 mb-6">
+                      <span className="text-4xl font-black text-[#D4AF37]">R$ {plan.price}</span>
+                      <span className={`text-xs font-black uppercase ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>/{plan.period === 'MENSAL' ? 'mês' : 'ano'}</span>
+                      {plan.discount && <span className="text-xs font-black text-emerald-500">-{plan.discount}%</span>}
+                    </div>
+                    <ul className="space-y-3 mb-6">
+                      {plan.benefits.map((benefit, idx) => (
+                        <li key={idx} className={`flex items-start gap-3 text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
+                          <CheckCircle2 size={16} className="text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <button className="w-full gradiente-ouro text-black py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Assinar Plano</button>
                   </div>
-                )}
+                ))}
               </div>
             </div>
           )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+            <div className={`p-8 rounded-[2rem] border ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/5'}`}>
+              <h2 className={`text-2xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Meu Perfil</h2>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Nome</label>
+                  <input type="text" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                </div>
+                <div className="space-y-2">
+                  <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>WhatsApp</label>
+                  <input type="tel" value={editData.phone} onChange={e => setEditData({...editData, phone: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                </div>
+                <div className="space-y-2">
+                  <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>E-mail</label>
+                  <input type="email" value={editData.email} onChange={e => setEditData({...editData, email: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                </div>
+                <button onClick={handleUpdateProfile} className="w-full gradiente-ouro text-black py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2"><Save size={14} /> Salvar Alterações</button>
+              </div>
+            </div>
+
+            <div className={`p-8 rounded-[2rem] border ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/5'}`}>
+              <h2 className={`text-2xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Envie uma Sugestão</h2>
+              <div className="space-y-4">
+                <textarea rows={6} placeholder="Sua opinião é muito importante para nós..." value={suggestionText} onChange={e => setSuggestionText(e.target.value)} className={`w-full border p-4 rounded-xl text-xs font-medium resize-none outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                <button onClick={handleAddSuggestion} className="w-full gradiente-ouro text-black py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2"><Send size={14} /> Enviar Feedback</button>
+              </div>
+            </div>
+          </div>
+
+          <div className={`p-8 rounded-[2rem] border ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/5'}`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Meu Histórico</h2>
+              <button onClick={() => { setView('BOOKING'); setPasso(1); }} className="gradiente-ouro text-black px-6 py-3 rounded-2xl font-black text-xs uppercase shadow-lg">Novo Agendamento</button>
+            </div>
+            <div className="space-y-4">
+              {clientAppointments.length === 0 && (
+                <p className={`text-center py-12 text-sm italic ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Nenhum agendamento ainda.</p>
+              )}
+              {clientAppointments.map(apt => {
+                const svc = services.find(s => s.id === apt.serviceId);
+                const prof = professionals.find(p => p.id === apt.professionalId);
+                return (
+                  <div key={apt.id} className={`p-6 rounded-2xl border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/5'}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className={`text-lg font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{apt.serviceName}</h3>
+                          <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider ${apt.status === 'PENDENTE' ? 'bg-yellow-500/10 text-yellow-500' : apt.status === 'CONFIRMADO' ? 'bg-blue-500/10 text-blue-500' : apt.status === 'CONCLUIDO' || apt.status === 'CONCLUIDO_PAGO' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>{apt.status.replace('_', ' ')}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-4 text-xs">
+                          <div className={`flex items-center gap-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                            <User size={14} className="text-[#D4AF37]" />
+                            <span className="font-bold">{apt.professionalName}</span>
+                          </div>
+                          <div className={`flex items-center gap-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                            <Calendar size={14} className="text-[#D4AF37]" />
+                            <span className="font-bold">{new Date(apt.date).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                          <div className={`flex items-center gap-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                            <Clock size={14} className="text-[#D4AF37]" />
+                            <span className="font-bold">{apt.startTime}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-2xl font-black text-[#D4AF37] ml-4">R$ {apt.price}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   if (view === 'HOME') {
+    const servicosAgrupados = services.reduce((acc, svc) => {
+      if (!acc[svc.category]) acc[svc.category] = [];
+      acc[svc.category].push(svc);
+      return acc;
+    }, {} as Record<string, Service[]>);
+
     return (
-      <div className={`min-h-screen selection:bg-[#D4AF37]/30 relative ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
-        {/* Hero */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <img src={config.heroBackground || config.coverImage} className={`w-full h-full object-cover transition-all duration-1000 ${theme === 'light' ? 'opacity-30' : 'opacity-40'}`} alt="Hero" />
-            <div className={`absolute inset-0 ${theme === 'light' ? 'bg-gradient-to-t from-[#F8F9FA] via-[#F8F9FA]/50 to-transparent' : 'bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent'}`}></div>
-          </div>
+      <div className={`min-h-screen ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
+        <div className="relative h-screen overflow-hidden">
+          <img src={config.coverImage} className={`absolute inset-0 w-full h-full object-cover grayscale transition-all ${theme === 'light' ? 'opacity-10' : 'opacity-30'}`} alt="Barbearia" />
+          <div className={`absolute inset-0 bg-gradient-to-b ${theme === 'light' ? 'from-transparent via-[#F8F9FA]/80 to-[#F8F9FA]' : 'from-transparent via-[#050505]/80 to-[#050505]'}`}></div>
 
-          <div className="relative z-10 text-center px-6 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <div className="space-y-6">
-              <h1 className={`text-5xl md:text-8xl font-black font-display italic tracking-tighter leading-none ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                {config.name}
-              </h1>
-              <p className={`text-sm md:text-lg font-medium max-w-2xl mx-auto ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                {config.description}
-              </p>
+          <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 h-full flex flex-col justify-center items-start py-24">
+            <div className="space-y-8 max-w-2xl">
+              <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-[#D4AF37] shadow-2xl shadow-[#D4AF37]/30">
+                <img src={config.logo} className="w-full h-full object-cover" alt="Logo" />
+              </div>
+
+              <div className="space-y-6">
+                <h1 className={`text-5xl md:text-7xl font-black font-display italic tracking-tighter leading-none ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.name}</h1>
+                <p className={`text-lg md:text-xl leading-relaxed max-w-xl ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>{config.description}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                <button onClick={() => { setView('BOOKING'); setPasso(1); }} className="gradiente-ouro text-black px-10 py-5 rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-2xl hover:scale-105 active:scale-95 transition-all">Agendar Ritual</button>
+                <button onClick={() => setShowReviewModal(true)} className={`px-10 py-5 rounded-[2rem] border font-black uppercase tracking-widest text-xs transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-700 hover:border-blue-400 shadow-lg' : 'bg-white/5 border-white/10 text-white hover:border-[#D4AF37]'}`}>Avaliar</button>
+                {loggedClient ? (
+                  <button onClick={() => setView('CLIENT_DASHBOARD')} className={`px-10 py-5 rounded-[2rem] border font-black uppercase tracking-widest text-xs transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-700 hover:border-blue-400 shadow-lg' : 'bg-white/5 border-white/10 text-white hover:border-[#D4AF37]'}`}>Meu Portal</button>
+                ) : (
+                  <button onClick={() => setView('LOGIN')} className={`px-10 py-5 rounded-[2rem] border font-black uppercase tracking-widest text-xs transition-all ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-700 hover:border-blue-400 shadow-lg' : 'bg-white/5 border-white/10 text-white hover:border-[#D4AF37]'}`}><Lock size={14} className="inline mr-2" />Login Membro</button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-6 pt-6">
+                <a href={`https://instagram.com/${config.instagram?.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-[#D4AF37]'}`}><Instagram size={18} /> {config.instagram}</a>
+                <a href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-[#D4AF37]'}`}><Phone size={18} /> WhatsApp</a>
+              </div>
             </div>
-            <button onClick={() => setView('BOOKING')} className="gradiente-ouro text-black px-12 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl hover:scale-105 active:scale-95 transition-all">
-              Agendar Ritual
-            </button>
           </div>
+        </div>
 
-          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
-            <ChevronRight className={`rotate-90 ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-600'}`} size={32}/>
-          </div>
-        </section>
-
-        {/* Destaques */}
-        <section className={`py-20 md:py-32 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/5'}`}>
-          <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-16">
-            <div className="text-center space-y-6">
-              <h2 className={`text-4xl md:text-6xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Rituais Signature</h2>
-              <p className={`text-sm md:text-base font-medium max-w-2xl mx-auto ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                Experiências que transformam o cuidado pessoal em arte.
-              </p>
+        <div className="relative bg-[#D4AF37] py-24 overflow-hidden">
+          <div className="absolute inset-0 opacity-10"><div className="absolute inset-0 bg-[radial-gradient(circle,black_1px,transparent_1px)] bg-[length:24px_24px]"></div></div>
+          <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-4xl font-black font-display italic text-black">Rituais em Destaque</h2>
             </div>
-
-            <div 
-              ref={destaqueRef}
-              onMouseDown={(e) => handleMouseDown(e, destaqueRef)}
-              onMouseLeave={handleMouseLeave}
-              onMouseUp={handleMouseUp}
-              onMouseMove={(e) => handleMouseMove(e, destaqueRef)}
-              className="flex gap-8 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing pb-6"
-              style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
-            >
+            <div ref={destaqueRef} onMouseDown={(e) => handleMouseDown(e, destaqueRef)} onMouseLeave={handleMouseLeave} onMouseUp={handleMouseUp} onMouseMove={(e) => handleMouseMove(e, destaqueRef)} className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide cursor-grab active:cursor-grabbing select-none">
               {sortedServicesForHighlights.slice(0, 6).map(svc => (
-                <div key={svc.id} className={`flex-shrink-0 w-80 rounded-[2.5rem] overflow-hidden border group hover:border-[#D4AF37]/50 transition-all duration-500 relative ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'bg-[#0F0F0F] border-white/5'}`}>
-                  <div className="h-80 overflow-hidden">
-                    <img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt={svc.name} draggable={false} />
+                <div key={svc.id} onClick={() => handleBookingStart(svc)} className="min-w-[280px] md:min-w-[320px] p-8 bg-black rounded-[2rem] cursor-pointer hover:scale-105 transition-all shadow-2xl group">
+                  <div className="w-full h-40 rounded-2xl overflow-hidden mb-6 bg-zinc-900">
+                    <img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all" alt={svc.name} />
                   </div>
-                  <div className="p-8 space-y-6">
-                    <div>
-                      <h3 className={`text-2xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{svc.name}</h3>
-                      <p className={`text-xs font-medium line-clamp-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{svc.description}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-black text-[#D4AF37] font-display italic">R$ {svc.price}</p>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>{svc.durationMinutes} minutos</p>
-                      </div>
-                      <button onClick={() => handleBookingStart(svc)} className="gradiente-ouro text-black p-4 rounded-2xl hover:scale-110 active:scale-95 transition-all shadow-xl">
-                        <ArrowRight size={20}/>
-                      </button>
-                    </div>
+                  <h3 className="text-2xl font-black font-display italic text-white mb-2">{svc.name}</h3>
+                  <p className="text-xs text-zinc-400 mb-4 line-clamp-2">{svc.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-black text-[#D4AF37]">R$ {svc.price}</span>
+                    <span className="text-xs font-black uppercase text-zinc-500">{svc.durationMinutes} min</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Todos os Serviços */}
-        <section className={`py-20 md:py-32 border-t ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0A0A] border-white/5'}`}>
-          <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-16">
-            <div className="text-center space-y-6">
-              <h2 className={`text-4xl md:text-6xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Cardápio Completo</h2>
-            </div>
-
-            <div className="flex gap-3 justify-center flex-wrap">
-              {categories.map(cat => (
-                <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all border ${selectedCategory === cat ? 'bg-[#D4AF37] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-white border-zinc-200 text-zinc-600' : 'bg-white/5 border-white/5 text-zinc-500'}`}>
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredServices.map(svc => (
-                <div key={svc.id} className={`rounded-[2rem] overflow-hidden border group hover:border-[#D4AF37]/50 transition-all duration-500 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'bg-[#0F0F0F] border-white/5'}`}>
-                  <div className="h-64 overflow-hidden">
-                    <img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt={svc.name} />
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <h3 className={`text-xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{svc.name}</h3>
-                    <p className={`text-xs line-clamp-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{svc.description}</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xl font-black text-[#D4AF37] font-display italic">R$ {svc.price}</p>
-                        <p className={`text-[9px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>{svc.durationMinutes} min</p>
-                      </div>
-                      <button onClick={() => handleBookingStart(svc)} className="gradiente-ouro text-black p-3 rounded-xl hover:scale-110 transition-all">
-                        <ArrowRight size={18}/>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ✅ NOVO: Seção de Planos VIP */}
-        {activePlans.length > 0 && (
-          <section className={`py-20 md:py-32 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/5'}`}>
-            <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-16">
-              <div className="text-center space-y-6">
-                <div className="flex items-center justify-center gap-3">
-                  <Crown className="text-[#D4AF37]" size={40}/>
-                  <h2 className={`text-4xl md:text-6xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                    Planos VIP
-                  </h2>
-                </div>
-                <p className={`text-sm md:text-base font-medium max-w-2xl mx-auto ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                  Experiências exclusivas para membros especiais
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {activePlans.map(plan => (
-                  <div key={plan.id} className={`rounded-[2.5rem] p-8 border-2 relative overflow-hidden group hover:border-[#D4AF37] transition-all duration-500 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-lg' : 'bg-[#0F0F0F] border-white/10'}`}>
-                    <div className="absolute top-6 right-6">
-                      <Crown className="text-[#D4AF37] opacity-20 group-hover:opacity-100 transition-all" size={32}/>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className={`text-2xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                          {plan.name}
-                        </h3>
-                        <p className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                          {plan.period === 'MENSAL' ? 'Mensal' : 'Anual'}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-4xl font-black text-[#D4AF37] font-display italic">
-                          R$ {plan.price}
-                        </p>
-                        {plan.discount && (
-                          <p className={`text-xs font-black uppercase mt-2 ${theme === 'light' ? 'text-emerald-600' : 'text-emerald-500'}`}>
-                            {plan.discount}% de desconto
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        {plan.benefits.map((benefit, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
-                            <Check className="text-[#D4AF37] flex-shrink-0 mt-0.5" size={16}/>
-                            <p className={`text-xs ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                              {benefit}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <a 
-                        href={`https://wa.me/55${config.whatsapp.replace(/\D/g, '')}?text=Olá! Tenho interesse no plano ${plan.name} (${plan.period === 'MENSAL' ? 'Mensal' : 'Anual'}) por R$ ${plan.price}. Gostaria de mais informações.`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full gradiente-ouro text-black py-4 rounded-xl font-black uppercase text-xs tracking-widest text-center hover:scale-105 transition-all shadow-xl"
-                      >
-                        Assinar Agora
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* A Experiência Signature */}
-        <section className={`py-20 md:py-32 border-t ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0A0A] border-white/5'}`}>
-          <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-16">
-            <div className="text-center space-y-6">
-              <h2 className={`text-4xl md:text-6xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                {config.aboutTitle || 'A Experiência'}
-              </h2>
-              <p className={`text-sm md:text-base font-medium max-w-3xl mx-auto leading-relaxed ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                {config.aboutText}
-              </p>
-            </div>
-
-            {config.aboutImage && (
-              <div className="max-w-4xl mx-auto rounded-[3rem] overflow-hidden border-4 border-[#D4AF37]/20 shadow-2xl">
-                <img src={config.aboutImage} className="w-full h-auto" alt="Sobre" />
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Mestres Barbeiros */}
-        <section className={`py-20 md:py-32 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/5'}`}>
-          <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-16">
-            <div className="text-center space-y-6">
-              <h2 className={`text-4xl md:text-6xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                Mestres Barbeiros
-              </h2>
-            </div>
-
-            <div 
-              ref={membroRef}
-              onMouseDown={(e) => handleMouseDown(e, membroRef)}
-              onMouseLeave={handleMouseLeave}
-              onMouseUp={handleMouseUp}
-              onMouseMove={(e) => handleMouseMove(e, membroRef)}
-              className="flex gap-8 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing pb-6"
-              style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
-            >
-              {professionals.map(prof => (
-                <div key={prof.id} className={`flex-shrink-0 w-80 rounded-[2.5rem] p-8 border group hover:border-[#D4AF37]/50 transition-all duration-500 relative ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'bg-[#0F0F0F] border-white/5'}`}>
-                  <div 
-                    className="relative mb-6 cursor-pointer"
-                    onClick={() => {
-                      setSelectedProfessional(prof);
-                      setShowProfessionalModal(true);
-                    }}
-                  >
-                    <img src={prof.avatar} className="w-full aspect-square object-cover rounded-[2rem] border-2 border-white/10 group-hover:border-[#D4AF37]/50 transition-all" alt={prof.name} draggable={false} />
-                    <div className="absolute -bottom-3 -right-3 bg-[#D4AF37] text-black p-3 rounded-xl shadow-xl">
-                      <Sparkles size={20}/>
-                    </div>
-                  </div>
-                  <h3 className={`text-2xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                    {prof.name}
-                  </h3>
-                  <p className={`text-xs font-black uppercase tracking-widest mb-6 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                    Mestre Barbeiro
-                  </p>
-                  <button onClick={() => likeProfessional(prof.id)} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-[#D4AF37]' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#D4AF37]'}`}>
-                    <Heart size={16} className="text-[#D4AF37]"/>
-                    <span className="text-xs font-black">{prof.likes || 0}</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Avaliações */}
-        {config.reviews && config.reviews.length > 0 && (
-          <section className={`py-20 md:py-32 border-t ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0A0A] border-white/5'}`}>
-            <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-16">
-              <div className="text-center space-y-6">
-                <h2 className={`text-4xl md:text-6xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  O Que Dizem
-                </h2>
-              </div>
-
-              <div 
-                ref={experienciaRef}
-                onMouseDown={(e) => handleMouseDown(e, experienciaRef)}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={handleMouseUp}
-                onMouseMove={(e) => handleMouseMove(e, experienciaRef)}
-                className="flex gap-8 overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing pb-6"
-                style={{ scrollBehavior: isDragging ? 'auto' : 'smooth' }}
-              >
-                {config.reviews.map(rev => (
-                  <div key={rev.id} className={`flex-shrink-0 w-96 rounded-[2.5rem] p-8 border ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'bg-[#0F0F0F] border-white/5'}`}>
-                    <Quote className="text-[#D4AF37] mb-6" size={32}/>
-                    <div className="flex gap-1 mb-6">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} size={16} className={i < rev.rating ? 'text-[#D4AF37] fill-[#D4AF37]' : theme === 'light' ? 'text-zinc-300' : 'text-zinc-800'}/>
-                      ))}
-                    </div>
-                    <p className={`text-sm mb-6 italic leading-relaxed ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                      "{rev.comment}"
-                    </p>
-                    <p className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-600'}`}>
-                      {rev.userName}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Localização */}
-        <section className={`py-20 md:py-32 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/5'}`}>
-          <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-16">
-            <div className="text-center space-y-6">
-              <h2 className={`text-4xl md:text-6xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                Onde Nos Encontrar
-              </h2>
-              <p className={`text-sm md:text-base font-medium ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                {config.address}, {config.city} - {config.state}
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="rounded-[2.5rem] overflow-hidden border-2 border-white/5">
-                <iframe src={config.locationUrl} width="100%" height="450" style={{border:0}} allowFullScreen loading="lazy" className="w-full h-full"></iframe>
-              </div>
-              
-              {config.locationImage && (
-                <div className="rounded-[2.5rem] overflow-hidden border-2 border-white/5">
-                  <img src={config.locationImage} className="w-full h-full object-cover" alt="Localização" />
-                </div>
-              )}
-            </div>
-
-            <div className="text-center space-y-4">
-              <p className={`text-sm font-bold ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                Horário: {config.openingTime} às {config.closingTime}
-              </p>
-              <a href={config.locationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 gradiente-ouro text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:scale-105 transition-all">
-                <MapPin size={20}/>
-                Ver no Mapa
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer com Redes Sociais CORRIGIDAS */}
-        <footer className={`border-t py-12 ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0A0A] border-white/5'}`}>
+        <div className={`py-24 ${theme === 'light' ? 'bg-white' : 'bg-[#0A0A0A]'}`}>
           <div className="max-w-7xl mx-auto px-6 md:px-12">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="text-center md:text-left">
-                <p className={`text-2xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
-                  {config.name}
-                </p>
-                <p className={`text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-600'}`}>
-                  © {new Date().getFullYear()} Todos os direitos reservados.
-                </p>
-              </div>
+            <div className="flex items-center justify-between mb-12">
+              <h2 className={`text-4xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Experiências dos Membros</h2>
+            </div>
+            <div ref={experienciaRef} onMouseDown={(e) => handleMouseDown(e, experienciaRef)} onMouseLeave={handleMouseLeave} onMouseUp={handleMouseUp} onMouseMove={(e) => handleMouseMove(e, experienciaRef)} className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide cursor-grab active:cursor-grabbing select-none">
+              {config.reviews && config.reviews.slice(0, 8).map((rev, idx) => (
+                <div key={idx} className={`min-w-[320px] md:min-w-[400px] p-8 rounded-[2rem] border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+                  <div className="flex items-center gap-1 mb-4">{Array.from({length: 5}).map((_, i) => <Star key={i} size={16} className={i < rev.rating ? 'text-[#D4AF37] fill-[#D4AF37]' : theme === 'light' ? 'text-zinc-300' : 'text-zinc-700'} />)}</div>
+                  <p className={`text-sm leading-relaxed mb-6 italic ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>"{rev.comment}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#D4AF37] rounded-full flex items-center justify-center font-black text-black text-sm">{rev.userName.charAt(0)}</div>
+                    <div>
+                      <p className={`text-xs font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{rev.userName}</p>
+                      <p className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Membro</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-              {/* ✅ CORREÇÃO: Botões de Redes Sociais com Links Corretos */}
+        <div className={`py-24 ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
+          <div className="max-w-7xl mx-auto px-6 md:px-12">
+            <div className="mb-12 text-center max-w-3xl mx-auto">
+              <h2 className={`text-4xl md:text-5xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Mestres da Arte</h2>
+              <p className={`text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Profissionais dedicados à excelência em cada corte, barba e ritual de cuidado masculino.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {professionals.map(prof => (
+                <div key={prof.id} className={`rounded-[2rem] overflow-hidden border transition-all hover:border-[#D4AF37]/50 group cursor-pointer ${theme === 'light' ? 'bg-white border-zinc-200 shadow-lg' : 'bg-white/5 border-white/5'}`}>
+                  <div className="relative h-80 overflow-hidden bg-zinc-900" onClick={() => handleProfessionalClick(prof)}>
+                    <img src={prof.avatar} className="w-full h-full object-contain group-hover:scale-105 transition-all" alt={prof.name} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <h3 className="text-3xl font-black font-display italic text-white mb-2">{prof.name}</h3>
+                      <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Mestre Barbeiro</p>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className={`flex items-center gap-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
+                        <Clock size={14} className="text-[#D4AF37]" />
+                        <span className="text-xs font-black">{prof.workingHours.start} - {prof.workingHours.end}</span>
+                      </div>
+                      <button onClick={() => likeProfessional(prof.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${theme === 'light' ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700' : 'bg-white/5 hover:bg-white/10 text-zinc-400'}`}>
+                        <Heart size={14} className="text-[#D4AF37]" fill="currentColor" />
+                        <span className="text-xs font-black">{prof.likes || 0}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className={`py-24 ${theme === 'light' ? 'bg-white' : 'bg-[#0A0A0A]'}`}>
+          <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
+            <h2 className={`text-4xl md:text-5xl font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.aboutTitle || 'Nossa História'}</h2>
+            <p className={`text-lg leading-relaxed mb-12 ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>{config.aboutText || 'Tradição e excelência desde 1995.'}</p>
+            <div className={`p-12 rounded-[3rem] border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+              <MapPin className="w-12 h-12 text-[#D4AF37] mx-auto mb-6" />
+              <h3 className={`text-2xl font-black font-display italic mb-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Venha nos Visitar</h3>
+              <p className={`text-sm mb-2 ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>{config.address}</p>
+              <p className={`text-sm mb-6 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{config.city}, {config.state}</p>
+              <a href={config.locationUrl} target="_blank" rel="noopener noreferrer" className="inline-block gradiente-ouro text-black px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">Ver no Mapa</a>
+            </div>
+          </div>
+        </div>
+
+        <footer className={`py-16 border-t ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0A0A] border-white/5'}`}>
+          <div className="max-w-7xl mx-auto px-6 md:px-12">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                {/* Botão Instagram */}
-                <a 
-                  href="https://www.instagram.com/srjosebarberpub/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className={`p-4 rounded-2xl border transition-all hover:border-[#D4AF37] hover:scale-110 ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-white/5 border-white/10 text-zinc-400'}`}
-                >
-                  <Instagram size={24}/>
-                </a>
-
-                {/* ✅ NOVO: Botão WhatsApp */}
-                <a 
-                  href="https://wa.me/5521964340031" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className={`p-4 rounded-2xl border transition-all hover:border-[#D4AF37] hover:scale-110 ${theme === 'light' ? 'bg-white border-zinc-200 text-zinc-700' : 'bg-white/5 border-white/10 text-zinc-400'}`}
-                >
-                  <Phone size={24}/>
-                </a>
+                <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10">
+                  <img src={config.logo} className="w-full h-full object-cover" alt="Logo" />
+                </div>
+                <div>
+                  <p className={`font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{config.name}</p>
+                  <p className={`text-xs ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>© 2024 Todos os direitos reservados.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                <a href={`https://instagram.com/${config.instagram?.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-[#D4AF37]'}`}><Instagram size={20} /></a>
+                <a href={`https://wa.me/${config.whatsapp}`} target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-[#D4AF37]'}`}><Phone size={20} /></a>
+                <a href={`mailto:${config.email}`} className={`transition-colors ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-[#D4AF37]'}`}><Mail size={20} /></a>
               </div>
             </div>
           </div>
         </footer>
+      </div>
+    );
+  }
+
+  if (view === 'LOGIN') {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-6 ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
+        <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-10 shadow-2xl border ${theme === 'light' ? 'bg-white border-zinc-200' : 'cartao-vidro border-[#D4AF37]/30'}`}>
+          <button onClick={() => setView('HOME')} className={`flex items-center gap-2 text-sm font-black uppercase tracking-widest transition-colors ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-white'}`}>
+            <ChevronLeft size={20}/> Voltar
+          </button>
+          
+          <div className="text-center space-y-6">
+            <div className="w-24 h-24 rounded-3xl mx-auto overflow-hidden border-2 border-[#D4AF37]/30 shadow-2xl shadow-[#D4AF37]/20">
+              <img src={config.logo} className="w-full h-full object-cover" alt="Logo" />
+            </div>
+            <div>
+              <h1 className={`text-4xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Portal do Membro</h1>
+              <p className={`text-[10px] font-black uppercase tracking-[0.3em] mt-2 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>Acesse sua área exclusiva</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className={`text-[10px] font-black uppercase tracking-widest ml-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>E-mail ou WhatsApp</label>
+              <input type="text" placeholder="seuemail@gmail.com ou (21)..." value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none transition-all font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+            </div>
+            <div className="space-y-2">
+              <label className={`text-[10px] font-black uppercase tracking-widest ml-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Senha</label>
+              <input type="password" placeholder="••••••" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none transition-all font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+            </div>
+            <button onClick={handleClientLogin} className="w-full gradiente-ouro text-black py-6 rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-2xl">Acessar Portal</button>
+          </div>
+
+          <p className={`text-center text-xs ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Ainda não tem conta? Faça seu primeiro agendamento para se cadastrar.</p>
+        </div>
       </div>
     );
   }
@@ -847,6 +619,12 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
         </div>
       );
     }
+
+    const servicosAgrupados = services.reduce((acc, svc) => {
+      if (!acc[svc.category]) acc[svc.category] = [];
+      acc[svc.category].push(svc);
+      return acc;
+    }, {} as Record<string, Service[]>);
 
     return (
       <div className={`min-h-screen ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
@@ -918,8 +696,8 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Heart size={14} className="text-[#D4AF37]"/>
-                          <span className="text-xs font-black text-[#D4AF37]">{prof.likes || 0}</span>
+                          <Clock size={14} className="text-[#D4AF37]"/>
+                          <span className={`text-xs font-black ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>{prof.workingHours.start} - {prof.workingHours.end}</span>
                         </div>
                         <ArrowRight className={theme === 'light' ? 'text-zinc-400' : 'text-zinc-600'}/>
                       </div>
@@ -930,39 +708,39 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
               {passo === 3 && (
                 <div className="space-y-8 animate-in slide-in-from-right-2">
-                  <div>
-                    <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-500'}`}>Escolha a Data</h3>
-                    <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
-                      {nextDays.map((d, i) => {
-                        const dateStr = d.toISOString().split('T')[0];
-                        return (
-                          <button key={i} onClick={() => setSelecao({...selecao, date: dateStr})} className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selecao.date === dateStr ? 'bg-[#D4AF37] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#D4AF37]/50'}`}>
-                            <span className="text-[8px] font-black uppercase opacity-60">{d.toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
-                            <span className="text-2xl font-black font-display">{d.getDate()}</span>
-                          </button>
-                        );
-                      })}
-                   </div>
-                  {selecao.date && (
-                    <div className="space-y-6">
-                      {(Object.entries(turnos) as [string, string[]][]).map(([turno, horarios]) => (
-                        <div key={turno} className="space-y-4">
-                          <h4 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-4 ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>{turno === 'manha' ? 'Manhã' : turno === 'tarde' ? 'Tarde' : 'Noite'} <div className={`h-px flex-1 ${theme === 'light' ? 'bg-zinc-200' : 'bg-white/5'}`}></div></h4>
-                          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                            {horarios.map(t => {
-                               const isOccupied = checkAvailability(selecao.date, t, selecao.professionalId);
-                               return (
-                                 <button key={t} disabled={isOccupied} onClick={() => { setSelecao({...selecao, time: t}); setPasso(4); }} className={`py-3 rounded-xl border text-[10px] font-black transition-all ${isOccupied ? 'border-red-500/20 text-red-500/30 cursor-not-allowed bg-red-500/5' : selecao.time === t ? 'bg-[#D4AF37] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#D4AF37]/50'}`}>
-                                    {t}
-                                 </button>
-                               );
-                            })}
-                          </div>
+                  <div className="grid grid-cols-7 gap-3">
+                    {Array.from({ length: 14 }).map((_, i) => {
+                      const d = new Date();
+                      d.setDate(d.getDate() + i);
+                      const dateStr = d.toISOString().split('T')[0];
+                      return (
+                        <button key={i} onClick={() => setSelecao({...selecao, date: dateStr})} className={`p-4 rounded-2xl border text-center transition-all ${selecao.date === dateStr ? 'bg-[#D4AF37] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#D4AF37]/50'}`}>
+                          <span className="text-[8px] font-black uppercase opacity-60">{d.toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
+                          <span className="text-2xl font-black font-display">{d.getDate()}</span>
+                        </button>
+                      );
+                    })}
+                 </div>
+                {selecao.date && (
+                  <div className="space-y-6">
+                    {(Object.entries(turnos) as [string, string[]][]).map(([turno, horarios]) => (
+                      <div key={turno} className="space-y-4">
+                        <h4 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-4 ${theme === 'light' ? 'text-blue-600' : 'text-[#D4AF37]'}`}>{turno === 'manha' ? 'Manhã' : turno === 'tarde' ? 'Tarde' : 'Noite'} <div className={`h-px flex-1 ${theme === 'light' ? 'bg-zinc-200' : 'bg-white/5'}`}></div></h4>
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                          {horarios.map(t => {
+                             const isOccupied = checkAvailability(selecao.date, t, selecao.professionalId);
+                             return (
+                               <button key={t} disabled={isOccupied} onClick={() => { setSelecao({...selecao, time: t}); setPasso(4); }} className={`py-3 rounded-xl border text-[10px] font-black transition-all ${isOccupied ? 'border-red-500/20 text-red-500/30 cursor-not-allowed bg-red-500/5' : selecao.time === t ? 'bg-[#D4AF37] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#D4AF37]/50'}`}>
+                                  {t}
+                               </button>
+                             );
+                          })}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               )}
 
               {passo === 4 && (
@@ -980,6 +758,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               )}
            </div>
         </div>
+      </div>
       )}
 
       {showReviewModal && (
