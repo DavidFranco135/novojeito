@@ -183,7 +183,7 @@ const App: React.FC = () => {
       <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
         {renderContent()}
       </Layout>
-      <button onClick={handleGoToClientView} className="fixed bottom-6 right-6 z-[100] gradiente-ouro text-black px-8 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-110 active:scale-95 transition-all">VISÃƒO DO CLIENTE</button>
+      <button onClick={handleGoToClientView} className="fixed bottom-6 right-6 z-[100] gradiente-ouro text-black px-8 py-4 rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-110 active:scale-95 transition-all">VISÃO DO CLIENTE</button>
     </div>
   );
 };
