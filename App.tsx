@@ -22,14 +22,14 @@ const App: React.FC = () => {
   const [registerData, setRegisterData] = useState({ name: '', phone: '', email: '', password: '' });
   const [lastAppointmentCount, setLastAppointmentCount] = useState(0);
 
-  // NOTIFICAÃ‡ÃƒO SONORA PARA NOVOS AGENDAMENTOS (apenas para ADM)
+  // NOTIFICAÇÃO SONORA PARA NOVOS AGENDAMENTOS (apenas para ADM)
   useEffect(() => {
     if (user && user.role === 'ADMIN') {
       if (appointments.length > lastAppointmentCount && lastAppointmentCount > 0) {
-        // Toca som de notificaÃ§Ã£o
+        // Toca som de notificação
         const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYHGmW56+ahUBEJTqXh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEK');
         audio.volume = 0.5;
-        audio.play().catch(e => console.log('NÃ£o foi possÃ­vel tocar o som'));
+        audio.play().catch(e => console.log('Não foi possível tocar o som'));
       }
       setLastAppointmentCount(appointments.length);
     }
@@ -45,7 +45,7 @@ const App: React.FC = () => {
 
   const handleRegister = async () => {
     if (!registerData.name || !registerData.phone || !registerData.password) {
-      alert("Preencha todos os campos obrigatÃ³rios.");
+      alert("Preencha todos os campos obrigatórios.");
       return;
     }
     try {
@@ -55,20 +55,20 @@ const App: React.FC = () => {
         email: registerData.email,
         password: registerData.password
       } as any);
-      alert("Cadastro realizado com sucesso! Agora faÃ§a o login.");
+      alert("Cadastro realizado com sucesso! Agora faça o login.");
       setIsRegistering(false);
     } catch (err) {
       alert("Erro ao realizar cadastro.");
     }
   };
 
-  // CORREÃ‡ÃƒO: FunÃ§Ã£o para ir para visÃ£o do cliente (faz logout e vai para pÃºblico)
+  // CORREÇÃO: Função para ir para visão do cliente (faz logout e vai para público)
   const handleGoToClientView = () => {
     logout();
     setIsPublicView(true);
   };
 
-  // Se o usuÃ¡rio logado for um CLIENTE, ele deve ver apenas o Portal do Membro
+  // Se o usuário logado for um CLIENTE, ele deve ver apenas o Portal do Membro
   if (user && user.role === 'CLIENTE') {
     return (
       <div className={`relative min-h-screen theme-transition ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
@@ -82,7 +82,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Se nÃ£o houver usuÃ¡rio logado e estiver na visÃ£o pÃºblica (PadrÃ£o)
+  // Se não houver usuário logado e estiver na visão pública (Padrão)
   if (!user && isPublicView) {
     return (
       <div className={`relative min-h-screen theme-transition ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
@@ -99,7 +99,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Se nÃ£o houver usuÃ¡rio logado e NÃƒO estiver na visÃ£o pÃºblica, mostra a tela de login (acesso ADM/Login Geral)
+  // Se não houver usuário logado e NÃO estiver na visão pública, mostra a tela de login (acesso ADM/Login Geral)
   if (!user && !isPublicView) {
     return (
       <div className={`min-h-screen flex items-center justify-center p-6 selection:bg-[#D4AF37]/30 relative overflow-hidden transition-all duration-500 ${theme === 'light' ? 'bg-[#F8F9FA] text-[#1A1A1A]' : 'bg-[#050505] text-[#f3f4f6]'}`}>
@@ -120,7 +120,7 @@ const App: React.FC = () => {
                <img src={config.logo} className="w-full h-full object-cover" alt="Logo/Profile" />
             </div>
             <div className="space-y-2">
-              <h1 className={`text-4xl font-black font-display italic tracking-tight ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{isRegistering ? 'Criar Conta' : 'Portal Sr. JosÃ©'}</h1>
+              <h1 className={`text-4xl font-black font-display italic tracking-tight ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{isRegistering ? 'Criar Conta' : 'Portal Sr. José'}</h1>
               <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme === 'light' ? 'text-zinc-500' : 'opacity-40'}`}>{isRegistering ? 'Cadastre-se para agendar' : 'Acesse para gerir ou agendar'}</p>
             </div>
           </div>
@@ -139,7 +139,7 @@ const App: React.FC = () => {
               </div>
               <button onClick={handleLogin} className="w-full gradiente-ouro text-black py-7 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl hover:scale-[1.03] active:scale-[0.97] transition-all">ACESSAR</button>
               <div className="text-center">
-                <button onClick={() => setIsRegistering(true)} className={`text-[10px] font-black uppercase tracking-widest hover:underline ${theme === 'light' ? 'text-blue-600 hover:text-blue-700' : 'text-[#D4AF37]'}`}>Ainda nÃ£o tem conta? Cadastre-se</button>
+                <button onClick={() => setIsRegistering(true)} className={`text-[10px] font-black uppercase tracking-widest hover:underline ${theme === 'light' ? 'text-blue-600 hover:text-blue-700' : 'text-[#D4AF37]'}`}>Ainda não tem conta? Cadastre-se</button>
               </div>
             </div>
           ) : (
@@ -152,18 +152,18 @@ const App: React.FC = () => {
               </div>
               <button onClick={handleRegister} className="w-full gradiente-ouro text-black py-6 rounded-[2.5rem] font-black uppercase tracking-widest text-xs shadow-xl">CADASTRAR E CONTINUAR</button>
               <div className="text-center">
-                <button onClick={() => setIsRegistering(false)} className={`text-[10px] font-black uppercase tracking-widest hover:opacity-100 transition-opacity ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'opacity-40'}`}>JÃ¡ tem conta? Voltar ao Login</button>
+                <button onClick={() => setIsRegistering(false)} className={`text-[10px] font-black uppercase tracking-widest hover:opacity-100 transition-opacity ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'opacity-40'}`}>Já tem conta? Voltar ao Login</button>
               </div>
             </div>
           )}
 
-          <button onClick={() => setIsPublicView(true)} className={`w-full text-[10px] font-black uppercase tracking-[0.3em] transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-blue-600' : 'opacity-40 hover:opacity-100 hover:text-[#D4AF37]'}`}>Visualizar Site (Site PÃºblico)</button>
+          <button onClick={() => setIsPublicView(true)} className={`w-full text-[10px] font-black uppercase tracking-[0.3em] transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-blue-600' : 'opacity-40 hover:opacity-100 hover:text-[#D4AF37]'}`}>Visualizar Site (Site Público)</button>
         </div>
       </div>
     );
   }
 
-  // Se o usuÃ¡rio logado for ADMIN, mostra o Layout de GestÃ£o
+  // Se o usuário logado for ADMIN, mostra o Layout de Gestão
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return <Dashboard onNavigate={setActiveTab} />;
