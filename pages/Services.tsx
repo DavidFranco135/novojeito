@@ -53,8 +53,8 @@ const Services: React.FC = () => {
     <div className="space-y-6 animate-in fade-in pb-10 h-full overflow-y-auto scrollbar-hide">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Serviços Signature</h1>
-          <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>Gerencie seu cardápio de rituais.</p>
+          <h1 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Serviços de Cortes</h1>
+          <p className={`text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>Gerencie seu cardápio de cortes.</p>
         </div>
         <button onClick={() => { setEditingId(null); setFormData(initialFormData); setShowModal(true); }} className="gradiente-ouro text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase shadow-lg flex items-center gap-2">
           <Plus size={16} /> Novo Serviço
