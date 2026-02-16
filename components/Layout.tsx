@@ -30,7 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
 
   return (
     <div className={`flex h-screen overflow-hidden ${theme === 'light' ? 'bg-zinc-50' : 'bg-[#050505]'}`}>
-      {/* Sidebar */}
+      {/* Sidebar - CORRIGIDO */}
       <aside className={`fixed inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:w-20' : 'lg:w-72'} ${theme === 'light' ? 'bg-white border-r border-zinc-200 shadow-sm' : 'bg-[#0A0A0A] border-r border-white/5'}`}>
         <div className="flex flex-col h-full">
           <div className="p-6 flex items-center justify-between">
@@ -61,11 +61,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
                   className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
                     isActive 
                       ? 'gradiente-ouro text-black shadow-lg shadow-[#D4AF37]/20' 
-                      : theme === 'light' ? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900' : 'text-zinc-500 hover:bg-white/5'
+                      : theme === 'light' 
+                        ? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900' 
+                        : 'text-zinc-500 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <Icon size={22} className={`${isActive ? 'text-black' : theme === 'light' ? 'text-zinc-700 group-hover:text-zinc-900' : 'group-hover:text-[#D4AF37] transition-colors'}`} />
-                  {!isCollapsed && <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>}
+                  <Icon size={22} className={`flex-shrink-0 ${isActive ? 'text-black' : theme === 'light' ? 'text-zinc-700 group-hover:text-zinc-900' : 'text-zinc-500 group-hover:text-[#D4AF37]'} transition-colors`} />
+                  {!isCollapsed && <span className={`font-black text-[11px] uppercase tracking-widest ${isActive ? 'text-black' : theme === 'light' ? 'text-zinc-700 group-hover:text-zinc-900' : 'text-zinc-500 group-hover:text-white'}`}>{item.label}</span>}
                 </button>
               );
             })}
@@ -73,7 +75,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
 
           <div className={`p-4 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/5'}`}>
             <button onClick={logout} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${theme === 'light' ? 'text-red-600 hover:bg-red-50' : 'text-red-500 hover:bg-red-500/10'}`}>
-              <LogOut size={22} />
+              <LogOut size={22} className="flex-shrink-0" />
               {!isCollapsed && <span className="font-black text-[11px] uppercase tracking-widest">Sair do Painel</span>}
             </button>
           </div>
