@@ -42,10 +42,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
                 <span className={`font-black italic text-xl tracking-tighter ${theme === 'light' ? 'text-black' : 'text-white'}`}>ADMIN</span>
               </div>
             )}
-            <button onClick={() => setIsCollapsed(!isCollapsed)} className={`hidden lg:flex p-2 rounded-xl hover:bg-white/5 ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+            <button onClick={() => setIsCollapsed(!isCollapsed)} className={`hidden lg:flex p-2 rounded-xl hover:bg-white/5 ${theme === 'light' ? 'text-zinc-700 hover:text-zinc-900' : 'text-zinc-500'}`}>
               <ChevronLeft className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
             </button>
-            <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-zinc-500">
+            <button onClick={() => setIsSidebarOpen(false)} className={`lg:hidden transition-all ${theme === 'light' ? 'text-zinc-700 hover:text-zinc-900' : 'text-zinc-500'}`}>
               <X size={24} />
             </button>
           </div>
@@ -61,10 +61,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
                   className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
                     isActive 
                       ? 'gradiente-ouro text-black shadow-lg shadow-[#D4AF37]/20' 
-                      : theme === 'light' ? 'text-zinc-500 hover:bg-zinc-100' : 'text-zinc-500 hover:bg-white/5'
+                      : theme === 'light' ? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900' : 'text-zinc-500 hover:bg-white/5'
                   }`}
                 >
-                  <Icon size={22} className={`${isActive ? 'text-black' : 'group-hover:text-[#D4AF37] transition-colors'}`} />
+                  <Icon size={22} className={`${isActive ? 'text-black' : theme === 'light' ? 'text-zinc-700 group-hover:text-zinc-900' : 'group-hover:text-[#D4AF37] transition-colors'}`} />
                   {!isCollapsed && <span className="font-black text-[11px] uppercase tracking-widest">{item.label}</span>}
                 </button>
               );
@@ -72,7 +72,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
           </nav>
 
           <div className={`p-4 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/5'}`}>
-            <button onClick={logout} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-red-500 hover:bg-red-500/10 transition-all`}>
+            <button onClick={logout} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${theme === 'light' ? 'text-red-600 hover:bg-red-50' : 'text-red-500 hover:bg-red-500/10'}`}>
               <LogOut size={22} />
               {!isCollapsed && <span className="font-black text-[11px] uppercase tracking-widest">Sair do Painel</span>}
             </button>
@@ -83,21 +83,21 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className={`h-20 flex items-center justify-between px-6 md:px-10 border-b ${theme === 'light' ? 'bg-white border-zinc-200' : 'bg-[#0A0A0A] border-white/5'}`}>
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-zinc-500 hover:bg-white/5 rounded-xl">
+            <button onClick={() => setIsSidebarOpen(true)} className={`lg:hidden p-2 rounded-xl transition-all ${theme === 'light' ? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900' : 'text-zinc-500 hover:bg-white/5'}`}>
               <Menu size={24} />
             </button>
-            <h2 className={`text-sm font-black uppercase tracking-[0.2em] ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+            <h2 className={`text-sm font-black uppercase tracking-[0.2em] ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>
               {menuItems.find(i => i.id === activeTab)?.label}
             </h2>
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={toggleTheme} className={`p-3 rounded-2xl border transition-all ${theme === 'light' ? 'bg-zinc-100 border-zinc-200 text-zinc-600' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-[#D4AF37]'}`}>
+            <button onClick={toggleTheme} className={`p-3 rounded-2xl border transition-all ${theme === 'light' ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-900' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-[#D4AF37]'}`}>
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
             
             <div className="relative">
-              <button onClick={() => setShowNotifs(!showNotifs)} className={`p-3 rounded-2xl border transition-all relative ${theme === 'light' ? 'bg-zinc-100 border-zinc-200 text-zinc-600' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-[#D4AF37]'}`}>
+              <button onClick={() => setShowNotifs(!showNotifs)} className={`p-3 rounded-2xl border transition-all relative ${theme === 'light' ? 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-900' : 'bg-white/5 border-white/10 text-zinc-400 hover:text-[#D4AF37]'}`}>
                 <Bell size={18} />
                 {notifications.filter(n => !n.read).length > 0 && (
                   <span className={`absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 ${theme === 'light' ? 'border-white' : 'border-[#0A0A0A]'}`}></span>
