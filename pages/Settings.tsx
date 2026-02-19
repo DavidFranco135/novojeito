@@ -110,7 +110,7 @@ const Settings: React.FC = () => {
       price: newPlan.price!,
       period: newPlan.period!,
       benefits: newPlan.benefits!.filter(b => b.trim()),
-      discount: newPlan.discount,
+      discount: newPlan.discount ?? 0,
       status: newPlan.status!
     };
 
@@ -365,7 +365,7 @@ const Settings: React.FC = () => {
                   <input 
                     type="text" 
                     value={newPlan.name || ''}
-                    onChange={e => setNewPlan({...newPlan, name: e.target.value})}
+                   onChange={e => setNewPlan({...newPlan, discount: parseInt(e.target.value) || 0})}
                     className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                     placeholder="Ex: Plano Premium"
                   />
