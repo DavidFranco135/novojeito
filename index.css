@@ -43,11 +43,11 @@ body {
 }
 
 .gradiente-ouro {
-  background: linear-gradient(135deg, #C9A961 0%, #B8860B 50%, #8B6914 100%);
+  background: linear-gradient(135deg, #8B4513 0%, #633510 50%, #4a2709 100%);
 }
 
 .gradiente-texto-ouro {
-  background: linear-gradient(135deg, #C9A961 0%, #B8860B 50%, #8B6914 100%);
+  background: linear-gradient(135deg, #8B4513 0%, #633510 50%, #4a2709 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
