@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   ChevronLeft, ChevronRight, Plus, Clock, Check, X, 
-  Calendar, Scissors, LayoutGrid, List, UserPlus, DollarSign, RefreshCw, Filter, CalendarRange
+  Calendar, Scissors, LayoutGrid, List, UserPlus, DollarSign, RefreshCw, Filter, CalendarRange, Trash2, LogIn, UserCheck
 } from 'lucide-react';
 import { useBarberStore } from '../store';
 import { Appointment, Client } from '../types';
@@ -9,7 +9,7 @@ import { Appointment, Client } from '../types';
 const Appointments: React.FC = () => {
   const { 
     appointments, professionals, services, clients,
-    addAppointment, updateAppointmentStatus, addClient, rescheduleAppointment, theme
+    addAppointment, updateAppointmentStatus, addClient, rescheduleAppointment, deleteAppointment, theme
   } = useBarberStore();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -19,7 +19,8 @@ const Appointments: React.FC = () => {
   const [showRescheduleModal, setShowRescheduleModal] = useState<Appointment | null>(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
   const [showQuickClient, setShowQuickClient] = useState(false);
-  const [newApp, setNewApp] = useState({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00' });
+  // ✅ ADICIONADO: campo date no newApp
+  const [newApp, setNewApp] = useState({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00', date: new Date().toISOString().split('T')[0] });
   const [quickClient, setQuickClient] = useState({ name: '', phone: '' });
   const [filterPeriod, setFilterPeriod] = useState<'day' | 'month' | 'all'>('day');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -45,12 +46,12 @@ const Appointments: React.FC = () => {
     setQuickClient({ name: '', phone: '' });
   };
 
-  // NOVA FUNÇÃO: Criar agendamento ao clicar em um horário vazio
   const handleClickEmptySlot = (professionalId: string, timeSlot: string) => {
     setNewApp({
       ...newApp,
       professionalId: professionalId,
-      startTime: timeSlot
+      startTime: timeSlot,
+      date: currentDate
     });
     setShowAddModal(true);
   };
@@ -63,8 +64,19 @@ const Appointments: React.FC = () => {
       const [h, m] = newApp.startTime.split(':').map(Number);
       const totalMinutes = h * 60 + m + service.durationMinutes;
       const endTime = `${Math.floor(totalMinutes / 60).toString().padStart(2, '0')}:${(totalMinutes % 60).toString().padStart(2, '0')}`;
-      await addAppointment({ ...newApp, clientName: clients.find(c => c.id === newApp.clientId)?.name || '', clientPhone: clients.find(c => c.id === newApp.clientId)?.phone || '', serviceName: service.name, professionalName: professionals.find(p => p.id === newApp.professionalId)?.name || '', date: currentDate, endTime, price: service.price });
+      // ✅ usa newApp.date ao invés de currentDate fixo
+      await addAppointment({ 
+        ...newApp, 
+        clientName: clients.find(c => c.id === newApp.clientId)?.name || '', 
+        clientPhone: clients.find(c => c.id === newApp.clientId)?.phone || '', 
+        serviceName: service.name, 
+        professionalName: professionals.find(p => p.id === newApp.professionalId)?.name || '', 
+        date: newApp.date, 
+        endTime, 
+        price: service.price 
+      });
       setShowAddModal(false);
+      setNewApp({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00', date: new Date().toISOString().split('T')[0] });
     } catch (err) { alert("Erro ao agendar."); }
   };
 
@@ -75,6 +87,13 @@ const Appointments: React.FC = () => {
       const endTime = `${Math.floor((h * 60 + m + (service?.durationMinutes || 30)) / 60).toString().padStart(2, '0')}:${((h * 60 + m + (service?.durationMinutes || 30)) % 60).toString().padStart(2, '0')}`;
       rescheduleAppointment(showRescheduleModal.id, rescheduleData.date, rescheduleData.time, endTime);
       setShowRescheduleModal(null);
+    }
+  };
+
+  // ✅ FIX: Função de deletar agendamento (usada nas abas Mês e Todos)
+  const handleDelete = async (id: string) => {
+    if (confirm('Deseja excluir este agendamento?')) {
+      await deleteAppointment(id);
     }
   };
 
@@ -169,20 +188,30 @@ const Appointments: React.FC = () => {
         {viewMode === 'grid' ? (
           <div className={`overflow-auto h-full scrollbar-hide ${compactView ? '' : ''}`}>
             <div className={compactView ? 'w-full' : 'min-w-[900px]'}>
-              {/* CABEÇALHO: Reduzido padding vertical */}
+              {/* ✅ CABEÇALHO: fotos dos profissionais maiores */}
               <div className={`border-b border-white/5 bg-white/[0.02] sticky top-0 z-10 ${compactView ? 'grid grid-cols-[60px_repeat(auto-fit,minmax(120px,1fr))]' : 'grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))]'}`}>
                 <div className={`flex items-center justify-center text-zinc-500 ${compactView ? 'p-2' : 'p-3'}`}><Clock size={compactView ? 14 : 18} /></div>
                 {professionals.map(prof => (
-                  <div key={prof.id} className={`flex items-center justify-center gap-3 border-r border-white/5 ${compactView ? 'p-2 flex-col' : 'p-3'}`}>
-                    <img src={prof.avatar} className={`rounded-lg object-cover border border-[#D4AF37] ${compactView ? 'w-6 h-6' : 'w-8 h-8'}`} alt="" />
-                    <span className={`font-black uppercase tracking-widest ${compactView ? 'text-[8px]' : 'text-[10px]'}`}>{prof.name.split(' ')[0]}</span>
+                  <div key={prof.id} className={`flex items-center justify-center gap-3 border-r border-white/5 ${compactView ? 'p-2 flex-col' : 'p-4 flex-col'}`}>
+                    {/* ✅ Fotos maiores: de w-8/h-8 para w-14/h-14 no modo normal */}
+                    <img 
+                      src={prof.avatar} 
+                      className={`rounded-xl object-cover border-2 border-[#D4AF37] shadow-lg ${compactView ? 'w-7 h-7' : 'w-14 h-14'}`} 
+                      alt={prof.name} 
+                    />
+                    <span className={`font-black uppercase tracking-widest ${compactView ? 'text-[8px]' : 'text-[11px]'} ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-200'}`}>
+                      {prof.name.split(' ')[0]}
+                    </span>
                   </div>
                 ))}
               </div>
-              {/* LINHAS DE HORÁRIO: Altura reduzida de 100px/50px para 60px/35px */}
+              {/* ✅ LINHAS DE HORÁRIO: números mais claros */}
               {hours.map(hour => (
-                <div key={hour} className={`border-b border-white/[0.03] ${compactView ? 'grid grid-cols-[60px_repeat(auto-fit,minmax(120px,1fr))] min-h-[35px]' : 'grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] min-h-[60px]'}`}>
-                  <div className="flex items-center justify-center border-r border-white/5 bg-white/[0.01]"><span className={`font-black text-zinc-600 ${compactView ? 'text-[9px]' : 'text-[10px]'}`}>{hour}</span></div>
+                <div key={hour} className={`border-b border-white/[0.03] ${compactView ? 'grid grid-cols-[60px_repeat(auto-fit,minmax(120px,1fr))] min-h-[35px]' : 'grid grid-cols-[80px_repeat(auto-fit,minmax(200px,1fr))] min-h-[70px]'}`}>
+                  {/* ✅ Hora: de text-zinc-600 para text-zinc-300 (mais claro) e tamanho maior */}
+                  <div className="flex items-center justify-center border-r border-white/5 bg-white/[0.01]">
+                    <span className={`font-black ${compactView ? 'text-[9px] text-zinc-400' : 'text-[12px] text-zinc-300'}`}>{hour}</span>
+                  </div>
                   {professionals.map(prof => {
                     const app = appointmentsToday.find(a => a.professionalId === prof.id && a.startTime.split(':')[0] === hour.split(':')[0] && a.status !== 'CANCELADO');
                     return (
@@ -230,14 +259,15 @@ const Appointments: React.FC = () => {
                         {app.status === 'CONCLUIDO_PAGO' ? <Check size={20}/> : <Clock size={20}/>}
                      </div>
                      <div>
-                        <p className="text-xs font-black">{app.clientName} • <span className="text-[#D4AF37]">{app.startTime}</span></p>
+                        <p className="text-xs font-black">{app.clientName} • <span className="text-[#D4AF37]">{app.startTime}</span> • <span className="text-zinc-500 text-[10px]">{new Date(app.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span></p>
                         <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">{app.serviceName} com {app.professionalName}</p>
                      </div>
                   </div>
+                  {/* ✅ FIX: botão de deletar funcionando nas abas Mês e Todos */}
                   <div className="flex items-center gap-2">
                      <button onClick={() => updateAppointmentStatus(app.id, 'CONCLUIDO_PAGO')} className={`p-2 rounded-xl border transition-all ${app.status === 'CONCLUIDO_PAGO' ? 'bg-emerald-500 text-white border-transparent' : 'bg-white/5 border-white/10 text-zinc-500 hover:text-white'}`}><DollarSign size={16}/></button>
                      <button onClick={() => setShowRescheduleModal(app)} className="p-2 bg-white/5 border border-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"><RefreshCw size={16}/></button>
-                     <button onClick={() => updateAppointmentStatus(app.id, 'CANCELADO')} className="p-2 bg-white/5 border border-white/10 text-zinc-500 hover:text-red-500 rounded-xl transition-all"><X size={16}/></button>
+                     <button onClick={() => handleDelete(app.id)} className="p-2 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20 rounded-xl transition-all" title="Excluir agendamento"><Trash2 size={16}/></button>
                   </div>
                </div>
              ))}
@@ -245,7 +275,7 @@ const Appointments: React.FC = () => {
         )}
       </div>
 
-      {/* Modais omitidos por brevidade mas restaurados conforme lógica anterior de novo cliente e novo agendamento */}
+      {/* Modal Reagendar */}
       {showRescheduleModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
           <div className="cartao-vidro w-full max-w-sm rounded-[2.5rem] p-10 space-y-8 border-[#D4AF37]/30 shadow-2xl">
@@ -262,6 +292,7 @@ const Appointments: React.FC = () => {
         </div>
       )}
       
+      {/* Modal Novo Agendamento - ✅ com campo de data */}
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
           <div className="cartao-vidro w-full max-w-lg rounded-[2.5rem] p-10 space-y-8 border-[#D4AF37]/20 relative">
@@ -291,7 +322,29 @@ const Appointments: React.FC = () => {
                     <option value="" className="bg-zinc-950">Serviço</option>
                     {services.map(s => <option key={s.id} value={s.id} className="bg-zinc-950">{s.name} • R$ {s.price}</option>)}
                   </select>
-                  <input required type="time" value={newApp.startTime} onChange={e => setNewApp({...newApp, startTime: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-xs font-black" />
+                  {/* ✅ NOVO: Campo de data para escolher o dia do agendamento */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Data</label>
+                      <input 
+                        required 
+                        type="date" 
+                        value={newApp.date} 
+                        onChange={e => setNewApp({...newApp, date: e.target.value})} 
+                        className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-xs font-black" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Horário</label>
+                      <input 
+                        required 
+                        type="time" 
+                        value={newApp.startTime} 
+                        onChange={e => setNewApp({...newApp, startTime: e.target.value})} 
+                        className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-xs font-black" 
+                      />
+                    </div>
+                  </div>
                </div>
                <div className="flex gap-3">
                   <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-white/5 py-4 rounded-xl font-black uppercase text-[10px] text-zinc-500">Cancelar</button>
