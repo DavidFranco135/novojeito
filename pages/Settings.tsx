@@ -365,7 +365,7 @@ const Settings: React.FC = () => {
                   <input 
                     type="text" 
                     value={newPlan.name || ''}
-                   onChange={e => setNewPlan({...newPlan, discount: parseInt(e.target.value) || 0})}
+                    onChange={e => setNewPlan({...newPlan, name: e.target.value})}
                     className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                     placeholder="Ex: Plano Premium"
                   />
@@ -404,7 +404,7 @@ const Settings: React.FC = () => {
                     min="0"
                     max="100"
                     value={newPlan.discount || 0}
-                    onChange={e => setNewPlan({...newPlan, discount: parseInt(e.target.value) || undefined})}
+                    onChange={e => setNewPlan({...newPlan, discount: parseInt(e.target.value) || 0})}
                     className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                   />
                 </div>
