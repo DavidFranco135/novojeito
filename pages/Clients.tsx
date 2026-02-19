@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Search, UserPlus, Phone, Mail, Trash2, Edit2, X, Clock, Calendar, Scissors, CheckCircle2, History } from 'lucide-react';
 import { useBarberStore } from '../store';
@@ -67,7 +66,7 @@ const Clients: React.FC = () => {
           placeholder="Pesquisar Clientes (Nome ou Celular)..." 
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 pl-16 pr-8 text-sm focus:border-[#D4AF37]/50 outline-none transition-all placeholder:text-zinc-700 font-bold text-white"
+          className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 pl-16 pr-8 text-sm focus:border-[#633510]/50 outline-none transition-all placeholder:text-zinc-700 font-bold text-white"
         />
       </div>
 
@@ -87,11 +86,11 @@ const Clients: React.FC = () => {
                 <tr key={client.id} className="hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => setSelectedClient(client)}>
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-[#D4AF37]/20 flex items-center justify-center font-black text-[#D4AF37] text-sm italic group-hover:bg-[#D4AF37] group-hover:text-black transition-all">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-[#633510]/20 flex items-center justify-center font-black text-[#633510] text-sm italic group-hover:bg-[#633510] group-hover:text-black transition-all">
                         {client.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white group-hover:text-[#D4AF37] transition-all">{client.name}</p>
+                        <p className="text-sm font-bold text-white group-hover:text-[#633510] transition-all">{client.name}</p>
                         <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest mt-0.5">Desde: {new Date(client.createdAt).toLocaleDateString('pt-BR')}</p>
                       </div>
                     </div>
@@ -129,10 +128,10 @@ const Clients: React.FC = () => {
       {/* Histórico e Agendamentos Detalhados do Cliente */}
       {selectedClient && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
-          <div className="cartao-vidro w-full max-w-2xl rounded-[3rem] p-8 md:p-12 space-y-8 border-[#D4AF37]/10 relative shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <div className="cartao-vidro w-full max-w-2xl rounded-[3rem] p-8 md:p-12 space-y-8 border-[#633510]/10 relative shadow-2xl max-h-[85vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-start">
                <div className="flex items-center gap-5">
-                  <div className="w-16 h-16 rounded-[1.5rem] bg-[#D4AF37] text-black flex items-center justify-center text-3xl font-black italic">{selectedClient.name.charAt(0)}</div>
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-[#633510] text-black flex items-center justify-center text-3xl font-black italic">{selectedClient.name.charAt(0)}</div>
                   <div>
                     <h2 className="text-2xl font-black font-display italic text-white tracking-tight">{selectedClient.name}</h2>
                     <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">{selectedClient.phone}</p>
@@ -145,7 +144,7 @@ const Clients: React.FC = () => {
                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                      <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest mb-1">Total Investido</p>
-                     <p className="text-xl font-black text-[#D4AF37] italic font-display">R$ {selectedClient.totalSpent.toFixed(2)}</p>
+                     <p className="text-xl font-black text-[#633510] italic font-display">R$ {selectedClient.totalSpent.toFixed(2)}</p>
                   </div>
                   <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                      <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest mb-1">Rituais Concluídos</p>
@@ -155,11 +154,11 @@ const Clients: React.FC = () => {
 
                {/* Futuros Agendamentos */}
                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Próximos Rituais</h3>
+                  <h3 className="text-[10px] font-black text-[#633510] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Próximos Rituais</h3>
                   {clientAppointments.future.map(app => (
-                    <div key={app.id} className="bg-white/5 border border-[#D4AF37]/20 p-4 rounded-2xl flex items-center justify-between group hover:bg-[#D4AF37]/5 transition-all">
+                    <div key={app.id} className="bg-white/5 border border-[#633510]/20 p-4 rounded-2xl flex items-center justify-between group hover:bg-[#633510]/5 transition-all">
                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center text-[#D4AF37]"><Calendar size={18}/></div>
+                          <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center text-[#633510]"><Calendar size={18}/></div>
                           <div>
                              <p className="text-sm font-bold text-white">{app.serviceName}</p>
                              <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider">{new Date(app.date).toLocaleDateString('pt-BR')} • {app.startTime}</p>
@@ -201,20 +200,20 @@ const Clients: React.FC = () => {
 
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95 duration-300">
-          <div className="cartao-vidro w-full max-w-lg rounded-[3rem] p-8 md:p-12 space-y-10 border-[#D4AF37]/20 shadow-2xl relative">
+          <div className="cartao-vidro w-full max-w-lg rounded-[3rem] p-8 md:p-12 space-y-10 border-[#633510]/20 shadow-2xl relative">
             <h2 className="text-2xl font-black font-display italic text-white tracking-tight">{editingId ? 'Refinar Cadastro' : 'Novo Cliente '}</h2>
             <div className="space-y-6">
               <div className="space-y-2">
                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">Nome Completo</label>
-                 <input type="text" placeholder="Ex: Carlos Alberto" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white font-bold focus:border-[#D4AF37]/50" />
+                 <input type="text" placeholder="Ex: Carlos Alberto" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white font-bold focus:border-[#633510]/50" />
               </div>
               <div className="space-y-2">
                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">WhatsApp / Celular</label>
-                 <input type="tel" placeholder="(21) 99999-9999" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white font-bold focus:border-[#D4AF37]/50" />
+                 <input type="tel" placeholder="(21) 99999-9999" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white font-bold focus:border-[#633510]/50" />
               </div>
               <div className="space-y-2">
                  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest ml-1">E-mail Corporativo</label>
-                 <input type="email" placeholder="email@provedor.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white font-bold focus:border-[#D4AF37]/50" />
+                 <input type="email" placeholder="email@provedor.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-white font-bold focus:border-[#633510]/50" />
               </div>
               <div className="flex gap-4 pt-4">
                  <button onClick={() => setShowAddModal(false)} className="flex-1 bg-white/5 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-[9px] text-zinc-600 hover:text-white transition-all">Cancelar</button>
