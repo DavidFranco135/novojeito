@@ -254,11 +254,11 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
   if (success) return (
     <div className={`min-h-screen flex items-center justify-center p-6 animate-in zoom-in ${theme === 'light' ? 'bg-[#F8F9FA]' : 'bg-[#050505]'}`}>
-      <div className={`w-full max-w-lg p-12 rounded-[3rem] text-center space-y-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#633510]/30'}`}>
+      <div className={`w-full max-w-lg p-12 rounded-[3rem] text-center space-y-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/30'}`}>
         <div className="w-20 h-20 gradiente-ouro rounded-full mx-auto flex items-center justify-center"><Check className="w-10 h-10 text-black" /></div>
-        <h2 className="text-3xl font-black font-display italic text-[#633510]">Reserva Confirmada!</h2>
+        <h2 className="text-3xl font-black font-display italic text-[#C58A4A]">Reserva Confirmada!</h2>
         <p className={`text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Aguardamos você para sua melhor experiência da sua vida.</p>
-        <button onClick={() => window.location.reload()} className="bg-[#633510] text-black px-10 py-4 rounded-xl text-[10px] font-black uppercase">Voltar à Início</button>
+        <button onClick={() => window.location.reload()} className="bg-[#C58A4A] text-black px-10 py-4 rounded-xl text-[10px] font-black uppercase">Voltar à Início</button>
       </div>
     </div>
   );
@@ -270,11 +270,11 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
           <header className="relative h-[65vh] overflow-hidden flex flex-col items-center justify-center">
             <img src={config.coverImage} className="absolute inset-0 w-full h-full object-cover brightness-50" alt="Capa" />
             <div className={`absolute inset-0 bg-gradient-to-t ${theme === 'light' ? 'from-[#F8F9FA] via-transparent to-transparent' : 'from-[#050505] via-transparent to-transparent'}`}></div>
-            <div className="absolute top-6 right-6 z-[100]"><button onClick={() => setView('LOGIN')} className="bg-[#633510] text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95"><History size={16}/> PORTAL DO CLIENTE</button></div>
+            <div className="absolute top-6 right-6 z-[100]"><button onClick={() => setView('LOGIN')} className="bg-[#C58A4A] text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-2xl transition-all hover:scale-105 active:scale-95"><History size={16}/> PORTAL DO CLIENTE</button></div>
             <div className="relative z-20 text-center px-6 mt-10">
                <div className="w-28 h-28 rounded-3xl gradiente-ouro p-1 mx-auto mb-6"><div className="w-full h-full rounded-[2.2rem] bg-black overflow-hidden"><img src={config.logo} className="w-full h-full object-cover" alt="Logo" /></div></div>
                <h1 className={`text-5xl md:text-7xl font-black font-display italic tracking-tight ${theme === 'light' ? 'text-white drop-shadow-lg' : 'text-white'}`}>{config.name}</h1>
-               <p className="text-[#633510] text-[10px] font-black uppercase tracking-[0.4em] mt-3">{config.description}</p>
+               <p className="text-[#C58A4A] text-[10px] font-black uppercase tracking-[0.4em] mt-3">{config.description}</p>
             </div>
           </header>
 
@@ -306,12 +306,12 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     onMouseMove={(e) => handleMouseMove(e, destaqueRef)}
                   >
                    {sortedServicesForHighlights.map(svc => (
-                     <div key={svc.id} className={`snap-center flex-shrink-0 w-64 md:w-72 rounded-[2.5rem] overflow-hidden group shadow-2xl transition-all ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#633510]/30'}`}>
+                     <div key={svc.id} className={`snap-center flex-shrink-0 w-64 md:w-72 rounded-[2.5rem] overflow-hidden group shadow-2xl transition-all ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#C58A4A]/30'}`}>
                         <div className="h-48 overflow-hidden"><img src={svc.image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="" /></div>
                         <div className="p-6">
                            <h3 className={`text-xl font-black font-display italic leading-tight ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{svc.name}</h3>
                            {/* TAMANHO DO PREÇO REDUZIDO EM 20% (xl em vez de 2xl) */}
-                           <p className={`text-xl font-black mt-2 ${theme === 'light' ? 'text-blue-600' : 'text-[#633510]'}`}>R$ {svc.price.toFixed(2)}</p>
+                           <p className={`text-xl font-black mt-2 ${theme === 'light' ? 'text-blue-600' : 'text-[#C58A4A]'}`}>R$ {svc.price.toFixed(2)}</p>
                            <p className={`text-[9px] font-black uppercase ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>{svc.durationMinutes} min</p>
                            <button onClick={() => handleBookingStart(svc)} className="w-full mt-6 gradiente-ouro text-black py-3 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl">RESERVAR</button>
                         </div>
@@ -379,20 +379,20 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                   <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Planos VIP Exclusivos <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                      {config.vipPlans.filter(plan => plan.status === 'ATIVO').map(plan => (
-                       <div key={plan.id} className={`p-8 rounded-[2.5rem] border relative overflow-hidden transition-all hover:scale-[1.02] ${theme === 'light' ? 'bg-white border-zinc-200 shadow-lg' : 'cartao-vidro border-[#633510]/30'}`}>
+                       <div key={plan.id} className={`p-8 rounded-[2.5rem] border relative overflow-hidden transition-all hover:scale-[1.02] ${theme === 'light' ? 'bg-white border-zinc-200 shadow-lg' : 'cartao-vidro border-[#C58A4A]/30'}`}>
                           <div className="absolute top-4 right-4">
-                             <Crown className="text-[#633510]" size={32} />
+                             <Crown className="text-[#C58A4A]" size={32} />
                           </div>
                           <h3 className={`text-2xl font-black font-display italic mb-2 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</h3>
                           <div className="flex items-baseline gap-2 mb-6">
-                             <span className={`text-4xl font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#633510]'}`}>R$ {plan.price}</span>
+                             <span className={`text-4xl font-black ${theme === 'light' ? 'text-blue-600' : 'text-[#C58A4A]'}`}>R$ {plan.price}</span>
                              <span className={`text-xs font-black uppercase ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`}>/{plan.period === 'MENSAL' ? 'mês' : 'ano'}</span>
                              {plan.discount && <span className="text-xs font-black text-emerald-500">-{plan.discount}%</span>}
                           </div>
                           <ul className="space-y-3 mb-6">
                              {plan.benefits.map((benefit, idx) => (
                                <li key={idx} className={`flex items-start gap-3 text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                                  <CheckCircle2 size={16} className="text-[#633510] flex-shrink-0 mt-0.5" />
+                                  <CheckCircle2 size={16} className="text-[#C58A4A] flex-shrink-0 mt-0.5" />
                                   <span>{benefit}</span>
                                </li>
                              ))}
@@ -479,13 +479,13 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                          <div className="absolute -top-4 -left-4 w-10 h-10 gradiente-ouro rounded-full flex items-center justify-center text-black shadow-lg"><Quote size={18} fill="currentColor"/></div>
                          <div className="flex gap-1 mb-4">
                             {[1,2,3,4,5].map(s => (
-                               <Star key={s} size={14} fill={s <= rev.rating ? '#633510' : 'none'} className={s <= rev.rating ? 'text-[#633510]' : 'text-zinc-800'}/>
+                               <Star key={s} size={14} fill={s <= rev.rating ? '#C58A4A' : 'none'} className={s <= rev.rating ? 'text-[#C58A4A]' : 'text-zinc-800'}/>
                             ))}
                          </div>
                          <p className={`text-sm italic leading-relaxed mb-6 text-zinc-300`}>"{rev.comment}"</p>
                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#633510]/20 flex items-center justify-center">
-                               <User size={18} className="text-[#633510]"/>
+                            <div className="w-10 h-10 rounded-full bg-[#C58A4A]/20 flex items-center justify-center">
+                               <User size={18} className="text-[#C58A4A]"/>
                             </div>
                             <p className={`text-[10px] font-black text-white`}>{rev.userName}</p>
                          </div>
@@ -500,11 +500,11 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Nossos Profissionais <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                    {professionals.map(prof => (
-                      <div key={prof.id} className={`rounded-[2rem] p-6 text-center space-y-4 group transition-all hover:scale-105 ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#633510]/30'}`}>
+                      <div key={prof.id} className={`rounded-[2rem] p-6 text-center space-y-4 group transition-all hover:scale-105 ${theme === 'light' ? 'bg-white border border-zinc-200 hover:border-blue-300' : 'cartao-vidro border-white/5 hover:border-[#C58A4A]/30'}`}>
                          <div className="relative mx-auto w-24 h-24 flex items-center justify-center">
                             <img 
                               src={prof.avatar} 
-                              className="w-full h-full rounded-2xl object-cover border-2 border-[#633510] cursor-pointer" 
+                              className="w-full h-full rounded-2xl object-cover border-2 border-[#C58A4A] cursor-pointer" 
                               alt="" 
                               onClick={() => { setSelectedProfessional(prof); setShowProfessionalModal(true); }}
                             />
@@ -529,7 +529,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                       {config.locationImage ? (
                         <img src={config.locationImage} className="w-full h-full object-cover" alt="Nossa localização" />
                       ) : (
-                        <MapPin className="text-[#633510]" size={48}/>
+                        <MapPin className="text-[#C58A4A]" size={48}/>
                       )}
                    </div>
                    <div className={`p-8 ${theme === 'light' ? 'bg-white' : 'bg-white/5'}`}>
@@ -578,18 +578,18 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
       {view === 'LOGIN' && (
         <div className="flex-1 flex items-center justify-center p-6 animate-in fade-in zoom-in">
-           <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-10 shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#633510]/20'}`}>
+           <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-10 shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/20'}`}>
               <div className="text-center space-y-4">
-                 <div className="w-16 h-16 rounded-2xl gradiente-ouro p-1 mx-auto"><div className="w-full h-full rounded-[1.8rem] bg-black overflow-hidden flex items-center justify-center"><Lock className="text-[#633510]" size={24}/></div></div>
+                 <div className="w-16 h-16 rounded-2xl gradiente-ouro p-1 mx-auto"><div className="w-full h-full rounded-[1.8rem] bg-black overflow-hidden flex items-center justify-center"><Lock className="text-[#C58A4A]" size={24}/></div></div>
                  <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Portal do Cliente</h2>
                  <p className={`text-[10px] uppercase tracking-widest font-black ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Acesse com seu e-mail ou celular</p>
               </div>
               <div className="space-y-6">
-                 <input type="text" placeholder="E-mail ou WhatsApp" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#633510]'}`} />
-                 <input type="password" placeholder="Senha" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#633510]'}`} />
+                 <input type="text" placeholder="E-mail ou WhatsApp" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                 <input type="password" placeholder="Senha" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
                  <button onClick={handleLoginPortal} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all">ACESSAR PORTAL</button>
               </div>
-              <button onClick={() => setView('HOME')} className={`w-full text-[10px] font-black uppercase tracking-widest transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#633510]'}`}>Voltar ao Início</button>
+              <button onClick={() => setView('HOME')} className={`w-full text-[10px] font-black uppercase tracking-widest transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}>Voltar ao Início</button>
            </div>
         </div>
       )}
@@ -606,8 +606,8 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
            <div className="grid md:grid-cols-3 gap-6 mb-10">
               <div className={`md:col-span-1 rounded-[2rem] p-8 text-center space-y-6 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
                  <div className="relative inline-block">
-                    <img src={loggedClient.avatar || 'https://via.placeholder.com/120'} className="w-28 h-28 rounded-3xl object-cover border-4 border-[#633510]" alt="" />
-                    <label className="absolute -bottom-2 -right-2 bg-[#633510] text-black p-2 rounded-xl cursor-pointer hover:scale-110 transition-all shadow-lg">
+                    <img src={loggedClient.avatar || 'https://via.placeholder.com/120'} className="w-28 h-28 rounded-3xl object-cover border-4 border-[#C58A4A]" alt="" />
+                    <label className="absolute -bottom-2 -right-2 bg-[#C58A4A] text-black p-2 rounded-xl cursor-pointer hover:scale-110 transition-all shadow-lg">
                        <Upload size={14}/>
                        <input type="file" accept="image/*" onChange={handleUpdateProfilePhoto} className="hidden"/>
                     </label>
@@ -617,15 +617,15 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     <p className={`text-[9px] uppercase tracking-widest font-black mt-2 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Cliente Exclusivo</p>
                  </div>
                  <div className={`space-y-2 text-left ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-400'}`}>
-                    <p className="text-xs flex items-center gap-2"><Phone size={12} className="text-[#633510]"/> {loggedClient.phone}</p>
-                    <p className="text-xs flex items-center gap-2"><Mail size={12} className="text-[#633510]"/> {loggedClient.email}</p>
+                    <p className="text-xs flex items-center gap-2"><Phone size={12} className="text-[#C58A4A]"/> {loggedClient.phone}</p>
+                    <p className="text-xs flex items-center gap-2"><Mail size={12} className="text-[#C58A4A]"/> {loggedClient.email}</p>
                  </div>
               </div>
 
               <div className="md:col-span-2 space-y-6">
                  <div className={`rounded-[2rem] p-8 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-white/5'}`}>
                     <h3 className={`text-lg font-black font-display italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Enviar Sugestão</h3>
-                    <textarea rows={4} placeholder="Conte-nos suas ideias..." value={suggestionText} onChange={e => setSuggestionText(e.target.value)} className={`w-full border p-4 rounded-xl outline-none text-sm ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#633510]'}`}/>
+                    <textarea rows={4} placeholder="Conte-nos suas ideias..." value={suggestionText} onChange={e => setSuggestionText(e.target.value)} className={`w-full border p-4 rounded-xl outline-none text-sm ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`}/>
                     <button onClick={handleSendSuggestion} disabled={loading} className="mt-4 w-full gradiente-ouro text-black py-4 rounded-xl font-black uppercase text-[10px] shadow-xl">
                        {loading ? 'Enviando...' : <><Send size={14} className="inline mr-2"/> Enviar Sugestão</>}
                     </button>
@@ -640,7 +640,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                        {suggestions.filter(s => s.clientPhone === loggedClient.phone).map(sugg => (
                           <div key={sugg.id} className={`p-4 rounded-xl border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
                              <div className="flex items-start gap-3 mb-2">
-                                <MessageSquare size={16} className="text-[#633510] flex-shrink-0 mt-1" />
+                                <MessageSquare size={16} className="text-[#C58A4A] flex-shrink-0 mt-1" />
                                 <div className="flex-1">
                                    <p className={`text-xs font-bold mb-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Enviado em {sugg.date}</p>
                                    <p className={`text-sm ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{sugg.message}</p>
@@ -649,7 +649,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                              {sugg.response && (
                                 <div className={`mt-3 pt-3 border-t ${theme === 'light' ? 'border-zinc-200' : 'border-white/10'}`}>
                                    <div className="flex items-start gap-2">
-                                      <div className="w-6 h-6 rounded-full bg-[#633510] flex items-center justify-center flex-shrink-0">
+                                      <div className="w-6 h-6 rounded-full bg-[#C58A4A] flex items-center justify-center flex-shrink-0">
                                          <Check size={12} className="text-black" />
                                       </div>
                                       <div>
@@ -753,20 +753,20 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
              <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Reservar Ritual</h2>
            </header>
            
-           <div className={`rounded-[2.5rem] p-8 md:p-12 shadow-2xl flex flex-col gap-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#633510]/10'}`}>
+           <div className={`rounded-[2.5rem] p-8 md:p-12 shadow-2xl flex flex-col gap-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/10'}`}>
               {passo === 2 && (
                 <div className="space-y-8 animate-in slide-in-from-right-2 text-center">
                   <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Escolha o Artífice</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                      {professionals.map(p => (
-                       <button key={p.id} onClick={() => { setSelecao({...selecao, professionalId: p.id}); setPasso(3); }} className={`p-6 rounded-[2rem] border transition-all flex flex-col items-center gap-4 group ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 hover:border-blue-400' : 'bg-white/5 border-white/5 hover:border-[#633510]'}`}>
+                       <button key={p.id} onClick={() => { setSelecao({...selecao, professionalId: p.id}); setPasso(3); }} className={`p-6 rounded-[2rem] border transition-all flex flex-col items-center gap-4 group ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 hover:border-blue-400' : 'bg-white/5 border-white/5 hover:border-[#C58A4A]'}`}>
                           <div className="relative">
-                             <img src={p.avatar} className="w-20 h-20 rounded-2xl object-cover border-2 border-white/10 group-hover:border-[#633510]" alt="" />
-                             <div className="absolute -bottom-2 -right-2 bg-[#633510] text-black text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1">
+                             <img src={p.avatar} className="w-20 h-20 rounded-2xl object-cover border-2 border-white/10 group-hover:border-[#C58A4A]" alt="" />
+                             <div className="absolute -bottom-2 -right-2 bg-[#C58A4A] text-black text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1">
                                 <Heart size={8} fill="currentColor"/> {p.likes || 0}
                              </div>
                           </div>
-                          <span className={`text-[11px] font-black uppercase group-hover:text-[#633510] ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{p.name}</span>
+                          <span className={`text-[11px] font-black uppercase group-hover:text-[#C58A4A] ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{p.name}</span>
                        </button>
                      ))}
                   </div>
@@ -782,7 +782,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                        const d = new Date(); d.setDate(d.getDate() + i);
                        const dateStr = d.toISOString().split('T')[0];
                        return (
-                         <button key={i} onClick={() => { setSelecao({...selecao, date: dateStr}); setBookingError(null); }} className={`snap-center flex-shrink-0 w-24 h-28 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 ${selecao.date === dateStr ? 'bg-[#633510] text-black border-transparent scale-105 shadow-xl' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-zinc-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:border-white/20'}`}>
+                         <button key={i} onClick={() => { setSelecao({...selecao, date: dateStr}); setBookingError(null); }} className={`snap-center flex-shrink-0 w-24 h-28 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 ${selecao.date === dateStr ? 'bg-[#C58A4A] text-black border-transparent scale-105 shadow-xl' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-zinc-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:border-white/20'}`}>
                             <span className="text-[8px] font-black uppercase opacity-60">{d.toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
                             <span className="text-2xl font-black font-display">{d.getDate()}</span>
                          </button>
@@ -793,12 +793,12 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                     <div className="space-y-6">
                       {(Object.entries(turnos) as [string, string[]][]).map(([turno, horarios]) => (
                         <div key={turno} className="space-y-4">
-                          <h4 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-4 ${theme === 'light' ? 'text-blue-600' : 'text-[#633510]'}`}>{turno === 'manha' ? 'Manhã' : turno === 'tarde' ? 'Tarde' : 'Noite'} <div className={`h-px flex-1 ${theme === 'light' ? 'bg-zinc-200' : 'bg-white/5'}`}></div></h4>
+                          <h4 className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-4 ${theme === 'light' ? 'text-blue-600' : 'text-[#C58A4A]'}`}>{turno === 'manha' ? 'Manhã' : turno === 'tarde' ? 'Tarde' : 'Noite'} <div className={`h-px flex-1 ${theme === 'light' ? 'bg-zinc-200' : 'bg-white/5'}`}></div></h4>
                           <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                             {horarios.map(t => {
                                const isOccupied = checkAvailability(selecao.date, t, selecao.professionalId);
                                return (
-                                 <button key={t} disabled={isOccupied} onClick={() => { setSelecao({...selecao, time: t}); setPasso(4); }} className={`py-3 rounded-xl border text-[10px] font-black transition-all ${isOccupied ? 'border-red-500/20 text-red-500/30 cursor-not-allowed bg-red-500/5' : selecao.time === t ? 'bg-[#633510] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#633510]/50'}`}>
+                                 <button key={t} disabled={isOccupied} onClick={() => { setSelecao({...selecao, time: t}); setPasso(4); }} className={`py-3 rounded-xl border text-[10px] font-black transition-all ${isOccupied ? 'border-red-500/20 text-red-500/30 cursor-not-allowed bg-red-500/5' : selecao.time === t ? 'bg-[#C58A4A] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#C58A4A]/50'}`}>
                                     {t}
                                  </button>
                                );
@@ -815,9 +815,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 <div className="space-y-8 animate-in slide-in-from-right-2 text-center">
                   <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Sua Identificação</h3>
                   <div className="space-y-4 max-w-sm mx-auto w-full">
-                     <div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#633510]"/><input type="text" placeholder="Nome" value={selecao.clientName} onChange={e => setSelecao({...selecao, clientName: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#633510]'}`} /></div>
-                     <div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#633510]"/><input type="tel" placeholder="WhatsApp" value={selecao.clientPhone} onChange={e => setSelecao({...selecao, clientPhone: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#633510]'}`} /></div>
-                     <div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#633510]"/><input type="email" placeholder="E-mail para identificação" value={selecao.clientEmail} onChange={e => setSelecao({...selecao, clientEmail: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#633510]'}`} /></div>
+                     <div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="text" placeholder="Nome" value={selecao.clientName} onChange={e => setSelecao({...selecao, clientName: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                     <div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="tel" placeholder="WhatsApp" value={selecao.clientPhone} onChange={e => setSelecao({...selecao, clientPhone: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                     <div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="email" placeholder="E-mail para identificação" value={selecao.clientEmail} onChange={e => setSelecao({...selecao, clientEmail: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
                   </div>
                   <button onClick={handleConfirmBooking} disabled={loading} className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl">
                      {loading ? 'Processando...' : 'Confirmar Ritual'}
@@ -830,20 +830,20 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
       {showReviewModal && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in-95 ${theme === 'light' ? 'bg-black/70' : 'bg-black/95'}`}>
-           <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-8 shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#633510]/30'}`}>
+           <div className={`w-full max-w-md rounded-[3rem] p-12 space-y-8 shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/30'}`}>
               <div className="text-center space-y-4">
-                 <MessageSquare className="w-12 h-12 text-[#633510] mx-auto"/>
+                 <MessageSquare className="w-12 h-12 text-[#C58A4A] mx-auto"/>
                  <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Sua Experiência</h2>
               </div>
               <div className="space-y-8 text-center">
                  <div className="flex justify-center gap-3">
                     {[1,2,3,4,5].map(star => (
-                       <button key={star} onClick={() => setNewReview({...newReview, rating: star})} className={`transition-all ${newReview.rating >= star ? 'text-[#633510] scale-125' : theme === 'light' ? 'text-zinc-300' : 'text-zinc-800'}`}>
+                       <button key={star} onClick={() => setNewReview({...newReview, rating: star})} className={`transition-all ${newReview.rating >= star ? 'text-[#C58A4A] scale-125' : theme === 'light' ? 'text-zinc-300' : 'text-zinc-800'}`}>
                           <Star size={32} fill={newReview.rating >= star ? 'currentColor' : 'none'}/>
                        </button>
                     ))}
                  </div>
-                 <textarea rows={4} placeholder="Conte-nos como foi..." value={newReview.comment} onChange={e => setNewReview({...newReview, comment: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none font-medium transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#633510]'}`}/>
+                 <textarea rows={4} placeholder="Conte-nos como foi..." value={newReview.comment} onChange={e => setNewReview({...newReview, comment: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none font-medium transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`}/>
               </div>
               <div className="flex gap-4">
                  <button onClick={() => setShowReviewModal(false)} className={`flex-1 py-5 rounded-xl text-[10px] font-black uppercase ${theme === 'light' ? 'bg-zinc-100 text-zinc-700' : 'bg-white/5 text-zinc-500'}`}>Voltar</button>
@@ -855,7 +855,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
       {showProfessionalModal && selectedProfessional && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-xl animate-in zoom-in-95 ${theme === 'light' ? 'bg-black/70' : 'bg-black/95'}`}>
-           <div className={`w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#633510]/30'}`}>
+           <div className={`w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/30'}`}>
               <div className="relative h-96">
                  <img src={selectedProfessional.avatar} className="w-full h-full object-contain bg-black" alt={selectedProfessional.name} />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
@@ -868,7 +868,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                  <div className="absolute bottom-6 left-6 right-6">
                     <h2 className="text-4xl font-black font-display italic text-white mb-2">{selectedProfessional.name}</h2>
                     <div className="flex items-center gap-4">
-                       <div className="flex items-center gap-2 text-[#633510]">
+                       <div className="flex items-center gap-2 text-[#C58A4A]">
                           <Heart size={14} fill="currentColor" />
                           <span className="text-xs font-black">{selectedProfessional.likes || 0} curtidas</span>
                        </div>
