@@ -356,7 +356,10 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   };
 
   const updateConfig = async (data: Partial<ShopConfig>) => {
-    await setDoc(doc(db, COLLECTIONS.CONFIG, 'main'), { ...config, ...data }, { merge: true });
+    // Remove campos undefined recursivamente — o Firestore não aceita undefined em nenhum campo
+    const sanitize = (obj: any): any => JSON.parse(JSON.stringify(obj));
+    const merged = sanitize({ ...config, ...data });
+    await setDoc(doc(db, COLLECTIONS.CONFIG, 'main'), merged, { merge: true });
   };
 
   const addShopReview = async (review: Omit<Review, 'id' | 'date'>) => {
