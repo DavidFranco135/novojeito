@@ -67,7 +67,7 @@ const Financial: React.FC = () => {
           <p className="text-3xl font-black text-white mt-2 font-display italic">R$ {metrics.despesas.toFixed(2)}</p>
         </div>
         <div onClick={() => setFilterType('TUDO')} className="cartao-vidro rounded-[2rem] p-8 border-[#D4AF37]/20 relative overflow-hidden group cursor-pointer">
-          <div className="w-12 h-12 bg-[#D4AF37]/10 text-[#D4AF37] rounded-2xl flex items-center justify-center mb-6"><TrendingUp size={24}/></div>
+          <div className="w-12 h-12 bg-[#D4AF37]/10 text-[#C58A4A] rounded-2xl flex items-center justify-center mb-6"><TrendingUp size={24}/></div>
           <h3 className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">EBITDA / Saldo</h3>
           <p className="text-3xl font-black text-[#D4AF37] mt-2 font-display italic">R$ {metrics.lucro.toFixed(2)}</p>
         </div>
