@@ -272,7 +272,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
             <div className={`absolute inset-0 bg-gradient-to-t ${theme === 'light' ? 'from-[#F8F9FA] via-transparent to-transparent' : 'from-[#050505] via-transparent to-transparent'}`}></div>
             <div className="absolute top-6 right-6 z-[100]"><button onClick={() => setView('LOGIN')} className="bg-[#C58A4A] text-black px-3 py-1.5 rounded-full text-[6px] font-black uppercase tracking-widest flex items-center gap-1 shadow-2xl transition-all hover:scale-105 active:scale-95"><History size={8}/> PORTAL DO CLIENTE</button></div>
             <div className="relative z-20 text-center px-6 mt-10">
-               <div className="w-56 h-56 rounded-[3rem] gradiente-ouro p-1 mx-auto mb-6"><div className="w-full h-full rounded-[2.8rem] bg-black overflow-hidden"><img src={config.logo} className="w-full h-full object-cover" alt="Logo" /></div></div>
+               <div className="w-32 h-32 rounded-[3rem] gradiente-ouro p-1 mx-auto mb-6"><div className="w-full h-full rounded-[2.8rem] bg-black overflow-hidden"><img src={config.logo} className="w-full h-full object-cover" alt="Logo" /></div></div>
                <h1 className={`text-5xl md:text-7xl font-black font-display italic tracking-tight ${theme === 'light' ? 'text-white drop-shadow-lg' : 'text-white'}`}>{config.name}</h1>
                <p className="text-[#C58A4A] text-[10px] font-black uppercase tracking-[0.4em] mt-3">{config.description}</p>
             </div>
