@@ -39,6 +39,11 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
   const [loginPassword, setLoginPassword] = useState('');
   const [loggedClient, setLoggedClient] = useState<Client | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  // identificação: 'form' | 'login' | 'register'
+  const [identMode, setIdentMode] = useState<'form' | 'login' | 'register'>('form');
+  const [identError, setIdentError] = useState<string | null>(null);
+  const [identPassword, setIdentPassword] = useState('');
+  const [identPasswordConfirm, setIdentPasswordConfirm] = useState('');
 
   // States para o portal do membro
   const [suggestionText, setSuggestionText] = useState('');
@@ -165,6 +170,41 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     finally { setLoading(false); }
   };
 
+  // Confirm booking for existing client (login flow in identification step)
+  const handleConfirmBookingWithClient = async (client: Client) => {
+    if (checkAvailability(selecao.date, selecao.time, selecao.professionalId)) {
+      setBookingError("Este horário acabou de ser ocupado. Por favor, escolha outro.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const serv = services.find(s => s.id === selecao.serviceId);
+      const [h, m] = selecao.time.split(':').map(Number);
+      const endTime = `${Math.floor((h * 60 + m + (serv?.durationMinutes || 30)) / 60).toString().padStart(2, '0')}:${((h * 60 + m + (serv?.durationMinutes || 30)) % 60).toString().padStart(2, '0')}`;
+      await addAppointment({ clientId: client.id, clientName: client.name, clientPhone: client.phone, serviceId: selecao.serviceId, serviceName: serv?.name || '', professionalId: selecao.professionalId, professionalName: professionals.find(p => p.id === selecao.professionalId)?.name || '', date: selecao.date, startTime: selecao.time, endTime, price: serv?.price || 0 }, true);
+      setSuccess(true);
+    } catch (err) { alert("Erro ao agendar."); }
+    finally { setLoading(false); }
+  };
+
+  // Confirm booking for new client (register flow — save with password)
+  const handleConfirmBookingWithPassword = async (password: string) => {
+    if (checkAvailability(selecao.date, selecao.time, selecao.professionalId)) {
+      setBookingError("Este horário acabou de ser ocupado. Por favor, escolha outro.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const client = await addClient({ name: selecao.clientName, phone: selecao.clientPhone, email: selecao.clientEmail, password });
+      const serv = services.find(s => s.id === selecao.serviceId);
+      const [h, m] = selecao.time.split(':').map(Number);
+      const endTime = `${Math.floor((h * 60 + m + (serv?.durationMinutes || 30)) / 60).toString().padStart(2, '0')}:${((h * 60 + m + (serv?.durationMinutes || 30)) % 60).toString().padStart(2, '0')}`;
+      await addAppointment({ clientId: client.id, clientName: client.name, clientPhone: client.phone, serviceId: selecao.serviceId, serviceName: serv?.name || '', professionalId: selecao.professionalId, professionalName: professionals.find(p => p.id === selecao.professionalId)?.name || '', date: selecao.date, startTime: selecao.time, endTime, price: serv?.price || 0 }, true);
+      setSuccess(true);
+    } catch (err) { alert("Erro ao agendar."); }
+    finally { setLoading(false); }
+  };
+
   const handleLoginPortal = () => {
     if(!loginIdentifier || !loginPassword) {
       alert("Preencha e-mail/celular e senha.");
@@ -272,7 +312,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
             <div className={`absolute inset-0 bg-gradient-to-t ${theme === 'light' ? 'from-[#F8F9FA] via-transparent to-transparent' : 'from-[#050505] via-transparent to-transparent'}`}></div>
             <div className="absolute top-6 right-6 z-[100]"><button onClick={() => setView('LOGIN')} className="bg-[#C58A4A] text-black px-3 py-1.5 rounded-full text-[6px] font-black uppercase tracking-widest flex items-center gap-1 shadow-2xl transition-all hover:scale-105 active:scale-95"><History size={8}/> PORTAL DO CLIENTE</button></div>
             <div className="relative z-20 text-center px-6 mt-10">
-               <div className="w-32 h-32 rounded-[3rem] gradiente-ouro p-1 mx-auto mb-6"><div className="w-full h-full rounded-[2.8rem] bg-black overflow-hidden"><img src={config.logo} className="w-full h-full object-cover" alt="Logo" /></div></div>
+               <div className="w-56 h-56 rounded-[3rem] gradiente-ouro p-1 mx-auto mb-6"><div className="w-full h-full rounded-[2.8rem] bg-black overflow-hidden"><img src={config.logo} className="w-full h-full object-cover" alt="Logo" /></div></div>
                <h1 className={`text-5xl md:text-7xl font-black font-display italic tracking-tight ${theme === 'light' ? 'text-white drop-shadow-lg' : 'text-white'}`}>{config.name}</h1>
                <p className="text-[#C58A4A] text-[10px] font-black uppercase tracking-[0.4em] mt-3">{config.description}</p>
             </div>
@@ -798,7 +838,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                             {horarios.map(t => {
                                const isOccupied = checkAvailability(selecao.date, t, selecao.professionalId);
                                return (
-                                 <button key={t} disabled={isOccupied} onClick={() => { setSelecao({...selecao, time: t}); setPasso(4); }} className={`py-3 rounded-xl border text-[10px] font-black transition-all ${isOccupied ? 'border-red-500/20 text-red-500/30 cursor-not-allowed bg-red-500/5' : selecao.time === t ? 'bg-[#C58A4A] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#C58A4A]/50'}`}>
+                                 <button key={t} disabled={isOccupied} onClick={() => { setSelecao({...selecao, time: t}); setIdentMode('form'); setIdentError(null); setIdentPassword(''); setIdentPasswordConfirm(''); setPasso(4); }} className={`py-3 rounded-xl border text-[10px] font-black transition-all ${isOccupied ? 'border-red-500/20 text-red-500/30 cursor-not-allowed bg-red-500/5' : selecao.time === t ? 'bg-[#C58A4A] text-black border-transparent shadow-lg' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-blue-400' : 'bg-white/5 border-white/5 text-zinc-400 hover:border-[#C58A4A]/50'}`}>
                                     {t}
                                  </button>
                                );
@@ -814,14 +854,75 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               {passo === 4 && (
                 <div className="space-y-8 animate-in slide-in-from-right-2 text-center">
                   <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Sua Identificação</h3>
-                  <div className="space-y-4 max-w-sm mx-auto w-full">
-                     <div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="text" placeholder="Nome" value={selecao.clientName} onChange={e => setSelecao({...selecao, clientName: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
-                     <div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="tel" placeholder="WhatsApp" value={selecao.clientPhone} onChange={e => setSelecao({...selecao, clientPhone: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
-                     <div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="email" placeholder="E-mail para identificação" value={selecao.clientEmail} onChange={e => setSelecao({...selecao, clientEmail: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
-                  </div>
-                  <button onClick={handleConfirmBooking} disabled={loading} className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl">
-                     {loading ? 'Processando...' : 'Confirmar Ritual'}
-                  </button>
+
+                  {identMode === 'form' && (
+                    <div className="space-y-4 max-w-sm mx-auto w-full">
+                      <div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="text" placeholder="Nome" value={selecao.clientName} onChange={e => setSelecao({...selecao, clientName: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                      <div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="tel" placeholder="WhatsApp" value={selecao.clientPhone} onChange={e => setSelecao({...selecao, clientPhone: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                      <div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="email" placeholder="E-mail para identificação" value={selecao.clientEmail} onChange={e => setSelecao({...selecao, clientEmail: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                      {identError && <p className="text-red-400 text-[10px] font-black">{identError}</p>}
+                      <button onClick={() => {
+                        if (!selecao.clientName || !selecao.clientPhone || !selecao.clientEmail) { setIdentError('Preencha todos os campos.'); return; }
+                        const cleanPhone = selecao.clientPhone.replace(/\D/g, '');
+                        const exists = clients.find(c => c.email.toLowerCase() === selecao.clientEmail.toLowerCase() || c.phone.replace(/\D/g, '') === cleanPhone);
+                        if (exists) {
+                          setIdentError('Este e-mail ou celular já possui conta. Faça login para continuar.');
+                          setIdentMode('login');
+                          setIdentPassword('');
+                        } else {
+                          setIdentError(null);
+                          setIdentMode('register');
+                          setIdentPassword('');
+                          setIdentPasswordConfirm('');
+                        }
+                      }} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl">
+                        Continuar
+                      </button>
+                    </div>
+                  )}
+
+                  {identMode === 'login' && (
+                    <div className="space-y-4 max-w-sm mx-auto w-full animate-in slide-in-from-right-2">
+                      <div className={`p-4 rounded-2xl border text-left text-[10px] font-black ${theme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-[#C58A4A]/10 border-[#C58A4A]/30 text-[#C58A4A]'}`}>
+                        Este e-mail ou celular já possui conta. Entre com sua senha para continuar.
+                      </div>
+                      <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="password" placeholder="Senha" value={identPassword} onChange={e => setIdentPassword(e.target.value)} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                      {identError && <p className="text-red-400 text-[10px] font-black">{identError}</p>}
+                      <button onClick={() => {
+                        const cleanPhone = selecao.clientPhone.replace(/\D/g, '');
+                        const client = clients.find(c => c.email.toLowerCase() === selecao.clientEmail.toLowerCase() || c.phone.replace(/\D/g, '') === cleanPhone);
+                        if (!client) { setIdentError('Cliente não encontrado.'); return; }
+                        if (client.password !== identPassword) { setIdentError('Senha incorreta.'); return; }
+                        setIdentError(null);
+                        setLoggedClient(client);
+                        setSelecao(prev => ({ ...prev, clientName: client.name, clientPhone: client.phone, clientEmail: client.email }));
+                        handleConfirmBookingWithClient(client);
+                      }} disabled={loading} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl">
+                        {loading ? 'Processando...' : 'Entrar e Confirmar Ritual'}
+                      </button>
+                      <button onClick={() => { setIdentMode('form'); setIdentError(null); }} className="w-full text-[10px] font-black text-zinc-500 hover:text-[#C58A4A] transition-all uppercase">← Voltar</button>
+                    </div>
+                  )}
+
+                  {identMode === 'register' && (
+                    <div className="space-y-4 max-w-sm mx-auto w-full animate-in slide-in-from-right-2">
+                      <div className={`p-4 rounded-2xl border text-left text-[10px] font-black ${theme === 'light' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`}>
+                        Crie uma senha para acessar o portal do cliente!
+                      </div>
+                      <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="password" placeholder="Crie uma senha (mín. 4 caracteres)" value={identPassword} onChange={e => setIdentPassword(e.target.value)} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                      <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="password" placeholder="Confirme a senha" value={identPasswordConfirm} onChange={e => setIdentPasswordConfirm(e.target.value)} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
+                      {identError && <p className="text-red-400 text-[10px] font-black">{identError}</p>}
+                      <button onClick={async () => {
+                        if (identPassword.length < 4) { setIdentError('Senha mínima de 4 caracteres.'); return; }
+                        if (identPassword !== identPasswordConfirm) { setIdentError('As senhas não coincidem.'); return; }
+                        setIdentError(null);
+                        await handleConfirmBookingWithPassword(identPassword);
+                      }} disabled={loading} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl">
+                        {loading ? 'Processando...' : 'Confirmar Ritual'}
+                      </button>
+                      <button onClick={() => { setIdentMode('form'); setIdentError(null); }} className="w-full text-[10px] font-black text-zinc-500 hover:text-[#C58A4A] transition-all uppercase">← Voltar</button>
+                    </div>
+                  )}
                </div>
               )}
            </div>
