@@ -64,18 +64,18 @@ const Services: React.FC = () => {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
           <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-600'}`} size={18} />
-          <input type="text" placeholder="Pesquisar rituais..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full border py-3 pl-12 pr-4 rounded-xl text-xs font-black outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+          <input type="text" placeholder="Pesquisar rituais..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className={`w-full border py-3 pl-12 pr-4 rounded-xl text-xs font-black outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {categories.map(cat => (
-            <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${activeCategory === cat ? 'bg-[#D4AF37] text-black border-transparent' : theme === 'light' ? 'bg-white border-zinc-200 text-zinc-600' : 'bg-white/5 text-zinc-500 border-white/5'}`}>{cat}</button>
+            <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${activeCategory === cat ? 'bg-[#C58A4A] text-black border-transparent' : theme === 'light' ? 'bg-white border-zinc-200 text-zinc-600' : 'bg-white/5 text-zinc-500 border-white/5'}`}>{cat}</button>
           ))}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredServices.map(s => (
-          <div key={s.id} className={`p-4 rounded-[2rem] border flex gap-4 transition-all group ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm hover:border-blue-400' : 'cartao-vidro border-white/5 hover:border-[#D4AF37]/40'}`}>
+          <div key={s.id} className={`p-4 rounded-[2rem] border flex gap-4 transition-all group ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm hover:border-blue-400' : 'cartao-vidro border-white/5 hover:border-[#C58A4A]/40'}`}>
             <div className="w-20 h-20 rounded-2xl overflow-hidden bg-zinc-900 flex-shrink-0">
                <img src={s.image} className="w-full h-full object-cover group-hover:scale-105 transition-all" alt="" />
             </div>
@@ -86,13 +86,13 @@ const Services: React.FC = () => {
                 {s.description && s.description.length > 50 && (
                   <button 
                     onClick={() => setExpandedDescriptions({...expandedDescriptions, [s.id]: !expandedDescriptions[s.id]})}
-                    className="text-[9px] font-black text-[#D4AF37] hover:text-[#D4AF37]/80 mt-1 transition-all"
+                    className="text-[9px] font-black text-[#C58A4A] hover:text-[#C58A4A]/80 mt-1 transition-all"
                   >
                     {expandedDescriptions[s.id] ? 'Ver menos' : 'Ver mais'}
                   </button>
                 )}
                 <div className="flex gap-3 mt-2">
-                   <span className="text-[9px] font-black text-[#D4AF37]">R$ {s.price}</span>
+                   <span className="text-[9px] font-black text-[#C58A4A]">R$ {s.price}</span>
                    <span className={`text-[9px] font-black ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>{s.durationMinutes} min</span>
                 </div>
               </div>
@@ -125,23 +125,23 @@ const Services: React.FC = () => {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2 space-y-1">
                     <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Nome</label>
-                    <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                    <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
                   </div>
                   <div className="space-y-1">
                     <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Valor (R$)</label>
-                    <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                    <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
                   </div>
                   <div className="space-y-1">
                     <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Duração (Min)</label>
-                    <input required type="number" value={formData.durationMinutes} onChange={e => setFormData({...formData, durationMinutes: parseInt(e.target.value)})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                    <input required type="number" value={formData.durationMinutes} onChange={e => setFormData({...formData, durationMinutes: parseInt(e.target.value)})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
                   </div>
                   <div className="md:col-span-2 space-y-1">
                     <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Categoria</label>
-                    <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} />
+                    <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
                   </div>
                   <div className="md:col-span-2 space-y-1">
                     <label className={`text-[9px] font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Descrição</label>
-                    <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold resize-none h-20 outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#D4AF37]'}`} placeholder="Descreva o serviço..."></textarea>
+                    <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className={`w-full border p-4 rounded-xl text-xs font-bold resize-none h-20 outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} placeholder="Descreva o serviço..."></textarea>
                   </div>
                </div>
                <button type="submit" className="w-full gradiente-ouro text-black py-5 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl">Salvar Ritual</button>
