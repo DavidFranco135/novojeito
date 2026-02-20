@@ -14,16 +14,17 @@ const Appointments: React.FC = () => {
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compactView, setCompactView] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+  const todayLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  const [currentDate, setCurrentDate] = useState(todayLocal());
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState<Appointment | null>(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
   const [showQuickClient, setShowQuickClient] = useState(false);
   // ✅ ADICIONADO: campo date no newApp
-  const [newApp, setNewApp] = useState({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00', date: new Date().toISOString().split('T')[0] });
-  const [quickClient, setQuickClient] = useState({ name: '', phone: '' });
+  const [newApp, setNewApp] = useState({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00', date: todayLocal() });
+  const [quickClient, setQuickClient] = useState({ name: '', phone: '', email: '' });
   const [filterPeriod, setFilterPeriod] = useState<'day' | 'month' | 'all'>('day');
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(todayLocal().slice(0, 7));
 
   const hours = useMemo(() => Array.from({ length: 14 }, (_, i) => `${(i + 8).toString().padStart(2, '0')}:00`), []);
   const appointmentsToday = useMemo(() => appointments.filter(a => a.date === currentDate), [appointments, currentDate]);
@@ -40,10 +41,10 @@ const Appointments: React.FC = () => {
 
   const handleQuickClient = async () => {
     if(!quickClient.name || !quickClient.phone) return alert("Preencha nome e telefone");
-    const client = await addClient({ ...quickClient, email: '' });
+    const client = await addClient({ ...quickClient, email: quickClient.email || '' });
     setNewApp({...newApp, clientId: client.id});
     setShowQuickClient(false);
-    setQuickClient({ name: '', phone: '' });
+    setQuickClient({ name: '', phone: '', email: '' });
   };
 
   const handleClickEmptySlot = (professionalId: string, timeSlot: string) => {
@@ -76,7 +77,7 @@ const Appointments: React.FC = () => {
         price: service.price 
       });
       setShowAddModal(false);
-      setNewApp({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00', date: new Date().toISOString().split('T')[0] });
+      setNewApp({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00', date: todayLocal() });
     } catch (err) { alert("Erro ao agendar."); }
   };
 
@@ -307,11 +308,15 @@ const Appointments: React.FC = () => {
                     <button type="button" onClick={() => setShowQuickClient(true)} className="p-4 bg-[#D4AF37] text-black rounded-xl hover:scale-105 transition-all"><UserPlus size={20}/></button>
                   </div>
                   {showQuickClient && (
-                    <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/30 space-y-3 animate-in slide-in-from-top-2">
-                      <p className="text-[9px] font-black uppercase text-[#D4AF37]">Rápido: Novo Cliente</p>
+                    <div className="p-4 bg-white/5 rounded-xl border border-[#C58A4A]/30 space-y-3 animate-in slide-in-from-top-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[9px] font-black uppercase text-[#C58A4A]">Rápido: Novo Cliente</p>
+                        <button type="button" onClick={() => setShowQuickClient(false)} className="p-1 rounded-lg bg-white/10 text-zinc-400 hover:text-white transition-all"><X size={14}/></button>
+                      </div>
                       <input type="text" placeholder="Nome" value={quickClient.name} onChange={e => setQuickClient({...quickClient, name: e.target.value})} className="w-full bg-black/20 border border-white/5 p-3 rounded-lg text-xs" />
                       <input type="tel" placeholder="WhatsApp" value={quickClient.phone} onChange={e => setQuickClient({...quickClient, phone: e.target.value})} className="w-full bg-black/20 border border-white/5 p-3 rounded-lg text-xs" />
-                      <button type="button" onClick={handleQuickClient} className="w-full bg-[#D4AF37] text-black py-2 rounded-lg text-[9px] font-black uppercase">Salvar e Selecionar</button>
+                      <input type="email" placeholder="E-mail (opcional)" value={quickClient.email} onChange={e => setQuickClient({...quickClient, email: e.target.value})} className="w-full bg-black/20 border border-white/5 p-3 rounded-lg text-xs" />
+                      <button type="button" onClick={handleQuickClient} className="w-full bg-[#C58A4A] text-black py-2 rounded-lg text-[9px] font-black uppercase">Salvar e Selecionar</button>
                     </div>
                   )}
                   <select required value={newApp.professionalId} onChange={e => setNewApp({...newApp, professionalId: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-xs font-black uppercase">
