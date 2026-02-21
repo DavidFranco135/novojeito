@@ -92,7 +92,7 @@ const Financial: React.FC = () => {
                   <span>Comissão:</span>
                   <span>R$ {stat.commission.toFixed(2)}</span>
                 </div>
-                <p className="text-[8px] font-black text-zinc-700 uppercase mt-2">Baseado em {stat.count} rituais concluídos</p>
+                <p className="text-[8px] font-black text-zinc-700 uppercase mt-2">Baseado em {stat.count} Serviços concluídos</p>
               </div>
             </div>
           ))}
