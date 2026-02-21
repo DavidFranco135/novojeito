@@ -12,6 +12,7 @@ const NOTIFICATION_SOUND_URL = 'https://raw.githubusercontent.com/DavidFranco135
 let audioCtx: AudioContext | null = null;
 let audioBuffer: AudioBuffer | null = null;
 let audioBufferLoading = false;
+let audioInitialized = false; // Flag para garantir inicialização única
 
 const getAudioContext = (): AudioContext => {
   if (!audioCtx || audioCtx.state === 'closed') {
@@ -59,13 +60,14 @@ const Appointments: React.FC = () => {
   const prevAppCountRef = useRef(appointments.length);
   const isPlayingRef = useRef(false);
 
-  // Precarrega o áudio no primeiro clique do usuário (exigência do navegador)
+  // Precarrega o áudio silenciosamente após a primeira interação do usuário
+  // Usa a flag audioInitialized para garantir que o contexto é criado apenas uma vez
   useEffect(() => {
     const initAudio = () => {
-      getAudioContext(); // cria o contexto
-      preloadAudio();   // baixa e decodifica o MP3
-      window.removeEventListener('click', initAudio);
-      window.removeEventListener('keydown', initAudio);
+      if (audioInitialized) return;
+      audioInitialized = true;
+      getAudioContext();
+      preloadAudio();
     };
     window.addEventListener('click', initAudio, { once: true });
     window.addEventListener('keydown', initAudio, { once: true });
@@ -76,10 +78,16 @@ const Appointments: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (appointments.length > prevAppCountRef.current && !isPlayingRef.current) {
-      isPlayingRef.current = true;
-      playNotificationSound();
-      setTimeout(() => { isPlayingRef.current = false; }, 3000);
+    if (appointments.length > prevAppCountRef.current) {
+      if (!isPlayingRef.current) {
+        isPlayingRef.current = true;
+        // Pequeno delay para garantir que o contexto de áudio já foi inicializado
+        // caso o agendamento venha logo após o primeiro clique
+        setTimeout(() => {
+          playNotificationSound();
+          setTimeout(() => { isPlayingRef.current = false; }, 5000);
+        }, 200);
+      }
     }
     prevAppCountRef.current = appointments.length;
   }, [appointments.length]);
