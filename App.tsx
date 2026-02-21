@@ -13,27 +13,13 @@ import { useBarberStore } from './store';
 import { LogIn, Sparkles, Sun, Moon, LogOut, UserPlus } from 'lucide-react';
 
 const App: React.FC = () => {
-  const { user, config, theme, login, toggleTheme, addClient, clients, appointments, logout } = useBarberStore();
+  const { user, config, theme, login, toggleTheme, addClient, clients, logout } = useBarberStore();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isPublicView, setIsPublicView] = useState(true);
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [registerData, setRegisterData] = useState({ name: '', phone: '', email: '', password: '' });
-  const [lastAppointmentCount, setLastAppointmentCount] = useState(0);
-
-  // NOTIFICAÇÃO SONORA PARA NOVOS AGENDAMENTOS (apenas para ADM)
-  useEffect(() => {
-    if (user && user.role === 'ADMIN') {
-      if (appointments.length > lastAppointmentCount && lastAppointmentCount > 0) {
-        // Toca som de notificação
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYHGmW56+ahUBEJTqXh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEKT6Xh8LdjHAU2jdXzyn0tBSh+zPLaizsIHGS56+mjTxEK');
-        audio.volume = 0.5;
-        audio.play().catch(e => console.log('Não foi possível tocar o som'));
-      }
-      setLastAppointmentCount(appointments.length);
-    }
-  }, [appointments, user, lastAppointmentCount]);
 
   const handleLogin = async () => {
     try {
