@@ -8,12 +8,14 @@ import { Appointment, Client } from '../types';
 
 const NOTIFICATION_SOUND_URL = 'https://raw.githubusercontent.com/DavidFranco135/iphone/main/iphone.mp3';
 
-// AudioContext e buffer ficam fora do componente para persistir
+// ─── Áudio: variáveis globais fora do componente ───────────────────────────
 let audioCtx: AudioContext | null = null;
 let audioBuffer: AudioBuffer | null = null;
 let audioBufferLoading = false;
-let audioInitialized = false; // Flag para garantir inicialização única
+let audioReady = false;          // true quando buffer já foi decodificado
+let notifDebounceTimer: ReturnType<typeof setTimeout> | null = null; // debounce Firestore
 
+// Cria (ou retorna) o AudioContext
 const getAudioContext = (): AudioContext => {
   if (!audioCtx || audioCtx.state === 'closed') {
     audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -21,34 +23,42 @@ const getAudioContext = (): AudioContext => {
   return audioCtx;
 };
 
-const preloadAudio = async () => {
-  if (audioBuffer || audioBufferLoading) return;
+// Faz download e decodifica o MP3 — só executa uma vez
+const preloadAudio = async (): Promise<void> => {
+  if (audioReady || audioBufferLoading) return;
   audioBufferLoading = true;
   try {
     const ctx = getAudioContext();
+    if (ctx.state === 'suspended') await ctx.resume();
     const response = await fetch(NOTIFICATION_SOUND_URL);
     const arrayBuffer = await response.arrayBuffer();
     audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    audioReady = true;
   } catch (e) {
-    audioBufferLoading = false;
+    audioBufferLoading = false; // permite tentar novamente
   }
 };
 
-const playNotificationSound = async () => {
+// Toca o MP3 exatamente uma vez — não cria novo contexto, não produz "tuuu"
+const playNotificationSound = async (): Promise<void> => {
   try {
+    if (!audioReady || !audioBuffer) return; // buffer ainda não pronto
     const ctx = getAudioContext();
-    // Resume o contexto caso esteja suspenso (aba em background)
     if (ctx.state === 'suspended') await ctx.resume();
-    // Garante que o buffer está carregado
-    if (!audioBuffer) {
-      await preloadAudio();
-      if (!audioBuffer) return;
-    }
     const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(ctx.destination);
     source.start(0);
-  } catch (e) {}
+  } catch (_) {}
+};
+
+// Dispara o som com debounce de 800 ms para absorver o duplo-snapshot do Firestore
+const scheduleNotificationSound = (): void => {
+  if (notifDebounceTimer) clearTimeout(notifDebounceTimer);
+  notifDebounceTimer = setTimeout(() => {
+    playNotificationSound();
+    notifDebounceTimer = null;
+  }, 800);
 };
 
 const Appointments: React.FC = () => {
@@ -57,37 +67,42 @@ const Appointments: React.FC = () => {
     addAppointment, updateAppointmentStatus, addClient, rescheduleAppointment, theme
   } = useBarberStore();
   
-  const prevAppCountRef = useRef(appointments.length);
-  const isPlayingRef = useRef(false);
+  const prevAppCountRef = useRef<number | null>(null); // null = ainda não inicializado
 
-  // Precarrega o áudio silenciosamente após a primeira interação do usuário
-  // Usa a flag audioInitialized para garantir que o contexto é criado apenas uma vez
+  // ── 1. Pré-carrega o áudio logo que o componente monta ──────────────────
+  //    O admin já interagiu com a página (clicou no menu) antes de chegar aqui,
+  //    então o AudioContext pode ser criado sem precisar de novo clique.
   useEffect(() => {
-    const initAudio = () => {
-      if (audioInitialized) return;
-      audioInitialized = true;
-      getAudioContext();
-      preloadAudio();
-    };
-    window.addEventListener('click', initAudio, { once: true });
-    window.addEventListener('keydown', initAudio, { once: true });
-    return () => {
-      window.removeEventListener('click', initAudio);
-      window.removeEventListener('keydown', initAudio);
-    };
+    preloadAudio();
   }, []);
 
+  // ── 2. Auto-atualiza a data na virada de meia-noite ─────────────────────
   useEffect(() => {
+    const getToday = () => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    // Verifica a cada minuto se o dia virou
+    const interval = setInterval(() => {
+      const today = getToday();
+      setCurrentDate(prev => prev !== today ? today : prev);
+    }, 60_000);
+    // Garante que a data já está correta ao montar
+    setCurrentDate(getToday());
+    return () => clearInterval(interval);
+  }, []);
+
+  // ── 3. Dispara som apenas para agendamentos novos (ignora carga inicial) ─
+  //    O debounce de 800 ms absorve o duplo-snapshot do Firestore
+  //    (write local → confirmação do servidor) que causava o duplo som.
+  useEffect(() => {
+    if (prevAppCountRef.current === null) {
+      // Primeira vez: só registra a contagem atual, sem tocar som
+      prevAppCountRef.current = appointments.length;
+      return;
+    }
     if (appointments.length > prevAppCountRef.current) {
-      if (!isPlayingRef.current) {
-        isPlayingRef.current = true;
-        // Pequeno delay para garantir que o contexto de áudio já foi inicializado
-        // caso o agendamento venha logo após o primeiro clique
-        setTimeout(() => {
-          playNotificationSound();
-          setTimeout(() => { isPlayingRef.current = false; }, 5000);
-        }, 200);
-      }
+      scheduleNotificationSound();
     }
     prevAppCountRef.current = appointments.length;
   }, [appointments.length]);
