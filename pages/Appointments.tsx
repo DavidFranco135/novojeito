@@ -8,14 +8,39 @@ import { Appointment, Client } from '../types';
 
 const NOTIFICATION_SOUND_URL = 'https://raw.githubusercontent.com/DavidFranco135/iphone/main/iphone.mp3';
 
-// ─── Áudio: variáveis globais fora do componente ───────────────────────────
+// ─── Helpers de data — sem new Date(string) para evitar bug UTC/fuso ──────
+const getTodayString = (): string => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Formata "2025-02-21" → "21 de fev." sem depender de UTC
+const formatDateLabel = (dateStr: string): string => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const local = new Date(year, month - 1, day); // meia-noite LOCAL, sem fuso
+  return local.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+};
+
+// Avança/recua um dia em "YYYY-MM-DD" sem bug de UTC
+const shiftDate = (dateStr: string, delta: number): string => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const d = new Date(year, month - 1, day + delta);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Formata "YYYY-MM" → "fevereiro de 2025" sem bug de UTC
+const formatMonthLabel = (monthStr: string): string => {
+  const [year, month] = monthStr.split('-').map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+};
+
+// ─── Áudio: variáveis globais fora do componente ──────────────────────────
 let audioCtx: AudioContext | null = null;
 let audioBuffer: AudioBuffer | null = null;
 let audioBufferLoading = false;
-let audioReady = false;          // true quando buffer já foi decodificado
-let notifDebounceTimer: ReturnType<typeof setTimeout> | null = null; // debounce Firestore
+let audioReady = false;
+let notifDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-// Cria (ou retorna) o AudioContext
 const getAudioContext = (): AudioContext => {
   if (!audioCtx || audioCtx.state === 'closed') {
     audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -23,7 +48,7 @@ const getAudioContext = (): AudioContext => {
   return audioCtx;
 };
 
-// Faz download e decodifica o MP3 — só executa uma vez
+// Download + decodificação — executa apenas uma vez
 const preloadAudio = async (): Promise<void> => {
   if (audioReady || audioBufferLoading) return;
   audioBufferLoading = true;
@@ -34,15 +59,15 @@ const preloadAudio = async (): Promise<void> => {
     const arrayBuffer = await response.arrayBuffer();
     audioBuffer = await ctx.decodeAudioData(arrayBuffer);
     audioReady = true;
-  } catch (e) {
-    audioBufferLoading = false; // permite tentar novamente
+  } catch (_) {
+    audioBufferLoading = false;
   }
 };
 
-// Toca o MP3 exatamente uma vez — não cria novo contexto, não produz "tuuu"
+// Toca o buffer já decodificado — nenhum "tuuu", nenhum contexto novo
 const playNotificationSound = async (): Promise<void> => {
+  if (!audioReady || !audioBuffer) return;
   try {
-    if (!audioReady || !audioBuffer) return; // buffer ainda não pronto
     const ctx = getAudioContext();
     if (ctx.state === 'suspended') await ctx.resume();
     const source = ctx.createBufferSource();
@@ -52,13 +77,13 @@ const playNotificationSound = async (): Promise<void> => {
   } catch (_) {}
 };
 
-// Dispara o som com debounce de 800 ms para absorver o duplo-snapshot do Firestore
+// Debounce de 1 s absorve o duplo-snapshot do Firestore (cache + servidor)
 const scheduleNotificationSound = (): void => {
   if (notifDebounceTimer) clearTimeout(notifDebounceTimer);
   notifDebounceTimer = setTimeout(() => {
     playNotificationSound();
     notifDebounceTimer = null;
-  }, 800);
+  }, 1000);
 };
 
 const Appointments: React.FC = () => {
@@ -67,37 +92,26 @@ const Appointments: React.FC = () => {
     addAppointment, updateAppointmentStatus, addClient, rescheduleAppointment, theme
   } = useBarberStore();
   
-  const prevAppCountRef = useRef<number | null>(null); // null = ainda não inicializado
+  const prevAppCountRef = useRef<number | null>(null);
 
-  // ── 1. Pré-carrega o áudio logo que o componente monta ──────────────────
-  //    O admin já interagiu com a página (clicou no menu) antes de chegar aqui,
-  //    então o AudioContext pode ser criado sem precisar de novo clique.
+  // ── 1. Pré-carrega o áudio ao montar (admin já clicou no menu para chegar aqui)
   useEffect(() => {
     preloadAudio();
   }, []);
 
-  // ── 2. Auto-atualiza a data na virada de meia-noite ─────────────────────
+  // ── 2. Data sempre correta — atualiza a cada minuto detectando virada de dia
+  const [currentDate, setCurrentDate] = useState<string>(getTodayString);
+
   useEffect(() => {
-    const getToday = () => {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    };
-    // Verifica a cada minuto se o dia virou
-    const interval = setInterval(() => {
-      const today = getToday();
-      setCurrentDate(prev => prev !== today ? today : prev);
-    }, 60_000);
-    // Garante que a data já está correta ao montar
-    setCurrentDate(getToday());
+    const tick = () => setCurrentDate(getTodayString());
+    tick(); // corrige imediatamente caso haja defasagem
+    const interval = setInterval(tick, 60_000);
     return () => clearInterval(interval);
   }, []);
 
-  // ── 3. Dispara som apenas para agendamentos novos (ignora carga inicial) ─
-  //    O debounce de 800 ms absorve o duplo-snapshot do Firestore
-  //    (write local → confirmação do servidor) que causava o duplo som.
+  // ── 3. Som de notificação — ignora carga inicial, debounce absorve duplo-snapshot
   useEffect(() => {
     if (prevAppCountRef.current === null) {
-      // Primeira vez: só registra a contagem atual, sem tocar som
       prevAppCountRef.current = appointments.length;
       return;
     }
@@ -109,10 +123,6 @@ const Appointments: React.FC = () => {
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compactView, setCompactView] = useState(false);
-  const [currentDate, setCurrentDate] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState<Appointment | null>(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
@@ -225,9 +235,9 @@ const Appointments: React.FC = () => {
           
           {filterPeriod === 'day' && (
             <div className={`flex items-center border rounded-xl p-1 ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
-              <button onClick={() => { const d = new Date(currentDate); d.setDate(d.getDate() - 1); setCurrentDate(d.toISOString().split('T')[0]); }} className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}><ChevronLeft size={20} /></button>
-              <span className={`px-4 text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>{new Date(currentDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
-              <button onClick={() => { const d = new Date(currentDate); d.setDate(d.getDate() + 1); setCurrentDate(d.toISOString().split('T')[0]); }} className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}><ChevronRight size={20} /></button>
+              <button onClick={() => setCurrentDate(prev => shiftDate(prev, -1))} className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}><ChevronLeft size={20} /></button>
+              <span className={`px-4 text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>{formatDateLabel(currentDate)}</span>
+              <button onClick={() => setCurrentDate(prev => shiftDate(prev, +1))} className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}><ChevronRight size={20} /></button>
             </div>
           )}
           
@@ -237,20 +247,20 @@ const Appointments: React.FC = () => {
                 onClick={() => { 
                   const [year, month] = selectedMonth.split('-').map(Number);
                   const newDate = new Date(year, month - 2, 1);
-                  setSelectedMonth(newDate.toISOString().slice(0, 7));
+                  setSelectedMonth(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`);
                 }} 
                 className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}
               >
                 <ChevronLeft size={20} />
               </button>
               <span className={`px-4 text-[10px] font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>
-                {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                {formatMonthLabel(selectedMonth)}
               </span>
               <button 
                 onClick={() => { 
                   const [year, month] = selectedMonth.split('-').map(Number);
                   const newDate = new Date(year, month, 1);
-                  setSelectedMonth(newDate.toISOString().slice(0, 7));
+                  setSelectedMonth(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`);
                 }} 
                 className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}
               >
