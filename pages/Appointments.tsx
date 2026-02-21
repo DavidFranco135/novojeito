@@ -66,19 +66,25 @@ const playNotificationSound = async (): Promise<void> => {
   } catch (_) {}
 };
 
-// Debounce 1 s absorve o duplo-snapshot do Firestore (cache + servidor)
+// Toca uma única vez — bloqueia qualquer chamada extra dentro de 6 s
+let soundCooldown = false;
 const scheduleNotificationSound = (): void => {
+  if (soundCooldown) return;          // já tocando ou em cooldown
+  soundCooldown = true;
   if (notifDebounceTimer) clearTimeout(notifDebounceTimer);
+  // Pequeno delay para garantir que o AudioContext está pronto
   notifDebounceTimer = setTimeout(() => {
     playNotificationSound();
     notifDebounceTimer = null;
-  }, 1000);
+    // Libera após 6 s — tempo suficiente para absorver qualquer re-render do Firestore
+    setTimeout(() => { soundCooldown = false; }, 6000);
+  }, 300);
 };
 
 const Appointments: React.FC = () => {
   const { 
     appointments, professionals, services, clients,
-    addAppointment, updateAppointmentStatus, addClient, rescheduleAppointment, theme
+    addAppointment, updateAppointmentStatus, deleteAppointment, addClient, rescheduleAppointment, theme
   } = useBarberStore();
   
   const prevAppCountRef = useRef<number | null>(null);
@@ -336,9 +342,9 @@ const Appointments: React.FC = () => {
                      </div>
                   </div>
                   <div className="flex items-center gap-2">
-                     <button onClick={() => updateAppointmentStatus(app.id, 'CONCLUIDO_PAGO')} className={`p-2 rounded-xl border transition-all ${app.status === 'CONCLUIDO_PAGO' ? 'bg-emerald-500 text-white border-transparent' : 'bg-white/5 border-white/10 text-zinc-500 hover:text-white'}`}><DollarSign size={16}/></button>
-                     <button onClick={() => setShowRescheduleModal(app)} className="p-2 bg-white/5 border border-white/10 text-zinc-500 hover:text-white rounded-xl transition-all"><RefreshCw size={16}/></button>
-                     <button onClick={() => updateAppointmentStatus(app.id, 'CANCELADO')} className="p-2 bg-white/5 border border-white/10 text-zinc-500 hover:text-red-500 rounded-xl transition-all"><X size={16}/></button>
+                     <button onClick={() => updateAppointmentStatus(app.id, 'CONCLUIDO_PAGO')} className={`p-2 rounded-xl border transition-all ${app.status === 'CONCLUIDO_PAGO' ? 'bg-emerald-500 text-white border-transparent' : 'bg-white/5 border-white/10 text-zinc-500 hover:text-white'}`} title="Marcar como Pago"><DollarSign size={16}/></button>
+                     <button onClick={() => setShowRescheduleModal(app)} className="p-2 bg-white/5 border border-white/10 text-zinc-500 hover:text-white rounded-xl transition-all" title="Reagendar"><RefreshCw size={16}/></button>
+                     <button onClick={() => { if (window.confirm(`Excluir agendamento de ${app.clientName}?`)) deleteAppointment(app.id); }} className="p-2 bg-white/5 border border-white/10 text-zinc-500 hover:text-red-500 hover:border-red-500/30 rounded-xl transition-all" title="Excluir agendamento"><X size={16}/></button>
                   </div>
                </div>
              ))}
@@ -350,7 +356,7 @@ const Appointments: React.FC = () => {
       {showRescheduleModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
           <div className="cartao-vidro w-full max-w-sm rounded-[2.5rem] p-10 space-y-8 border-[#C58A4A]/30 shadow-2xl">
-             <div className="text-center space-y-2"><h2 className="text-xl font-black font-display italic">Reagendar Serviço</h2><p className="text-[10px] text-zinc-500 uppercase font-black">Escolha novo horário para {showRescheduleModal.clientName}</p></div>
+             <div className="text-center space-y-2"><h2 className="text-xl font-black font-display italic">Reagendar Ritual</h2><p className="text-[10px] text-zinc-500 uppercase font-black">Escolha novo horário para {showRescheduleModal.clientName}</p></div>
              <div className="space-y-4">
                 <input type="date" value={rescheduleData.date} onChange={e => setRescheduleData({...rescheduleData, date: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-xs font-black" />
                 <input type="time" value={rescheduleData.time} onChange={e => setRescheduleData({...rescheduleData, time: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-xs font-black" />
