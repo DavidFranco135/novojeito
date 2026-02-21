@@ -837,13 +837,13 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       )}
 
       {view === 'BOOKING' && (
-        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 pb-20 animate-in fade-in">
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-3 sm:px-6 pb-20 pt-4 sm:pt-6 animate-in fade-in">
            <header className="flex items-center gap-4 mb-10">
              <button onClick={() => { setView('HOME'); setShowQuickClient(false); setClientVerified(false); setLookupInput(''); setLookupError(null); setLookupClientFound(null); setLookupPassword(''); setLookupPasswordError(null); setLookupClientFound(null); setLookupPassword(''); setLookupPasswordError(null); }} className={`p-3 rounded-xl border transition-all ${theme === 'light' ? 'border-zinc-300 text-zinc-700 hover:bg-zinc-50' : 'border-white/10 text-zinc-400 hover:bg-white/5'}`}><ChevronLeft size={24}/></button>
              <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Reservar Serviço</h2>
            </header>
            
-           <div className={`rounded-[2.5rem] p-8 md:p-12 shadow-2xl flex flex-col gap-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/10'}`}>
+           <div className={`rounded-[2rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-12 shadow-2xl flex flex-col gap-10 ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/10'}`}>
               {passo === 1 && (
                 <div className="space-y-8 animate-in slide-in-from-right-2 text-center">
                   <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Você Tem Cadastro?</h3>
@@ -913,11 +913,11 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               )}
 
               {passo === 4 && (
-                <div className="space-y-8 animate-in slide-in-from-right-2 text-center">
+                <div className="space-y-6 animate-in slide-in-from-right-2 text-center">
                   <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Sua Identificação</h3>
                   
                   {!clientVerified ? (
-                    <div className="space-y-4 max-w-sm mx-auto w-full">
+                    <div className="space-y-4 w-full max-w-sm mx-auto">
 
                       {/* STEP 1: buscar por email/celular */}
                       {!lookupClientFound ? (
@@ -933,7 +933,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                               value={lookupInput} 
                               onChange={e => { setLookupInput(e.target.value); setLookupError(null); }}
                               onKeyDown={e => e.key === 'Enter' && handleLookupClient()}
-                              className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} 
+                              className={`w-full border p-4 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} 
                             />
                           </div>
                           {lookupError && (
@@ -949,14 +949,14 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                           )}
                           <button 
                             onClick={handleLookupClient} 
-                            className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all"
+                            className="w-full gradiente-ouro text-black py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl active:scale-95 transition-all"
                           >
                             Continuar
                           </button>
                           {!lookupError && (
                             <button 
                               onClick={() => { setView('LOGIN'); setLoginMode('register'); }} 
-                              className={`text-[10px] font-black uppercase tracking-widest underline transition-all ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
+                              className={`w-full text-[10px] font-black uppercase tracking-widest underline transition-all py-2 ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
                             >
                               Não tenho cadastro — Criar Conta
                             </button>
@@ -965,12 +965,12 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                       ) : (
                         /* STEP 2: confirmar com senha */
                         <>
-                          <div className={`p-4 rounded-2xl border flex items-center gap-3 ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+                          <div className={`p-4 rounded-2xl border flex items-center gap-3 text-left ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
                             <div className="w-10 h-10 rounded-xl bg-[#C58A4A]/20 flex items-center justify-center flex-shrink-0">
                               <User size={18} className="text-[#C58A4A]"/>
                             </div>
-                            <div className="text-left">
-                              <p className={`font-black text-sm ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{lookupClientFound.name}</p>
+                            <div className="text-left min-w-0">
+                              <p className={`font-black text-sm truncate ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{lookupClientFound.name}</p>
                               <p className="text-zinc-500 text-[10px]">{lookupClientFound.phone}</p>
                             </div>
                           </div>
@@ -986,7 +986,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                               onChange={e => { setLookupPassword(e.target.value); setLookupPasswordError(null); }}
                               onKeyDown={e => e.key === 'Enter' && handleVerifyPassword()}
                               autoFocus
-                              className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} 
+                              className={`w-full border p-4 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} 
                             />
                           </div>
                           {lookupPasswordError && (
@@ -994,13 +994,13 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                           )}
                           <button 
                             onClick={handleVerifyPassword} 
-                            className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all"
+                            className="w-full gradiente-ouro text-black py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl active:scale-95 transition-all"
                           >
                             Confirmar Identidade
                           </button>
                           <button 
                             onClick={() => { setLookupClientFound(null); setLookupPassword(''); setLookupPasswordError(null); }}
-                            className={`text-[10px] font-black uppercase tracking-widest underline transition-all ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
+                            className={`w-full text-[10px] font-black uppercase tracking-widest underline transition-all py-2 ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
                           >
                             Voltar
                           </button>
@@ -1008,9 +1008,9 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                       )}
                     </div>
                   ) : (
-                    <div className="space-y-6 max-w-sm mx-auto w-full">
-                      <div className={`p-6 rounded-2xl border ${theme === 'light' ? 'bg-emerald-50 border-emerald-200' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
-                        <CheckCircle2 className="text-emerald-500 mx-auto mb-3" size={44}/>
+                    <div className="space-y-5 w-full max-w-sm mx-auto">
+                      <div className={`p-5 sm:p-6 rounded-2xl border ${theme === 'light' ? 'bg-emerald-50 border-emerald-200' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
+                        <CheckCircle2 className="text-emerald-500 mx-auto mb-3" size={40}/>
                         <p className={`font-black text-xl font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{selecao.clientName}</p>
                         <p className="text-zinc-500 text-xs mt-1">{selecao.clientPhone}</p>
                         {selecao.clientEmail && <p className="text-zinc-500 text-xs">{selecao.clientEmail}</p>}
@@ -1019,13 +1019,13 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                       <button 
                         onClick={handleConfirmBooking} 
                         disabled={loading} 
-                        className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all"
+                        className="w-full gradiente-ouro text-black py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl active:scale-95 transition-all disabled:opacity-60"
                       >
                         {loading ? 'Processando...' : 'Confirmar Serviço'}
                       </button>
                       <button 
                         onClick={() => { setClientVerified(false); setLookupInput(''); setLookupError(null); setLookupClientFound(null); setLookupPassword(''); setLookupPasswordError(null); }} 
-                        className={`text-[10px] font-black uppercase tracking-widest underline transition-all ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
+                        className={`w-full text-[10px] font-black uppercase tracking-widest underline transition-all py-2 ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
                       >
                         Trocar identificação
                       </button>
