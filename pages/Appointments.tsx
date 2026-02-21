@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-
-const IPHONE_SOUND_B64 = 
-  import { 
+import { 
   ChevronLeft, ChevronRight, Plus, Clock, Check, X, 
   Calendar, Scissors, LayoutGrid, List, UserPlus, DollarSign, RefreshCw, Filter, CalendarRange
 } from 'lucide-react';
 import { useBarberStore } from '../store';
 import { Appointment, Client } from '../types';
 
+const NOTIFICATION_SOUND_URL = 'https://drive.google.com/uc?export=download&id=1d1AYpHoWSsLEzEHVO8LHaRkl4-1xF_27';
+
 const playNotificationSound = () => {
   try {
-    const audio = new Audio(`data:audio/mp3;base64,${IPHONE_SOUND_B64}`);
+    const audio = new Audio(NOTIFICATION_SOUND_URL);
     audio.volume = 1.0;
     audio.play().catch(() => {});
   } catch (e) {}
@@ -23,10 +23,13 @@ const Appointments: React.FC = () => {
   } = useBarberStore();
   
   const prevAppCountRef = useRef(appointments.length);
+  const isPlayingRef = useRef(false);
   
   useEffect(() => {
-    if (appointments.length > prevAppCountRef.current) {
+    if (appointments.length > prevAppCountRef.current && !isPlayingRef.current) {
+      isPlayingRef.current = true;
       playNotificationSound();
+      setTimeout(() => { isPlayingRef.current = false; }, 3000);
     }
     prevAppCountRef.current = appointments.length;
   }, [appointments.length]);
