@@ -33,7 +33,11 @@ const Appointments: React.FC = () => {
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compactView, setCompactView] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+ const [currentDate, setCurrentDate] = useState(() => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().split('T')[0];
+});
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState<Appointment | null>(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
