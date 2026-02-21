@@ -6,35 +6,47 @@ import {
 import { useBarberStore } from '../store';
 import { Appointment, Client } from '../types';
 
-const playNotificationSound = () => {
+const NOTIFICATION_SOUND_URL = 'https://raw.githubusercontent.com/DavidFranco135/iphone/main/iphone.mp3';
+
+// AudioContext e buffer ficam fora do componente para persistir
+let audioCtx: AudioContext | null = null;
+let audioBuffer: AudioBuffer | null = null;
+let audioBufferLoading = false;
+
+const getAudioContext = (): AudioContext => {
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  return audioCtx;
+};
+
+const preloadAudio = async () => {
+  if (audioBuffer || audioBufferLoading) return;
+  audioBufferLoading = true;
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const master = ctx.createGain();
-    master.gain.setValueAtTime(0.7, ctx.currentTime);
-    master.connect(ctx.destination);
+    const ctx = getAudioContext();
+    const response = await fetch(NOTIFICATION_SOUND_URL);
+    const arrayBuffer = await response.arrayBuffer();
+    audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+  } catch (e) {
+    audioBufferLoading = false;
+  }
+};
 
-    // Simula sino do iPhone (tri-tone): 3 notas ascendentes
-    const notes = [
-      { freq: 1046.50, start: 0.00 },   // C6
-      { freq: 1318.51, start: 0.18 },   // E6
-      { freq: 1567.98, start: 0.36 },   // G6
-    ];
-
-    notes.forEach(({ freq, start }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
-      gain.gain.setValueAtTime(0, ctx.currentTime + start);
-      gain.gain.linearRampToValueAtTime(1, ctx.currentTime + start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + 0.55);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + 0.6);
-    });
-
-    setTimeout(() => ctx.close(), 2000);
+const playNotificationSound = async () => {
+  try {
+    const ctx = getAudioContext();
+    // Resume o contexto caso esteja suspenso (aba em background)
+    if (ctx.state === 'suspended') await ctx.resume();
+    // Garante que o buffer está carregado
+    if (!audioBuffer) {
+      await preloadAudio();
+      if (!audioBuffer) return;
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(ctx.destination);
+    source.start(0);
   } catch (e) {}
 };
 
@@ -46,7 +58,23 @@ const Appointments: React.FC = () => {
   
   const prevAppCountRef = useRef(appointments.length);
   const isPlayingRef = useRef(false);
-  
+
+  // Precarrega o áudio no primeiro clique do usuário (exigência do navegador)
+  useEffect(() => {
+    const initAudio = () => {
+      getAudioContext(); // cria o contexto
+      preloadAudio();   // baixa e decodifica o MP3
+      window.removeEventListener('click', initAudio);
+      window.removeEventListener('keydown', initAudio);
+    };
+    window.addEventListener('click', initAudio, { once: true });
+    window.addEventListener('keydown', initAudio, { once: true });
+    return () => {
+      window.removeEventListener('click', initAudio);
+      window.removeEventListener('keydown', initAudio);
+    };
+  }, []);
+
   useEffect(() => {
     if (appointments.length > prevAppCountRef.current && !isPlayingRef.current) {
       isPlayingRef.current = true;
