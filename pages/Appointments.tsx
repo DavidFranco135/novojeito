@@ -92,7 +92,7 @@ const scheduleNotificationSound = (): void => {
 
 const Appointments: React.FC = () => {
   const { 
-    appointments, professionals, services, clients,
+    appointments, professionals, services, clients, user,
     addAppointment, updateAppointmentStatus, deleteAppointment, addClient, rescheduleAppointment, theme
   } = useBarberStore();
   
@@ -109,15 +109,18 @@ const Appointments: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // ── Som: ignora carga inicial, debounce absorve duplo-snapshot do Firestore
+  // ── Som: apenas para ADMIN, ignora carga inicial
   useEffect(() => {
     if (prevAppCountRef.current === null) {
       prevAppCountRef.current = appointments.length;
       return;
     }
-    if (appointments.length > prevAppCountRef.current) scheduleNotificationSound();
+    // Toca SOMENTE se esta aba está logada como ADMIN
+    if (appointments.length > prevAppCountRef.current && user?.role === 'ADMIN') {
+      scheduleNotificationSound();
+    }
     prevAppCountRef.current = appointments.length;
-  }, [appointments.length]);
+  }, [appointments.length, user]);
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compactView, setCompactView] = useState(false);
