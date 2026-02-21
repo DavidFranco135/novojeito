@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ChevronLeft, ChevronRight, Plus, Clock, Check, X, 
-  Calendar, Scissors, LayoutGrid, List, UserPlus, DollarSign, RefreshCw, Filter, CalendarRange
+  Calendar, Scissors, LayoutGrid, List, UserPlus, DollarSign, RefreshCw, Filter, CalendarRange, Phone, Mail, User
 } from 'lucide-react';
 import { useBarberStore } from '../store';
 import { Appointment, Client } from '../types';
@@ -13,22 +13,15 @@ const getTodayString = (): string => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-
-// Formata "2025-02-21" → "21 de fev." sem depender de UTC
 const formatDateLabel = (dateStr: string): string => {
   const [year, month, day] = dateStr.split('-').map(Number);
-  const local = new Date(year, month - 1, day); // meia-noite LOCAL, sem fuso
-  return local.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  return new Date(year, month - 1, day).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 };
-
-// Avança/recua um dia em "YYYY-MM-DD" sem bug de UTC
 const shiftDate = (dateStr: string, delta: number): string => {
   const [year, month, day] = dateStr.split('-').map(Number);
   const d = new Date(year, month - 1, day + delta);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
-
-// Formata "YYYY-MM" → "fevereiro de 2025" sem bug de UTC
 const formatMonthLabel = (monthStr: string): string => {
   const [year, month] = monthStr.split('-').map(Number);
   return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
@@ -48,7 +41,6 @@ const getAudioContext = (): AudioContext => {
   return audioCtx;
 };
 
-// Download + decodificação — executa apenas uma vez
 const preloadAudio = async (): Promise<void> => {
   if (audioReady || audioBufferLoading) return;
   audioBufferLoading = true;
@@ -59,12 +51,9 @@ const preloadAudio = async (): Promise<void> => {
     const arrayBuffer = await response.arrayBuffer();
     audioBuffer = await ctx.decodeAudioData(arrayBuffer);
     audioReady = true;
-  } catch (_) {
-    audioBufferLoading = false;
-  }
+  } catch (_) { audioBufferLoading = false; }
 };
 
-// Toca o buffer já decodificado — nenhum "tuuu", nenhum contexto novo
 const playNotificationSound = async (): Promise<void> => {
   if (!audioReady || !audioBuffer) return;
   try {
@@ -77,7 +66,7 @@ const playNotificationSound = async (): Promise<void> => {
   } catch (_) {}
 };
 
-// Debounce de 1 s absorve o duplo-snapshot do Firestore (cache + servidor)
+// Debounce 1 s absorve o duplo-snapshot do Firestore (cache + servidor)
 const scheduleNotificationSound = (): void => {
   if (notifDebounceTimer) clearTimeout(notifDebounceTimer);
   notifDebounceTimer = setTimeout(() => {
@@ -94,37 +83,33 @@ const Appointments: React.FC = () => {
   
   const prevAppCountRef = useRef<number | null>(null);
 
-  // ── 1. Pré-carrega o áudio ao montar (admin já clicou no menu para chegar aqui)
-  useEffect(() => {
-    preloadAudio();
-  }, []);
+  // ── Pré-carrega áudio ao montar (admin já navegou até aqui, contexto permitido)
+  useEffect(() => { preloadAudio(); }, []);
 
-  // ── 2. Data sempre correta — atualiza a cada minuto detectando virada de dia
-  const [currentDate, setCurrentDate] = useState<string>(getTodayString);
-
+  // ── Data correta no fuso local, atualiza na virada de meia-noite
   useEffect(() => {
     const tick = () => setCurrentDate(getTodayString());
-    tick(); // corrige imediatamente caso haja defasagem
+    tick();
     const interval = setInterval(tick, 60_000);
     return () => clearInterval(interval);
   }, []);
 
-  // ── 3. Som de notificação — ignora carga inicial, debounce absorve duplo-snapshot
+  // ── Som: ignora carga inicial, debounce absorve duplo-snapshot do Firestore
   useEffect(() => {
     if (prevAppCountRef.current === null) {
       prevAppCountRef.current = appointments.length;
       return;
     }
-    if (appointments.length > prevAppCountRef.current) {
-      scheduleNotificationSound();
-    }
+    if (appointments.length > prevAppCountRef.current) scheduleNotificationSound();
     prevAppCountRef.current = appointments.length;
   }, [appointments.length]);
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compactView, setCompactView] = useState(false);
+  const [currentDate, setCurrentDate] = useState<string>(getTodayString);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState<Appointment | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState<Appointment | null>(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
   const [showQuickClient, setShowQuickClient] = useState(false);
   const [newApp, setNewApp] = useState({ clientId: '', serviceId: '', professionalId: '', startTime: '09:00' });
@@ -246,8 +231,8 @@ const Appointments: React.FC = () => {
               <button 
                 onClick={() => { 
                   const [year, month] = selectedMonth.split('-').map(Number);
-                  const newDate = new Date(year, month - 2, 1);
-                  setSelectedMonth(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`);
+                  const d = new Date(year, month - 2, 1);
+                  setSelectedMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
                 }} 
                 className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}
               >
@@ -259,8 +244,8 @@ const Appointments: React.FC = () => {
               <button 
                 onClick={() => { 
                   const [year, month] = selectedMonth.split('-').map(Number);
-                  const newDate = new Date(year, month, 1);
-                  setSelectedMonth(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`);
+                  const d = new Date(year, month, 1);
+                  setSelectedMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
                 }} 
                 className={`p-2 transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-400 hover:text-white'}`}
               >
@@ -303,7 +288,11 @@ const Appointments: React.FC = () => {
                         {app ? (
                           <div className={`h-full w-full rounded-2xl border flex flex-col justify-between transition-all group ${app.status === 'CONCLUIDO_PAGO' ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-[#C58A4A]/30 bg-[#C58A4A]/5'} ${compactView ? 'p-1.5 rounded-lg' : 'p-2'}`}>
                             <div className="truncate">
-                              <h4 className={`font-black uppercase truncate ${compactView ? 'text-[8px]' : 'text-[10px]'} ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{app.clientName}</h4>
+                              <h4 
+                                onClick={(e) => { e.stopPropagation(); setShowDetailModal(app); }}
+                                className={`font-black uppercase truncate cursor-pointer hover:text-[#C58A4A] transition-colors ${compactView ? 'text-[8px]' : 'text-[10px]'} ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}
+                                title="Ver detalhes do agendamento"
+                              >{app.clientName}</h4>
                               {!compactView && <p className="text-[8px] font-black opacity-50 uppercase mt-1 truncate">{app.serviceName}</p>}
                             </div>
                             <div className={`flex items-center justify-end gap-1 ${compactView ? 'mt-0.5' : 'mt-1'}`}>
@@ -338,7 +327,11 @@ const Appointments: React.FC = () => {
                         {app.status === 'CONCLUIDO_PAGO' ? <Check size={20}/> : <Clock size={20}/>}
                      </div>
                      <div>
-                        <p className="text-xs font-black">{app.clientName} • <span className="text-[#C58A4A]">{app.startTime}</span></p>
+                        <p 
+                          className="text-xs font-black cursor-pointer hover:text-[#C58A4A] transition-colors"
+                          onClick={() => setShowDetailModal(app)}
+                          title="Ver detalhes do agendamento"
+                        >{app.clientName} • <span className="text-[#C58A4A]">{app.startTime}</span></p>
                         <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">{app.serviceName} com {app.professionalName}</p>
                      </div>
                   </div>
@@ -413,6 +406,100 @@ const Appointments: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ── MODAL: Detalhes do Agendamento ───────────────────────────────── */}
+      {showDetailModal && (() => {
+        const app = showDetailModal;
+        const client = clients.find(c => c.name === app.clientName || c.phone === app.clientPhone);
+        const service = services.find(s => s.id === app.serviceId);
+        const professional = professionals.find(p => p.id === app.professionalId);
+        const statusLabel = app.status === 'CONCLUIDO_PAGO' ? 'Concluído e Pago' : app.status === 'CANCELADO' ? 'Cancelado' : 'Pendente';
+        const statusColor = app.status === 'CONCLUIDO_PAGO' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : app.status === 'CANCELADO' ? 'text-red-400 bg-red-500/10 border-red-500/30' : 'text-[#C58A4A] bg-[#C58A4A]/10 border-[#C58A4A]/30';
+        return (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
+            <div className={`w-full max-w-md rounded-[2.5rem] p-8 space-y-6 shadow-2xl border ${theme === 'light' ? 'bg-white border-zinc-200' : 'cartao-vidro border-[#C58A4A]/20'}`}>
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#C58A4A] mb-1">Detalhes do Agendamento</p>
+                  <h2 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{app.clientName}</h2>
+                </div>
+                <button onClick={() => setShowDetailModal(null)} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all"><X size={20} className="text-zinc-400"/></button>
+              </div>
+
+              {/* Status badge */}
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusColor}`}>
+                {app.status === 'CONCLUIDO_PAGO' ? <Check size={12}/> : app.status === 'CANCELADO' ? <X size={12}/> : <Clock size={12}/>}
+                {statusLabel}
+              </div>
+
+              {/* Info grid */}
+              <div className="space-y-3">
+                <div className={`flex items-center gap-4 p-4 rounded-2xl ${theme === 'light' ? 'bg-zinc-50' : 'bg-white/5'}`}>
+                  <Scissors size={16} className="text-[#C58A4A] shrink-0"/>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Serviço</p>
+                    <p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{app.serviceName}</p>
+                    {service && <p className="text-[9px] text-zinc-500 mt-0.5">{service.durationMinutes} min • R$ {app.price?.toFixed(2)}</p>}
+                  </div>
+                </div>
+
+                <div className={`flex items-center gap-4 p-4 rounded-2xl ${theme === 'light' ? 'bg-zinc-50' : 'bg-white/5'}`}>
+                  <User size={16} className="text-[#C58A4A] shrink-0"/>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Profissional</p>
+                    <p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{app.professionalName}</p>
+                  </div>
+                </div>
+
+                <div className={`flex items-center gap-4 p-4 rounded-2xl ${theme === 'light' ? 'bg-zinc-50' : 'bg-white/5'}`}>
+                  <Calendar size={16} className="text-[#C58A4A] shrink-0"/>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Data e Horário</p>
+                    <p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{formatDateLabel(app.date)} • {app.startTime} – {app.endTime}</p>
+                  </div>
+                </div>
+
+                {client?.phone && (
+                  <div className={`flex items-center gap-4 p-4 rounded-2xl ${theme === 'light' ? 'bg-zinc-50' : 'bg-white/5'}`}>
+                    <Phone size={16} className="text-[#C58A4A] shrink-0"/>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">WhatsApp</p>
+                      <a href={`https://wa.me/55${client.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="text-sm font-black text-[#C58A4A] hover:underline">{client.phone}</a>
+                    </div>
+                  </div>
+                )}
+
+                {client?.email && (
+                  <div className={`flex items-center gap-4 p-4 rounded-2xl ${theme === 'light' ? 'bg-zinc-50' : 'bg-white/5'}`}>
+                    <Mail size={16} className="text-[#C58A4A] shrink-0"/>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">E-mail</p>
+                      <p className={`text-sm font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{client.email}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => { setShowDetailModal(null); setShowRescheduleModal(app); }} 
+                  className="flex-1 bg-white/5 border border-white/10 py-3 rounded-xl font-black uppercase text-[9px] text-zinc-400 hover:text-white transition-all flex items-center justify-center gap-2"
+                >
+                  <RefreshCw size={12}/> Reagendar
+                </button>
+                <button 
+                  onClick={() => { updateAppointmentStatus(app.id, 'CONCLUIDO_PAGO'); setShowDetailModal(null); }} 
+                  className="flex-1 gradiente-ouro text-black py-3 rounded-xl font-black uppercase text-[9px] flex items-center justify-center gap-2"
+                >
+                  <DollarSign size={12}/> Pago
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
