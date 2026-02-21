@@ -6,13 +6,35 @@ import {
 import { useBarberStore } from '../store';
 import { Appointment, Client } from '../types';
 
-const NOTIFICATION_SOUND_URL = 'https://drive.google.com/uc?export=download&id=1d1AYpHoWSsLEzEHVO8LHaRkl4-1xF_27';
-
 const playNotificationSound = () => {
   try {
-    const audio = new Audio(NOTIFICATION_SOUND_URL);
-    audio.volume = 1.0;
-    audio.play().catch(() => {});
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.7, ctx.currentTime);
+    master.connect(ctx.destination);
+
+    // Simula sino do iPhone (tri-tone): 3 notas ascendentes
+    const notes = [
+      { freq: 1046.50, start: 0.00 },   // C6
+      { freq: 1318.51, start: 0.18 },   // E6
+      { freq: 1567.98, start: 0.36 },   // G6
+    ];
+
+    notes.forEach(({ freq, start }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(1, ctx.currentTime + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + 0.55);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + 0.6);
+    });
+
+    setTimeout(() => ctx.close(), 2000);
   } catch (e) {}
 };
 
