@@ -147,14 +147,14 @@ const Clients: React.FC = () => {
                      <p className="text-xl font-black text-[#C58A4A] italic font-display">R$ {selectedClient.totalSpent.toFixed(2)}</p>
                   </div>
                   <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                     <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest mb-1">Rituais Concluídos</p>
+                     <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest mb-1">Serviços Concluídos</p>
                      <p className="text-xl font-black text-white italic font-display">{clientAppointments.past.length}</p>
                   </div>
                </div>
 
                {/* Futuros Agendamentos */}
                <div className="space-y-4">
-                  <h3 className="text-[10px] font-black text-[#C58A4A] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Próximos Rituais</h3>
+                  <h3 className="text-[10px] font-black text-[#C58A4A] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><CheckCircle2 size={14} /> Próximos Serviços</h3>
                   {clientAppointments.future.map(app => (
                     <div key={app.id} className="bg-white/5 border border-[#C58A4A]/20 p-4 rounded-2xl flex items-center justify-between group hover:bg-[#C58A4A]/5 transition-all">
                        <div className="flex items-center gap-4">
