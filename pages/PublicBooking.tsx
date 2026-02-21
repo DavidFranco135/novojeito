@@ -28,6 +28,16 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
   const [loggedClient, setLoggedClient] = useState<Client | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
 
+  // Estados para verificação de cadastro no agendamento (passo 4)
+  const [lookupInput, setLookupInput] = useState('');
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [clientVerified, setClientVerified] = useState(false);
+
+  // Estados para cadastro no Portal do Cliente
+  const [loginMode, setLoginMode] = useState<'login' | 'register'>('login');
+  const [registerData, setRegisterData] = useState({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
+  const [registerError, setRegisterError] = useState<string | null>(null);
+
   // States para o portal do membro
   const [suggestionText, setSuggestionText] = useState('');
   const [editData, setEditData] = useState({ name: '', phone: '', email: '' });
@@ -145,10 +155,11 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
       await addClient({ name: quickClient.name, phone: quickClient.phone, email: quickClient.email });
       setSelecao(prev => ({ ...prev, clientName: quickClient.name, clientPhone: quickClient.phone, clientEmail: quickClient.email }));
+      setClientVerified(true);
       setShowQuickClient(false);
       setQuickClient({ name: '', phone: '', email: '' });
       setQuickClientError(null);
-      setPasso(2);
+      if (passo === 1 || passo < 2) setPasso(2);
     } catch (err: any) {
       setQuickClientError(err.message || "Erro ao criar cliente.");
     } finally {
@@ -156,9 +167,67 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     }
   };
 
+  const handleLookupClient = () => {
+    if (!lookupInput.trim()) {
+      setLookupError("Informe seu celular ou e-mail.");
+      return;
+    }
+    const normalizePhone = (p: string) => p.replace(/\D/g, '');
+    const found = clients.find(c => {
+      const emailMatch = c.email && c.email.toLowerCase() === lookupInput.toLowerCase().trim();
+      const phoneMatch = normalizePhone(c.phone) === normalizePhone(lookupInput);
+      return emailMatch || phoneMatch;
+    });
+    if (found) {
+      setSelecao(prev => ({ ...prev, clientName: found.name, clientPhone: found.phone, clientEmail: found.email || '' }));
+      setClientVerified(true);
+      setLookupError(null);
+    } else {
+      setLookupError("Nenhum cadastro encontrado com esses dados.");
+    }
+  };
+
+  const handleRegisterPortal = async () => {
+    if (!registerData.name || !registerData.phone || !registerData.email || !registerData.password) {
+      setRegisterError("Preencha todos os campos obrigatórios."); return;
+    }
+    if (registerData.password !== registerData.confirmPassword) {
+      setRegisterError("As senhas não conferem."); return;
+    }
+    const exists = clients.find(c => {
+      const emailMatch = c.email && c.email.toLowerCase() === registerData.email.toLowerCase();
+      const phoneMatch = c.phone.replace(/\D/g,'') === registerData.phone.replace(/\D/g,'');
+      return emailMatch || phoneMatch;
+    });
+    if (exists) {
+      setRegisterError("Já existe um cadastro com este e-mail ou celular."); return;
+    }
+    setLoading(true);
+    try {
+      const client = await addClient({ name: registerData.name, phone: registerData.phone, email: registerData.email, password: registerData.password });
+      setLoggedClient(client);
+      setEditData({ name: client.name, phone: client.phone, email: client.email });
+      setNewReview(prev => ({ ...prev, userName: client.name, clientPhone: client.phone }));
+      setRegisterData({ name: '', phone: '', email: '', password: '', confirmPassword: '' });
+      setRegisterError(null);
+      // Se veio de um agendamento em progresso, volta para o agendamento já verificado
+      if (selecao.serviceId && selecao.date && selecao.time && selecao.professionalId) {
+        setSelecao(prev => ({ ...prev, clientName: client.name, clientPhone: client.phone, clientEmail: client.email || '' }));
+        setClientVerified(true);
+        setLookupInput(client.email || client.phone);
+        setLookupError(null);
+        setView('BOOKING');
+      } else {
+        setView('CLIENT_DASHBOARD');
+      }
+    } catch (err: any) {
+      setRegisterError(err.message || "Erro ao criar conta.");
+    } finally { setLoading(false); }
+  };
+
   const handleConfirmBooking = async () => {
-    if (!selecao.date || !selecao.time || !selecao.professionalId || !selecao.clientName || !selecao.clientPhone || !selecao.clientEmail) {
-      alert("Por favor, preencha todos os dados de identificação.");
+    if (!clientVerified || !selecao.clientName || !selecao.clientPhone) {
+      alert("Por favor, verifique seu cadastro antes de confirmar.");
       return;
     }
     if (checkAvailability(selecao.date, selecao.time, selecao.professionalId)) {
@@ -168,8 +237,13 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
 
     setLoading(true);
     try {
-      const existingClient = clients.find(c => c.email && c.email.toLowerCase() === selecao.clientEmail.toLowerCase());
-      const client = existingClient || await addClient({ name: selecao.clientName, phone: selecao.clientPhone, email: selecao.clientEmail });
+      const normalizePhone = (p: string) => p.replace(/\D/g, '');
+      const client = clients.find(c => {
+        const emailMatch = selecao.clientEmail && c.email && c.email.toLowerCase() === selecao.clientEmail.toLowerCase();
+        const phoneMatch = normalizePhone(c.phone) === normalizePhone(selecao.clientPhone);
+        return emailMatch || phoneMatch;
+      });
+      if (!client) { alert("Cliente não encontrado. Verifique seu cadastro."); setLoading(false); return; }
       const serv = services.find(s => s.id === selecao.serviceId);
       const [h, m] = selecao.time.split(':').map(Number);
       const endTime = `${Math.floor((h * 60 + m + (serv?.durationMinutes || 30)) / 60).toString().padStart(2, '0')}:${((h * 60 + m + (serv?.durationMinutes || 30)) % 60).toString().padStart(2, '0')}`;
@@ -562,13 +636,30 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               <div className="text-center space-y-4">
                  <div className="w-16 h-16 rounded-2xl gradiente-ouro p-1 mx-auto"><div className="w-full h-full rounded-[1.8rem] bg-black overflow-hidden flex items-center justify-center"><Lock className="text-[#C58A4A]" size={24}/></div></div>
                  <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Portal do Cliente</h2>
-                 <p className={`text-[10px] uppercase tracking-widest font-black ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-500'}`}>Acesse com seu e-mail ou celular</p>
+                 <div className={`flex rounded-xl overflow-hidden border ${theme === 'light' ? 'border-zinc-200' : 'border-white/10'}`}>
+                    <button onClick={() => { setLoginMode('login'); setRegisterError(null); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${loginMode === 'login' ? 'bg-[#C58A4A] text-black' : theme === 'light' ? 'bg-zinc-50 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}>Entrar</button>
+                    <button onClick={() => { setLoginMode('register'); setRegisterError(null); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${loginMode === 'register' ? 'bg-[#C58A4A] text-black' : theme === 'light' ? 'bg-zinc-50 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}>Criar Conta</button>
+                 </div>
               </div>
-              <div className="space-y-6">
-                 <input type="text" placeholder="E-mail ou WhatsApp" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
-                 <input type="password" placeholder="Senha" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
-                 <button onClick={handleLoginPortal} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all">ACESSAR PORTAL</button>
-              </div>
+              
+              {loginMode === 'login' ? (
+                <div className="space-y-6">
+                   <input type="text" placeholder="E-mail ou WhatsApp" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                   <input type="password" placeholder="Senha" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                   <button onClick={handleLoginPortal} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all">ACESSAR PORTAL</button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                   {registerError && <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-[10px] font-black uppercase text-center">{registerError}</div>}
+                   <input type="text" placeholder="Nome Completo" value={registerData.name} onChange={e => setRegisterData({...registerData, name: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                   <input type="tel" placeholder="WhatsApp" value={registerData.phone} onChange={e => setRegisterData({...registerData, phone: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                   <input type="email" placeholder="E-mail" value={registerData.email} onChange={e => setRegisterData({...registerData, email: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                   <input type="password" placeholder="Senha" value={registerData.password} onChange={e => setRegisterData({...registerData, password: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                   <input type="password" placeholder="Confirmar Senha" value={registerData.confirmPassword} onChange={e => setRegisterData({...registerData, confirmPassword: e.target.value})} className={`w-full border p-5 rounded-2xl outline-none font-bold transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} />
+                   <button onClick={handleRegisterPortal} disabled={loading} className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all">{loading ? 'Criando...' : 'CRIAR MINHA CONTA'}</button>
+                </div>
+              )}
+              
               <button onClick={() => setView('HOME')} className={`w-full text-[10px] font-black uppercase tracking-widest transition-all ${theme === 'light' ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}>Voltar ao Início</button>
            </div>
         </div>
@@ -729,7 +820,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
       {view === 'BOOKING' && (
         <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 pb-20 animate-in fade-in">
            <header className="flex items-center gap-4 mb-10">
-             <button onClick={() => { setView('HOME'); setShowQuickClient(false); }} className={`p-3 rounded-xl border transition-all ${theme === 'light' ? 'border-zinc-300 text-zinc-700 hover:bg-zinc-50' : 'border-white/10 text-zinc-400 hover:bg-white/5'}`}><ChevronLeft size={24}/></button>
+             <button onClick={() => { setView('HOME'); setShowQuickClient(false); setClientVerified(false); setLookupInput(''); setLookupError(null); }} className={`p-3 rounded-xl border transition-all ${theme === 'light' ? 'border-zinc-300 text-zinc-700 hover:bg-zinc-50' : 'border-white/10 text-zinc-400 hover:bg-white/5'}`}><ChevronLeft size={24}/></button>
              <h2 className={`text-3xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Reservar Ritual</h2>
            </header>
            
@@ -805,14 +896,76 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               {passo === 4 && (
                 <div className="space-y-8 animate-in slide-in-from-right-2 text-center">
                   <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Sua Identificação</h3>
-                  <div className="space-y-4 max-w-sm mx-auto w-full">
-                     <div className="relative"><User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="text" placeholder="Nome" value={selecao.clientName} onChange={e => setSelecao({...selecao, clientName: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
-                     <div className="relative"><Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="tel" placeholder="WhatsApp" value={selecao.clientPhone} onChange={e => setSelecao({...selecao, clientPhone: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
-                     <div className="relative"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]"/><input type="email" placeholder="E-mail para identificação" value={selecao.clientEmail} onChange={e => setSelecao({...selecao, clientEmail: e.target.value})} className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} /></div>
-                  </div>
-                  <button onClick={handleConfirmBooking} disabled={loading} className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl">
-                     {loading ? 'Processando...' : 'Confirmar Ritual'}
-                  </button>
+                  
+                  {!clientVerified ? (
+                    <div className="space-y-4 max-w-sm mx-auto w-full">
+                      <p className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                        Informe seu celular ou e-mail cadastrado
+                      </p>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#C58A4A]" size={18}/>
+                        <input 
+                          type="text" 
+                          placeholder="Celular ou E-mail" 
+                          value={lookupInput} 
+                          onChange={e => { setLookupInput(e.target.value); setLookupError(null); }}
+                          onKeyDown={e => e.key === 'Enter' && handleLookupClient()}
+                          className={`w-full border p-5 pl-12 rounded-2xl text-xs font-bold outline-none transition-all ${theme === 'light' ? 'bg-zinc-50 border-zinc-300 text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500' : 'bg-white/5 border-white/10 text-white focus:border-[#C58A4A]'}`} 
+                        />
+                      </div>
+                      
+                      {lookupError && (
+                        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl space-y-3">
+                          <p className="text-red-500 text-xs font-black">{lookupError}</p>
+                          <button 
+                            onClick={() => { setView('LOGIN'); setLoginMode('register'); }} 
+                            className="w-full gradiente-ouro text-black py-3 rounded-xl font-black text-[10px] uppercase tracking-widest"
+                          >
+                            Criar Conta no Portal
+                          </button>
+                        </div>
+                      )}
+                      
+                      <button 
+                        onClick={handleLookupClient} 
+                        className="w-full gradiente-ouro text-black py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all"
+                      >
+                        Verificar Cadastro
+                      </button>
+                      
+                      {!lookupError && (
+                        <button 
+                          onClick={() => { setView('LOGIN'); setLoginMode('register'); }} 
+                          className={`text-[10px] font-black uppercase tracking-widest underline transition-all ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
+                        >
+                          Não tenho cadastro — Criar Conta
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-6 max-w-sm mx-auto w-full">
+                      <div className={`p-6 rounded-2xl border ${theme === 'light' ? 'bg-emerald-50 border-emerald-200' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
+                        <CheckCircle2 className="text-emerald-500 mx-auto mb-3" size={44}/>
+                        <p className={`font-black text-xl font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{selecao.clientName}</p>
+                        <p className="text-zinc-500 text-xs mt-1">{selecao.clientPhone}</p>
+                        {selecao.clientEmail && <p className="text-zinc-500 text-xs">{selecao.clientEmail}</p>}
+                      </div>
+                      {bookingError && <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-[10px] font-black uppercase text-center">{bookingError}</div>}
+                      <button 
+                        onClick={handleConfirmBooking} 
+                        disabled={loading} 
+                        className="w-full gradiente-ouro text-black py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl hover:scale-105 transition-all"
+                      >
+                        {loading ? 'Processando...' : 'Confirmar Ritual'}
+                      </button>
+                      <button 
+                        onClick={() => { setClientVerified(false); setLookupInput(''); setLookupError(null); }} 
+                        className={`text-[10px] font-black uppercase tracking-widest underline transition-all ${theme === 'light' ? 'text-zinc-500 hover:text-zinc-900' : 'text-zinc-600 hover:text-[#C58A4A]'}`}
+                      >
+                        Trocar identificação
+                      </button>
+                    </div>
+                  )}
                </div>
               )}
            </div>
