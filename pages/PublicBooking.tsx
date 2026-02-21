@@ -138,7 +138,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     try {
       const existingClient = clients.find(c => c.email && c.email.toLowerCase() === quickClient.email.toLowerCase());
       if (existingClient) {
-        setQuickClientError("Este e-mail já está cadastrado.");
+        setQuickClientError("Este email já está cadastrado no sistema.");
         setLoading(false);
         return;
       }
@@ -186,9 +186,10 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
     }
     const cleanId = loginIdentifier.toLowerCase().replace(/\D/g, '');
     // ✅ CORREÇÃO: Permitir login com email OU celular
+    const normalizePhone = (p: string) => p.replace(/\D/g, '');
     const client = clients.find(c => {
       const emailMatch = c.email && c.email.toLowerCase() === loginIdentifier.toLowerCase();
-      const phoneMatch = c.phone === loginIdentifier;
+      const phoneMatch = normalizePhone(c.phone) === normalizePhone(loginIdentifier);
       return (emailMatch || phoneMatch) && c.password === loginPassword;
     });
     
@@ -770,7 +771,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                      {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14].map(i => {
                        const d = new Date(); 
                        d.setDate(d.getDate() + i);
-                       const dateStr = d.toISOString().split('T')[0];
+                       const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                        return (
                          <button key={i} onClick={() => { setSelecao({...selecao, date: dateStr}); setBookingError(null); }} className={`snap-center flex-shrink-0 w-24 h-28 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 ${selecao.date === dateStr ? 'bg-[#C58A4A] text-black border-transparent scale-105 shadow-xl' : theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:border-zinc-400' : 'bg-white/5 border-white/5 text-zinc-500 hover:border-white/20'}`}>
                             <span className="text-[8px] font-black uppercase opacity-60">{d.toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
@@ -835,7 +836,7 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
               </div>
               
               <div className="flex gap-4">
-                 <button onClick={() => setShowQuickClient(false)} className={`flex-1 py-5 rounded-xl text-[10px] font-black uppercase transition-all ${theme === 'light' ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200' : 'bg-white/5 text-zinc-500 hover:bg-white/10'}`}>Fechar</button>
+                 <button onClick={() => setShowQuickClient(false)} className={`flex-1 py-5 rounded-xl text-[10px] font-black uppercase transition-all ${theme === 'light' ? 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200' : 'bg-white/5 text-zinc-500 hover:bg-white/10'}`}>Cancelar</button>
                  <button onClick={handleQuickClientCreate} disabled={loading} className="flex-1 gradiente-ouro text-black py-5 rounded-xl text-[10px] font-black uppercase shadow-xl hover:scale-105 transition-all">{loading ? 'Criando...' : 'Criar e Continuar'}</button>
               </div>
            </div>
