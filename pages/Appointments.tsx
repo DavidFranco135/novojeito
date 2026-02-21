@@ -92,11 +92,14 @@ const scheduleNotificationSound = (): void => {
 
 const Appointments: React.FC = () => {
   const { 
-    appointments, professionals, services, clients, user,
+    appointments, professionals, services, clients, user, notifications,
     addAppointment, updateAppointmentStatus, deleteAppointment, addClient, rescheduleAppointment, theme
   } = useBarberStore();
-  
-  const prevAppCountRef = useRef<number | null>(null);
+
+  // ── Referência ao momento em que o componente montou.
+  // Só notificações com timestamp POSTERIOR ao mount são consideradas "novas".
+  const mountTimeRef = useRef<number>(Date.now());
+  const prevNotifCountRef = useRef<number | null>(null);
 
   // ── Pré-carrega áudio ao montar (admin já navegou até aqui, contexto permitido)
   useEffect(() => { preloadAudio(); }, []);
@@ -109,18 +112,39 @@ const Appointments: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // ── Som: apenas para ADMIN, ignora carga inicial
+  // ── Som: apenas para ADMIN, apenas para agendamentos públicos (do cliente).
+  //
+  // POR QUÊ RASTREAR NOTIFICAÇÕES e não appointments.length?
+  //  1. Notificações type='appointment' só são criadas quando isPublic=true,
+  //     ou seja, apenas quando o CLIENTE agenda — o admin criando pelo painel NÃO dispara.
+  //  2. Usar mountTimeRef evita o falso-positivo da carga inicial: notificações
+  //     já existentes no Firestore têm timestamp anterior ao mount e são ignoradas,
+  //     enquanto notificações realmente novas têm timestamp posterior e disparam o som.
+  //  3. Isso elimina o duplo toque causado pela race condition entre o mount do
+  //     componente (prevRef = 0) e a chegada assíncrona dos agendamentos existentes.
   useEffect(() => {
-    if (prevAppCountRef.current === null) {
-      prevAppCountRef.current = appointments.length;
+    if (user?.role !== 'ADMIN') return;
+
+    const appointmentNotifs = notifications.filter(n => n.type === 'appointment');
+
+    // Inicialização: registra a contagem atual sem tocar som
+    if (prevNotifCountRef.current === null) {
+      prevNotifCountRef.current = appointmentNotifs.length;
       return;
     }
-    // Toca SOMENTE se esta aba está logada como ADMIN
-    if (appointments.length > prevAppCountRef.current && user?.role === 'ADMIN') {
-      scheduleNotificationSound();
+
+    // Só toca se chegou uma notificação NOVA (posterior ao mount deste componente)
+    if (appointmentNotifs.length > prevNotifCountRef.current) {
+      const hasRecentNotif = appointmentNotifs.some(
+        n => new Date(n.time).getTime() > mountTimeRef.current
+      );
+      if (hasRecentNotif) {
+        scheduleNotificationSound();
+      }
     }
-    prevAppCountRef.current = appointments.length;
-  }, [appointments.length, user]);
+
+    prevNotifCountRef.current = appointmentNotifs.length;
+  }, [notifications, user]);
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compactView, setCompactView] = useState(false);
