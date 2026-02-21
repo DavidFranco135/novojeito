@@ -277,6 +277,14 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const updateAppointmentStatus = async (id: string, status: any) => {
     await updateDoc(doc(db, COLLECTIONS.APPOINTMENTS, id), { status });
     
+    // Se voltando para PENDENTE, remove a receita gerada automaticamente
+    if (status === 'PENDENTE') {
+      const linkedEntry = financialEntries.find(e => e.appointmentId === id);
+      if (linkedEntry) {
+        await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
+      }
+    }
+    
     // Criar receita automÃ¡tica ao marcar como CONCLUÃDO_PAGO
     if (status === 'CONCLUIDO_PAGO') {
       const appointment = appointments.find(a => a.id === id);
@@ -310,6 +318,11 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   };
 
   const deleteAppointment = async (id: string) => {
+    // Remove a entrada financeira vinculada a este agendamento (se existir)
+    const linkedEntry = financialEntries.find(e => e.appointmentId === id);
+    if (linkedEntry) {
+      await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
+    }
     await deleteDoc(doc(db, COLLECTIONS.APPOINTMENTS, id));
   };
 
