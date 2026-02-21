@@ -33,11 +33,7 @@ const Appointments: React.FC = () => {
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [compactView, setCompactView] = useState(false);
-  const [currentDate, setCurrentDate] = useState(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString().split('T')[0];
-  });
+  const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState<Appointment | null>(null);
   const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
@@ -107,8 +103,8 @@ const Appointments: React.FC = () => {
         <div>
           <h1 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Agenda Digital</h1>
           <div className="flex gap-2 mt-2">
-             <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-[#C58A4A] text-black' : 'bg-white/5 text-zinc-500'}`}><LayoutGrid size={16}/></button>
-             <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-[#C58A4A] text-black' : 'bg-white/5 text-zinc-500'}`}><List size={16}/></button>
+             <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-zinc-500'}`}><LayoutGrid size={16}/></button>
+             <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-[#D4AF37] text-black' : 'bg-white/5 text-zinc-500'}`}><List size={16}/></button>
              {viewMode === 'grid' && (
                <button 
                  onClick={() => {
@@ -130,19 +126,19 @@ const Appointments: React.FC = () => {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setFilterPeriod('day')} 
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${filterPeriod === 'day' ? 'bg-[#C58A4A] text-black' : theme === 'light' ? 'bg-zinc-100 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}
+              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${filterPeriod === 'day' ? 'bg-[#D4AF37] text-black' : theme === 'light' ? 'bg-zinc-100 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}
             >
               Dia
             </button>
             <button 
               onClick={() => setFilterPeriod('month')} 
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${filterPeriod === 'month' ? 'bg-[#C58A4A] text-black' : theme === 'light' ? 'bg-zinc-100 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}
+              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${filterPeriod === 'month' ? 'bg-[#D4AF37] text-black' : theme === 'light' ? 'bg-zinc-100 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}
             >
               Mês
             </button>
             <button 
               onClick={() => setFilterPeriod('all')} 
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${filterPeriod === 'all' ? 'bg-[#C58A4A] text-black' : theme === 'light' ? 'bg-zinc-100 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}
+              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${filterPeriod === 'all' ? 'bg-[#D4AF37] text-black' : theme === 'light' ? 'bg-zinc-100 text-zinc-600' : 'bg-white/5 text-zinc-500'}`}
             >
               Todos
             </button>
@@ -197,7 +193,7 @@ const Appointments: React.FC = () => {
                 <div className={`flex items-center justify-center text-zinc-500 ${compactView ? 'p-2' : 'p-3'}`}><Clock size={compactView ? 14 : 18} /></div>
                 {professionals.map(prof => (
                   <div key={prof.id} className={`flex items-center justify-center gap-3 border-r border-white/5 ${compactView ? 'p-2 flex-col' : 'p-3'}`}>
-                    <img src={prof.avatar} className={`rounded-lg object-cover border border-[#C58A4A] ${compactView ? 'w-6 h-6' : 'w-8 h-8'}`} alt="" />
+                    <img src={prof.avatar} className={`rounded-lg object-cover border border-[#D4AF37] ${compactView ? 'w-6 h-6' : 'w-8 h-8'}`} alt="" />
                     <span className={`font-black uppercase tracking-widest ${compactView ? 'text-[8px]' : 'text-[10px]'}`}>{prof.name.split(' ')[0]}</span>
                   </div>
                 ))}
@@ -216,7 +212,7 @@ const Appointments: React.FC = () => {
                         title={!app ? `Clique para agendar às ${hour}` : ''}
                       >
                         {app ? (
-                          <div className={`h-full w-full rounded-2xl border flex flex-col justify-between transition-all group ${app.status === 'CONCLUIDO_PAGO' ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-[#C58A4A]/30 bg-[#C58A4A]/5'} ${compactView ? 'p-1.5 rounded-lg' : 'p-2'}`}>
+                          <div className={`h-full w-full rounded-2xl border flex flex-col justify-between transition-all group ${app.status === 'CONCLUIDO_PAGO' ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-[#D4AF37]/30 bg-[#D4AF37]/5'} ${compactView ? 'p-1.5 rounded-lg' : 'p-2'}`}>
                             <div className="truncate">
                               <h4 className={`font-black uppercase truncate ${compactView ? 'text-[8px]' : 'text-[10px]'} ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{app.clientName}</h4>
                               {!compactView && <p className="text-[8px] font-black opacity-50 uppercase mt-1 truncate">{app.serviceName}</p>}
@@ -229,7 +225,7 @@ const Appointments: React.FC = () => {
                           </div>
                         ) : (
                           <div className="h-full w-full flex items-center justify-center opacity-0 hover:opacity-40 transition-opacity">
-                            <Plus size={compactView ? 12 : 16} className="text-[#C58A4A]" />
+                            <Plus size={compactView ? 12 : 16} className="text-[#D4AF37]" />
                           </div>
                         )}
                       </div>
@@ -247,13 +243,13 @@ const Appointments: React.FC = () => {
                </p>
              )}
              {appointmentsFiltered.map(app => (
-               <div key={app.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-[#C58A4A]/30 transition-all">
+               <div key={app.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-[#D4AF37]/30 transition-all">
                   <div className="flex items-center gap-4">
-                     <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${app.status === 'CONCLUIDO_PAGO' ? 'border-emerald-500 text-emerald-500 bg-emerald-500/10' : 'border-[#C58A4A] text-[#C58A4A] bg-[#C58A4A]/10'}`}>
+                     <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${app.status === 'CONCLUIDO_PAGO' ? 'border-emerald-500 text-emerald-500 bg-emerald-500/10' : 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10'}`}>
                         {app.status === 'CONCLUIDO_PAGO' ? <Check size={20}/> : <Clock size={20}/>}
                      </div>
                      <div>
-                        <p className="text-xs font-black">{app.clientName} • <span className="text-[#C58A4A]">{app.startTime}</span></p>
+                        <p className="text-xs font-black">{app.clientName} • <span className="text-[#D4AF37]">{app.startTime}</span></p>
                         <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">{app.serviceName} com {app.professionalName}</p>
                      </div>
                   </div>
@@ -271,7 +267,7 @@ const Appointments: React.FC = () => {
       {/* Modais omitidos por brevidade mas restaurados conforme lógica anterior de novo cliente e novo agendamento */}
       {showRescheduleModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
-          <div className="cartao-vidro w-full max-w-sm rounded-[2.5rem] p-10 space-y-8 border-[#C58A4A]/30 shadow-2xl">
+          <div className="cartao-vidro w-full max-w-sm rounded-[2.5rem] p-10 space-y-8 border-[#D4AF37]/30 shadow-2xl">
              <div className="text-center space-y-2"><h2 className="text-xl font-black font-display italic">Reagendar Ritual</h2><p className="text-[10px] text-zinc-500 uppercase font-black">Escolha novo horário para {showRescheduleModal.clientName}</p></div>
              <div className="space-y-4">
                 <input type="date" value={rescheduleData.date} onChange={e => setRescheduleData({...rescheduleData, date: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-xs font-black" />
@@ -287,7 +283,7 @@ const Appointments: React.FC = () => {
       
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
-          <div className="cartao-vidro w-full max-w-lg rounded-[2.5rem] p-10 space-y-8 border-[#C58A4A]/20 relative">
+          <div className="cartao-vidro w-full max-w-lg rounded-[2.5rem] p-10 space-y-8 border-[#D4AF37]/20 relative">
             <h2 className="text-2xl font-black font-display italic">Novo Agendamento</h2>
             <form onSubmit={handleCreateAppointment} className="space-y-6">
                <div className="space-y-4">
@@ -296,14 +292,14 @@ const Appointments: React.FC = () => {
                       <option value="" className="bg-zinc-950">Selecione o Cliente</option>
                       {clients.map(c => <option key={c.id} value={c.id} className="bg-zinc-950">{c.name}</option>)}
                     </select>
-                    <button type="button" onClick={() => setShowQuickClient(true)} className="p-4 bg-[#C58A4A] text-black rounded-xl hover:scale-105 transition-all"><UserPlus size={20}/></button>
+                    <button type="button" onClick={() => setShowQuickClient(true)} className="p-4 bg-[#D4AF37] text-black rounded-xl hover:scale-105 transition-all"><UserPlus size={20}/></button>
                   </div>
                   {showQuickClient && (
-                    <div className="p-4 bg-white/5 rounded-xl border border-[#C58A4A]/30 space-y-3 animate-in slide-in-from-top-2">
-                      <p className="text-[9px] font-black uppercase text-[#C58A4A]">Rápido: Novo Cliente</p>
+                    <div className="p-4 bg-white/5 rounded-xl border border-[#D4AF37]/30 space-y-3 animate-in slide-in-from-top-2">
+                      <p className="text-[9px] font-black uppercase text-[#D4AF37]">Rápido: Novo Cliente</p>
                       <input type="text" placeholder="Nome" value={quickClient.name} onChange={e => setQuickClient({...quickClient, name: e.target.value})} className="w-full bg-black/20 border border-white/5 p-3 rounded-lg text-xs" />
                       <input type="tel" placeholder="WhatsApp" value={quickClient.phone} onChange={e => setQuickClient({...quickClient, phone: e.target.value})} className="w-full bg-black/20 border border-white/5 p-3 rounded-lg text-xs" />
-                      <button type="button" onClick={handleQuickClient} className="w-full bg-[#C58A4A] text-black py-2 rounded-lg text-[9px] font-black uppercase">Salvar e Selecionar</button>
+                      <button type="button" onClick={handleQuickClient} className="w-full bg-[#D4AF37] text-black py-2 rounded-lg text-[9px] font-black uppercase">Salvar e Selecionar</button>
                     </div>
                   )}
                   <select required value={newApp.professionalId} onChange={e => setNewApp({...newApp, professionalId: e.target.value})} className="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none text-xs font-black uppercase">
