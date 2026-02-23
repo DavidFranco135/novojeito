@@ -173,7 +173,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   const login = async (id: string, pass: string) => {
-    if (id === 'srjoseadm@gmail.com' && pass === '654321') {
+    if (id === 'srjoseadm@gmail.com' && pass === '654326') {
       // âœ… CORREÃ‡ÃƒO: Carregar nome do Firebase ao fazer login
       const adminName = config.adminName || 'Sr. JosÃ©';
       const adminAvatar = config.logo || 'https://i.pravatar.cc/150';
