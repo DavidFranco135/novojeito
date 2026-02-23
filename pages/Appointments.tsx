@@ -344,7 +344,7 @@ const Appointments: React.FC = () => {
                                  title={app.status === 'CONCLUIDO_PAGO' ? 'Marcar como Pendente' : 'Marcar como Pago'}
                                ><DollarSign size={compactView ? 9 : 11}/></button>
                                <button onClick={(e) => { e.stopPropagation(); setShowRescheduleModal(app); }} className={`bg-white/10 text-zinc-500 hover:text-white rounded-lg transition-all ${compactView ? 'p-0.5' : 'p-1'}`} title="Reagendar"><RefreshCw size={compactView ? 9 : 11}/></button>
-                               <button onClick={(e) => { e.stopPropagation(); updateAppointmentStatus(app.id, 'CANCELADO'); }} className={`bg-white/10 text-zinc-500 hover:text-red-500 rounded-lg transition-all ${compactView ? 'p-0.5' : 'p-1'}`} title="Cancelar"><X size={compactView ? 9 : 11}/></button>
+                               <button onClick={(e) => { e.stopPropagation(); if (window.confirm(`Excluir agendamento de ${app.clientName}?`)) deleteAppointment(app.id); }} className={`bg-white/10 text-zinc-500 hover:text-red-500 rounded-lg transition-all ${compactView ? 'p-0.5' : 'p-1'}`} title="Excluir agendamento"><X size={compactView ? 9 : 11}/></button>
                             </div>
                           </div>
                         ) : (
