@@ -273,30 +273,44 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
   };
 
   const handleLoginPortal = () => {
-    if(!loginIdentifier || !loginPassword) {
+    if (!loginIdentifier || !loginPassword) {
       alert("Preencha e-mail/celular e senha.");
       return;
     }
-    const cleanId = loginIdentifier.toLowerCase().replace(/\D/g, '');
-    // ✅ CORREÇÃO: Permitir login com email OU celular
+
     const normalizePhone = (p: string) => p.replace(/\D/g, '');
+
+    // 1º — Busca o cliente APENAS pelo identificador (sem checar senha aqui)
     const client = clients.find(c => {
-      const emailMatch = c.email && c.email.toLowerCase() === loginIdentifier.toLowerCase();
+      const emailMatch = c.email && c.email.toLowerCase() === loginIdentifier.toLowerCase().trim();
       const phoneMatch = normalizePhone(c.phone) === normalizePhone(loginIdentifier);
-      return (emailMatch || phoneMatch) && c.password === loginPassword;
+      return emailMatch || phoneMatch;
     });
-    
-    if (client && client.password === loginPassword) {
-      setLoggedClient(client);
-      setEditData({ name: client.name, phone: client.phone, email: client.email });
-      setNewReview(prev => ({ ...prev, userName: client.name, clientPhone: client.phone }));
-      setView('CLIENT_DASHBOARD');
-      setLoginPassword(''); 
-    } else if (client && client.password !== loginPassword) {
-      alert("Senha incorreta.");
-    } else {
+
+    // 2º — Cliente não existe na base
+    if (!client) {
       alert("Cliente não encontrado. Verifique seu e-mail ou celular cadastrado.");
+      return;
     }
+
+    // 3º — Cliente existe mas não tem senha definida (cadastrado pelo admin sem senha)
+    if (!client.password) {
+      alert("Sua conta ainda não possui senha. Peça ao estabelecimento para definir uma ou crie uma nova conta no portal.");
+      return;
+    }
+
+    // 4º — Senha incorreta
+    if (client.password !== loginPassword) {
+      alert("Senha incorreta. Tente novamente.");
+      return;
+    }
+
+    // 5º — Tudo certo: acesso liberado
+    setLoggedClient(client);
+    setEditData({ name: client.name, phone: client.phone, email: client.email });
+    setNewReview(prev => ({ ...prev, userName: client.name, clientPhone: client.phone }));
+    setLoginPassword('');
+    setView('CLIENT_DASHBOARD');
   };
 
   const handleLikeProfessional = async (profId: string) => {
