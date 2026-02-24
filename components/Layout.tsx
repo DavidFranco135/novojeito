@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   LayoutDashboard, Calendar, Users, Scissors, Briefcase, DollarSign, Settings, 
-  Menu, LogOut, Bell, Sparkles, ChevronLeft, Sun, Moon, X, Trash2, ChevronRight, MessageSquare
+  Menu, LogOut, Bell, Sparkles, ChevronLeft, Sun, Moon, X, Trash2, ChevronRight,
+  MessageSquare, Star, Crown, QrCode, CalendarX
 } from 'lucide-react';
 import { useBarberStore } from '../store';
 
@@ -24,24 +25,29 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
     }
     meta.content = '#C58A4A';
   }, []);
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const { logout, user, notifications, clearNotifications, markNotificationAsRead, theme, toggleTheme } = useBarberStore();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'appointments', label: 'Agenda Digital', icon: Calendar },
-    { id: 'clients', label: 'Membros', icon: Users },
-    { id: 'professionals', label: 'Barbeiros', icon: Briefcase },
-    { id: 'services', label: 'Serviços', icon: Scissors },
-    { id: 'financial', label: 'Fluxo de Caixa', icon: DollarSign },
-    { id: 'suggestions', label: 'Sugestões', icon: MessageSquare },
-    { id: 'settings', label: 'Ajustes Master', icon: Settings },
+    { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboard },
+    { id: 'appointments',  label: 'Agenda Digital',    icon: Calendar },
+    { id: 'clients',       label: 'Membros',           icon: Users },
+    { id: 'professionals', label: 'Barbeiros',         icon: Briefcase },
+    { id: 'services',      label: 'Serviços',          icon: Scissors },
+    { id: 'loyalty',       label: 'Fidelidade',        icon: Star },
+    { id: 'subscriptions', label: 'Assinaturas',       icon: Crown },
+    { id: 'partners',      label: 'Parceiros',         icon: QrCode },
+    { id: 'schedule',      label: 'Controle Agenda',   icon: CalendarX },
+    { id: 'financial',     label: 'Fluxo de Caixa',    icon: DollarSign },
+    { id: 'suggestions',   label: 'Sugestões',         icon: MessageSquare },
+    { id: 'settings',      label: 'Ajustes Master',    icon: Settings },
   ];
 
   return (
     <div className={`flex h-screen overflow-hidden ${theme === 'light' ? 'bg-zinc-50' : 'bg-[#050505]'}`}>
-      {/* Sidebar - CORRIGIDO */}
+      {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:w-20' : 'lg:w-72'} ${theme === 'light' ? 'bg-white border-r border-zinc-200 shadow-sm' : 'bg-[#0A0A0A] border-r border-white/5'}`}>
         <div className="flex flex-col h-full">
           <div className="p-6 flex items-center justify-between">
@@ -105,7 +111,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Botão de tema com cores do site público */}
+            {/* Botão de tema */}
             <button onClick={toggleTheme} className={`p-3 rounded-2xl border transition-all ${theme === 'light' ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 hover:border-amber-300' : 'bg-zinc-900 border-zinc-800 text-amber-500 hover:bg-zinc-800 hover:border-zinc-700'}`}>
               {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
