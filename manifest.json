@@ -1,7 +1,7 @@
 {
-  "name": "Barbearia Sr. José",
-  "short_name": "Sr. José",
-  "description": "Sistema Premium de Gestão de Barbearia",
+  "name": "Barbearia Novo Jeito",
+  "short_name": "Novo Jeito",
+  "description": "Sistema Premium de agendamento Novo Jeito",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050505",
