@@ -608,7 +608,115 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                 </div>
              </section>
 
-             {/* 6. Onde Nos Encontrar */}
+             {/* 6. Planos VIP */}
+             {config.vipPlans && config.vipPlans.filter(p => p.status === 'ATIVO').length > 0 && (
+               <section className="mb-24">
+                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                   Planos VIP <Crown size={24} className="text-[#C58A4A]" /> <div className="h-1 flex-1 gradiente-ouro opacity-10"></div>
+                 </h2>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {config.vipPlans.filter(p => p.status === 'ATIVO').map((plan, i) => (
+                     <div key={plan.id} className={`rounded-[2.5rem] p-8 border relative overflow-hidden transition-all hover:scale-[1.02] ${i === 0 ? 'border-[#C58A4A]/40 bg-gradient-to-br from-[#C58A4A]/10 to-transparent' : theme === 'light' ? 'bg-white border-zinc-200' : 'cartao-vidro border-white/10'}`}>
+                       {i === 0 && <div className="absolute top-0 inset-x-0 h-1 gradiente-ouro"></div>}
+                       <div className="flex items-center gap-3 mb-6">
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${i === 0 ? 'gradiente-ouro' : 'bg-white/5 border border-white/10'}`}>
+                           <Crown size={18} className={i === 0 ? 'text-black' : 'text-[#C58A4A]'} />
+                         </div>
+                         <div>
+                           <p className={`font-black text-lg ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{plan.name}</p>
+                           {plan.discount && plan.discount > 0 ? <span className="text-[9px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full">{plan.discount}% OFF</span> : null}
+                         </div>
+                       </div>
+                       <p className={`text-4xl font-black mb-1 ${i === 0 ? 'text-[#C58A4A]' : theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                         R$ {plan.price.toFixed(2)}
+                         <span className={`text-sm font-bold ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>/{plan.period === 'MENSAL' ? 'mês' : 'ano'}</span>
+                       </p>
+                       <div className="mt-6 space-y-3">
+                         {plan.benefits.map((benefit, bi) => (
+                           <div key={bi} className="flex items-start gap-3">
+                             <CheckCircle2 size={16} className="text-[#C58A4A] shrink-0 mt-0.5" />
+                             <p className={`text-sm ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>{benefit}</p>
+                           </div>
+                         ))}
+                       </div>
+                       <button
+                         onClick={() => { const w = `Olá! Tenho interesse no plano ${plan.name} (R$ ${plan.price.toFixed(2)}/${plan.period === 'MENSAL' ? 'mês' : 'ano'}). Como faço para assinar?`; window.open(`https://wa.me/55${config.whatsapp?.replace(/\D/g,'')}?text=${encodeURIComponent(w)}`, '_blank'); }}
+                         className={`w-full mt-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? 'gradiente-ouro text-black shadow-lg' : theme === 'light' ? 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200' : 'bg-white/10 text-white border border-white/10 hover:bg-white/20'}`}
+                       >
+                         Quero esse plano
+                       </button>
+                     </div>
+                   ))}
+                 </div>
+               </section>
+             )}
+
+             {/* 7. Programa de Fidelidade */}
+             {((config as any).stampsForFreeCut || (config as any).cashbackPercent) && (
+               <section className="mb-24">
+                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                   Programa de Fidelidade <Star size={24} className="text-[#C58A4A]" /> <div className="h-1 flex-1 gradiente-ouro opacity-10"></div>
+                 </h2>
+                 <div className={`rounded-[2.5rem] p-8 md:p-12 border overflow-hidden relative ${theme === 'light' ? 'bg-white border-zinc-200' : 'cartao-vidro border-[#C58A4A]/20'}`}>
+                   <div className="absolute top-0 inset-x-0 h-1 gradiente-ouro"></div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                     <div className="space-y-6">
+                       <p className={`text-lg font-bold leading-relaxed ${theme === 'light' ? 'text-zinc-700' : 'text-zinc-300'}`}>
+                         Cada visita te aproxima de uma recompensa. Acumule selos e cashback a cada serviço realizado!
+                       </p>
+                       <div className="space-y-4">
+                         {(config as any).stampsForFreeCut && (
+                           <div className={`flex items-center gap-4 p-4 rounded-2xl ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
+                             <div className="w-12 h-12 gradiente-ouro rounded-xl flex items-center justify-center shrink-0">
+                               <Scissors size={20} className="text-black" />
+                             </div>
+                             <div>
+                               <p className={`font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Corte Grátis</p>
+                               <p className={`text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>A cada <strong>{(config as any).stampsForFreeCut} visitas</strong>, ganhe um corte grátis</p>
+                             </div>
+                           </div>
+                         )}
+                         {(config as any).cashbackPercent && (
+                           <div className={`flex items-center gap-4 p-4 rounded-2xl ${theme === 'light' ? 'bg-zinc-50 border border-zinc-200' : 'bg-white/5 border border-white/10'}`}>
+                             <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center shrink-0">
+                               <span className="text-emerald-500 font-black text-sm">%</span>
+                             </div>
+                             <div>
+                               <p className={`font-black ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Cashback {(config as any).cashbackPercent}%</p>
+                               <p className={`text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>{(config as any).cashbackPercent}% de cada serviço volta como crédito para você</p>
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                       <button
+                         onClick={() => setView('LOGIN')}
+                         className="inline-flex items-center gap-3 gradiente-ouro text-black px-8 py-4 rounded-full font-black text-xs uppercase shadow-2xl hover:scale-105 transition-all"
+                       >
+                         <Star size={16} /> Ativar meu cartão fidelidade
+                       </button>
+                     </div>
+                     {/* Cartão de selos visual */}
+                     <div className={`rounded-[2rem] p-6 border ${theme === 'light' ? 'bg-zinc-50 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+                       <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>Seu Cartão Digital</p>
+                       <p className={`text-lg font-black italic mb-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Acumule selos a cada visita</p>
+                       <div className="grid grid-cols-5 gap-2 mb-6">
+                         {Array.from({ length: (config as any).stampsForFreeCut || 10 }).map((_, i) => (
+                           <div key={i} className={`aspect-square rounded-xl flex items-center justify-center border-2 transition-all ${i < 3 ? 'gradiente-ouro border-transparent' : theme === 'light' ? 'bg-zinc-100 border-zinc-200' : 'bg-white/5 border-white/10'}`}>
+                             {i < 3 ? <Scissors size={14} className="text-black" /> : <span className={`text-[10px] font-black ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-600'}`}>{i + 1}</span>}
+                           </div>
+                         ))}
+                       </div>
+                       <div className={`flex items-center justify-between text-sm ${theme === 'light' ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                         <span>3/{(config as any).stampsForFreeCut || 10} selos</span>
+                         <span className="text-[#C58A4A] font-black">{(config as any).cashbackPercent || 5}% cashback por visita</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </section>
+             )}
+
+             {/* 8. Onde Nos Encontrar */}
              <section className="mb-24">
                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Onde Nos Encontrar <div className="h-1 flex-1 gradiente-ouro opacity-10"></div></h2>
                 <div className={`rounded-[2.5rem] overflow-hidden shadow-2xl ${theme === 'light' ? 'border border-zinc-200' : 'border border-white/5'}`}>
