@@ -12,6 +12,7 @@ interface PublicBookingProps {
 
 const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) => {
   const { services, professionals, appointments, addAppointment, addClient, updateClient, config, theme, likeProfessional, addShopReview, addSuggestion, clients, user, logout, suggestions } = useBarberStore();
+  const { partners } = useBarberStore() as any;
   
   const [view, setView] = useState<'HOME' | 'BOOKING' | 'LOGIN' | 'CLIENT_DASHBOARD'>(initialView);
   const [passo, setPasso] = useState(1);
@@ -712,6 +713,44 @@ const PublicBooking: React.FC<PublicBookingProps> = ({ initialView = 'HOME' }) =
                        </div>
                      </div>
                    </div>
+                 </div>
+               </section>
+             )}
+
+             {/* QR Parceiros */}
+             {(partners || []).filter((p: any) => p.status === 'ATIVO' && new Date(p.qrCodeExpiry) > new Date()).length > 0 && (
+               <section className="mb-24">
+                 <h2 className={`text-2xl font-black font-display italic mb-10 flex items-center gap-6 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+                   Parceiros & Benefícios <div className="h-1 flex-1 gradiente-ouro opacity-10"></div>
+                 </h2>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                   {(partners || [])
+                     .filter((p: any) => p.status === 'ATIVO' && new Date(p.qrCodeExpiry) > new Date())
+                     .map((partner: any) => {
+                       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}?partner=${partner.qrCodeToken}`)}`;
+                       const expiryDate = new Date(partner.qrCodeExpiry).toLocaleDateString('pt-BR');
+                       return (
+                         <div key={partner.id} className={`rounded-[2.5rem] p-6 border text-center transition-all hover:scale-[1.02] ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'}`}>
+                           <p className={`font-black text-lg mb-1 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>{partner.businessName || partner.name}</p>
+                           <div className="flex items-center justify-center gap-3 mb-4">
+                             {partner.discount > 0 && (
+                               <span className="text-[9px] font-black text-emerald-500 uppercase bg-emerald-500/10 px-2 py-1 rounded-full">{partner.discount}% desconto</span>
+                             )}
+                             {partner.cashbackPercent > 0 && (
+                               <span className="text-[9px] font-black text-[#C58A4A] uppercase bg-[#C58A4A]/10 px-2 py-1 rounded-full">{partner.cashbackPercent}% cashback</span>
+                             )}
+                           </div>
+                           <div className={`mx-auto w-48 h-48 rounded-2xl overflow-hidden border-4 mb-4 ${theme === 'light' ? 'border-zinc-200 bg-white' : 'border-white/10 bg-white'}`}>
+                             <img src={qrUrl} alt={`QR ${partner.name}`} className="w-full h-full object-contain p-1" />
+                           </div>
+                           <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                             Mostre o QR na recepção
+                           </p>
+                           <p className={`text-[8px] font-bold ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-600'}`}>Válido até {expiryDate}</p>
+                         </div>
+                       );
+                     })
+                   }
                  </div>
                </section>
              )}
