@@ -36,7 +36,7 @@ const Schedule: React.FC = () => {
   });
 
   const inactiveClients = useMemo(() => {
-    const threshold = 30;
+    const threshold = 1;
     const now = new Date();
     return clients
       .map((c: any) => {
