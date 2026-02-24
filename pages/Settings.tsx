@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Store, Upload, ImageIcon, User as UserIcon, Trash2, Plus, Info, Clock, MapPin, Share2, RotateCcw, Crown, Check, X } from 'lucide-react';
+import { Save, Store, Upload, ImageIcon, User as UserIcon, Trash2, Plus, Info, Clock, MapPin, Share2, RotateCcw, Crown, Check, X, Star } from 'lucide-react';
 import { useBarberStore } from '../store';
 import { VipPlan } from '../types';
 
@@ -68,15 +68,13 @@ const Settings: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // 1. Atualizar configurações no Firebase (incluindo o nome do admin)
       const updatedConfig = { 
         ...formData, 
         logo: userData.avatar,
-        adminName: userData.name  // ✅ SALVAR NOME NO FIREBASE
+        adminName: userData.name
       };
       await updateConfig(updatedConfig);
       
-      // 2. Atualizar dados do usuário no contexto
       if (user) {
         const updatedUserData = {
           ...user,
@@ -84,8 +82,6 @@ const Settings: React.FC = () => {
           avatar: userData.avatar
         };
         updateUser(updatedUserData);
-        
-        // 3. Atualizar localStorage também (sincronização imediata)
         localStorage.setItem('brb_user', JSON.stringify(updatedUserData));
       }
       
@@ -167,6 +163,10 @@ const Settings: React.FC = () => {
     setNewPlan(prev => ({ ...prev, benefits: updatedBenefits }));
   };
 
+  const inputClass = `w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`;
+  const labelClass = `text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`;
+  const cardClass = `rounded-[3.5rem] p-10 md:p-14 border-2 space-y-10 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'}`;
+
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20 h-full overflow-auto scrollbar-hide">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -187,7 +187,9 @@ const Settings: React.FC = () => {
 
       <form id="settings-form" onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-10">
-          <div className={`rounded-[3.5rem] p-10 md:p-14 border-2 space-y-10 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'}`}>
+
+          {/* Perfil Master */}
+          <div className={cardClass}>
             <h3 className={`text-2xl font-black font-display italic flex items-center gap-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}><UserIcon className="text-[#C58A4A]" /> Perfil Master</h3>
             <div className="flex flex-col sm:flex-row items-center gap-10">
                <div className="relative group w-40 h-40">
@@ -199,12 +201,12 @@ const Settings: React.FC = () => {
                </div>
                <div className="flex-1 space-y-6 w-full">
                   <div className="space-y-3">
-                    <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Assinatura Digital (Seu Nome)</label>
+                    <label className={labelClass}>Assinatura Digital (Seu Nome)</label>
                     <input 
                       type="text" 
                       value={userData.name} 
                       onChange={e => setUserData({...userData, name: e.target.value})} 
-                      className={`w-full border-2 p-6 rounded-3xl outline-none font-black text-xl ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
+                      className={inputClass}
                       placeholder="Digite seu nome"
                     />
                   </div>
@@ -212,47 +214,88 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          <div className={`rounded-[3.5rem] p-10 md:p-14 border-2 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'} space-y-10`}>
+          {/* Identidade */}
+          <div className={cardClass}>
             <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'} flex items-center gap-4`}><Store className="text-[#C58A4A]" /> Identidade do barber pub</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Nome da Casa</label>
-                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
+                <label className={labelClass}>Nome da Casa</label>
+                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={inputClass}/>
               </div>
               <div className="space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Resumo Header (Slogan)</label>
-                <input type="text" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
+                <label className={labelClass}>Resumo Header (Slogan)</label>
+                <input type="text" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className={inputClass}/>
               </div>
               <div className="md:col-span-2 space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Título Seção Sobre</label>
-                <input type="text" value={formData.aboutTitle} onChange={e => setFormData({...formData, aboutTitle: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
+                <label className={labelClass}>Título Seção Sobre</label>
+                <input type="text" value={formData.aboutTitle} onChange={e => setFormData({...formData, aboutTitle: e.target.value})} className={inputClass}/>
               </div>
               <div className="md:col-span-2 space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>História / Conteúdo Sobre</label>
+                <label className={labelClass}>História / Conteúdo Sobre</label>
                 <textarea rows={5} value={formData.aboutText} onChange={e => setFormData({...formData, aboutText: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-medium resize-none ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
               </div>
             </div>
           </div>
 
-          <div className={`rounded-[3.5rem] p-10 md:p-14 border-2 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'} space-y-10`}>
+          {/* Onde & Como */}
+          <div className={cardClass}>
             <h3 className={`text-2xl font-black font-display italic ${theme === 'light' ? 'text-zinc-900' : 'text-white'} flex items-center gap-4`}><MapPin className="text-[#C58A4A]" /> Onde & Como</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>WhatsApp Business</label>
-                <input type="text" value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
+                <label className={labelClass}>WhatsApp Business</label>
+                <input type="text" value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className={inputClass}/>
               </div>
               <div className="space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Instagram (@user)</label>
-                <input type="text" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
+                <label className={labelClass}>Instagram (@user)</label>
+                <input type="text" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className={inputClass}/>
               </div>
               <div className="md:col-span-2 space-y-3">
-                <label className={`text-xs font-black uppercase tracking-widest ml-1 ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Endereço Completo</label>
-                <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className={`w-full border-2 p-6 rounded-3xl font-black ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}/>
+                <label className={labelClass}>Endereço Completo</label>
+                <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className={inputClass}/>
               </div>
             </div>
           </div>
 
-          <div className={`rounded-[3.5rem] p-10 md:p-14 border-2 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'} space-y-10`}>
+          {/* Programa de Fidelidade — NOVO */}
+          <div className={cardClass}>
+            <h3 className={`text-2xl font-black font-display italic flex items-center gap-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
+              <Star className="text-[#C58A4A]" /> Programa de Fidelidade
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className={labelClass}>Selos para Corte Grátis</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={(formData as any).stampsForFreeCut ?? 10}
+                  onChange={e => setFormData({...formData, stampsForFreeCut: parseInt(e.target.value) || 10} as any)}
+                  className={inputClass}
+                />
+                <p className={`text-[10px] font-bold ml-1 ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                  Padrão: 10 selos = 1 corte cortesia
+                </p>
+              </div>
+              <div className="space-y-3">
+                <label className={labelClass}>Cashback % por Serviço</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  step={0.5}
+                  value={(formData as any).cashbackPercent ?? 5}
+                  onChange={e => setFormData({...formData, cashbackPercent: parseFloat(e.target.value) || 0} as any)}
+                  className={inputClass}
+                />
+                <p className={`text-[10px] font-bold ml-1 ${theme === 'light' ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                  % do valor do serviço retorna como crédito
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Planos VIP */}
+          <div className={cardClass}>
             <div className="flex items-center justify-between">
               <h3 className={`text-2xl font-black font-display italic flex items-center gap-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>
                 <Crown className="text-[#C58A4A]" /> Planos VIP
@@ -314,7 +357,8 @@ const Settings: React.FC = () => {
             </div>
           </div>
 
-          <div className={`rounded-[3.5rem] p-10 md:p-14 border-2 ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'} space-y-10`}>
+          {/* Gestão de Barbeiros */}
+          <div className={cardClass}>
             <div className="flex items-center justify-between">
               <h3 className={`text-2xl font-black font-display italic flex items-center gap-4 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}><UserIcon className="text-[#C58A4A]" /> Gestão de Barbeiros</h3>
               <button 
@@ -335,6 +379,7 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
+        {/* Aside: Logo */}
         <aside className="space-y-10">
           <div className={`rounded-[3.5rem] p-12 border-2 text-center flex flex-col items-center ${theme === 'light' ? 'bg-white border-zinc-200 shadow-sm' : 'cartao-vidro border-white/10'}`}>
             <h3 className={`text-2xl font-black font-display italic mb-10 ${theme === 'light' ? 'text-zinc-900' : 'text-white'}`}>Logo Master</h3>
@@ -346,6 +391,7 @@ const Settings: React.FC = () => {
         </aside>
       </form>
 
+      {/* Modal VIP Plan */}
       {showVipPlanModal && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 backdrop-blur-xl ${theme === 'light' ? 'bg-black/70' : 'bg-black/95'}`}>
           <div className={`w-full max-w-2xl rounded-[3rem] p-12 space-y-8 shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide ${theme === 'light' ? 'bg-white border border-zinc-200' : 'cartao-vidro border-[#C58A4A]/30'}`}>
@@ -370,7 +416,6 @@ const Settings: React.FC = () => {
                     placeholder="Ex: Plano Premium"
                   />
                 </div>
-                
                 <div className="space-y-2">
                   <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Período</label>
                   <select
@@ -388,21 +433,16 @@ const Settings: React.FC = () => {
                 <div className="space-y-2">
                   <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Preço (R$)</label>
                   <input 
-                    type="number" 
-                    min="0"
-                    step="0.01"
+                    type="number" min="0" step="0.01"
                     value={newPlan.price || 0}
                     onChange={e => setNewPlan({...newPlan, price: parseFloat(e.target.value) || 0})}
                     className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
                   />
                 </div>
-
                 <div className="space-y-2">
                   <label className={`text-xs font-black uppercase tracking-widest ${theme === 'light' ? 'text-zinc-500' : 'text-zinc-400'}`}>Desconto (%)</label>
                   <input 
-                    type="number" 
-                    min="0"
-                    max="100"
+                    type="number" min="0" max="100"
                     value={newPlan.discount || 0}
                     onChange={e => setNewPlan({...newPlan, discount: parseInt(e.target.value) || 0})}
                     className={`w-full border-2 p-4 rounded-2xl outline-none font-bold ${theme === 'light' ? 'bg-zinc-50 border-zinc-200 text-zinc-900' : 'bg-white/5 border-white/10 text-white'}`}
