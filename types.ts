@@ -28,6 +28,9 @@ export interface Professional {
   commission: number;
   likes: number;
   specialty?: string;
+  isMaster?: boolean;
+  masterSurcharge?: number;
+  description?: string;
   workingHours: {
     start: string;
     end: string;
@@ -62,8 +65,8 @@ export interface Suggestion {
   clientPhone: string;
   text: string;
   date: string;
-  response?: string;  // ✅ NOVO: Campo para resposta do admin
-  responseDate?: string;  // ✅ NOVO: Data da resposta
+  response?: string;
+  responseDate?: string;
 }
 
 export interface Appointment {
@@ -138,5 +141,86 @@ export interface ShopConfig {
   gallery: string[];
   reviews: Review[];
   vipPlans?: VipPlan[];
-  adminName?: string;  // ✅ NOVO: Nome do admin salvo no Firebase
+  adminName?: string;
+  cashbackPercent?: number;
+  stampsForFreeCut?: number;
+  masterBarberSurcharge?: number;
+}
+
+// ── FIDELIDADE ───────────────────────────────────────────────
+export interface LoyaltyCard {
+  id: string;
+  clientId: string;
+  stamps: number;
+  totalStamps: number;
+  credits: number;
+  freeCutsEarned: number;
+  freeCutsPending: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── ASSINATURAS ──────────────────────────────────────────────
+export interface SubscriptionPayment {
+  id: string;
+  date: string;
+  amount: number;
+  method: string;
+  status: 'PAGO' | 'PENDENTE' | 'FALHOU';
+}
+
+export interface Subscription {
+  id: string;
+  clientId: string;
+  clientName: string;
+  planId: string;
+  planName: string;
+  price: number;
+  startDate: string;
+  endDate: string;
+  status: 'ATIVA' | 'VENCIDA' | 'CANCELADA' | 'PAUSADA';
+  usageCount: number;
+  usageLimit?: number;
+  paymentHistory: SubscriptionPayment[];
+  createdAt: string;
+}
+
+// ── BLOQUEIO DE HORÁRIOS ─────────────────────────────────────
+export interface BlockedSlot {
+  id: string;
+  professionalId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  reason: string;
+  recurring: boolean;
+  recurringDays?: number[];
+}
+
+// ── PARCEIROS / QR CODE ──────────────────────────────────────
+export interface Partner {
+  id: string;
+  name: string;
+  businessName: string;
+  phone: string;
+  email: string;
+  discount: number;
+  cashbackPercent: number;
+  qrCodeToken: string;
+  qrCodeExpiry: string;
+  totalReferrals: number;
+  status: 'ATIVO' | 'INATIVO' | 'EXPIRADO';
+  createdAt: string;
+}
+
+// ── CAMPANHAS DE INATIVIDADE ─────────────────────────────────
+export interface InactivityCampaign {
+  id: string;
+  name: string;
+  daysInactive: number;
+  message: string;
+  discount?: number;
+  lastRun: string;
+  clientsSent: string[];
+  status: 'ATIVA' | 'PAUSADA';
 }
