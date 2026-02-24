@@ -1,6 +1,5 @@
-
 import React, { useMemo, useState } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Plus, Trash2, Download, UserCheck } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Plus, Trash2, Download, UserCheck, Trophy } from 'lucide-react';
 import { useBarberStore } from '../store';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -37,7 +36,7 @@ const Financial: React.FC = () => {
         commission: commission,
         count: pApps.length
       };
-    }).filter(s => s.total > 0);
+    }).filter(s => s.total > 0).sort((a, b) => b.total - a.total);
   }, [appointments, professionals]);
 
   const pieData = [{ name: 'Receitas', value: metrics.receitas, color: '#10b981' }, { name: 'Despesas', value: metrics.despesas, color: '#ef4444' }];
@@ -55,6 +54,7 @@ const Financial: React.FC = () => {
         </div>
       </div>
 
+      {/* Cards de métricas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div onClick={() => setFilterType('RECEITA')} className={`cartao-vidro rounded-[2rem] p-8 border-white/5 cursor-pointer hover:border-emerald-500/30 transition-all ${filterType === 'RECEITA' ? 'bg-emerald-500/5 border-emerald-500/30' : ''}`}>
           <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mb-6"><DollarSign size={24}/></div>
@@ -73,7 +73,7 @@ const Financial: React.FC = () => {
         </div>
       </div>
 
-      {/* NOVO: Histórico por Barbeiro */}
+      {/* Repasse de Comissões */}
       <div className="cartao-vidro rounded-[2rem] p-8 border-white/5">
         <div className="flex items-center gap-3 mb-8">
           <UserCheck className="text-[#D4AF37]"/>
@@ -100,6 +100,54 @@ const Financial: React.FC = () => {
         </div>
       </div>
 
+      {/* Ranking de Profissionais — NOVO */}
+      <div className="cartao-vidro rounded-[2rem] p-8 border-white/5">
+        <div className="flex items-center gap-3 mb-8">
+          <Trophy className="text-[#D4AF37]"/>
+          <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Ranking de Barbeiros</h3>
+        </div>
+        <div className="space-y-4">
+          {barberStats.map((stat, idx) => (
+            <div key={stat.id} className="flex items-center gap-5 p-4 bg-white/5 rounded-2xl border border-white/5">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg flex-shrink-0 ${
+                idx === 0 ? 'bg-yellow-400 text-black' :
+                idx === 1 ? 'bg-zinc-400 text-black' :
+                idx === 2 ? 'bg-amber-700 text-white' :
+                'bg-white/5 text-zinc-500'
+              }`}>
+                {idx + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-white italic truncate">{stat.name}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#C58A4A] rounded-full transition-all duration-700"
+                      style={{
+                        width: barberStats[0]?.total > 0
+                          ? `${(stat.total / barberStats[0].total) * 100}%`
+                          : '0%'
+                      }}
+                    />
+                  </div>
+                  <span className="text-[9px] font-black text-zinc-500 uppercase w-16 text-right shrink-0">{stat.count} serv.</span>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="font-black text-white text-sm">R$ {stat.total.toFixed(2)}</p>
+                <p className="text-[8px] font-black text-[#D4AF37] uppercase mt-0.5">R$ {stat.commission.toFixed(2)} comissão</p>
+              </div>
+            </div>
+          ))}
+          {barberStats.length === 0 && (
+            <p className="text-center py-8 text-zinc-600 text-[10px] font-black uppercase italic">
+              Nenhum serviço concluído ainda.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="cartao-vidro rounded-[2rem] p-8 border-white/5">
           <h3 className="text-[10px] font-black text-white uppercase tracking-widest mb-8">Composição do Caixa</h3>
@@ -131,6 +179,7 @@ const Financial: React.FC = () => {
         </div>
       </div>
 
+      {/* Extrato */}
       <div className="cartao-vidro rounded-[2rem] p-8 border-white/5">
         <div className="flex items-center justify-between mb-8">
            <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Extrato de Fluxo</h3>
@@ -167,6 +216,7 @@ const Financial: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal Lançamento */}
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl animate-in zoom-in-95">
           <div className="cartao-vidro w-full max-w-md rounded-[2.5rem] p-10 space-y-6 border-[#D4AF37]/20 relative shadow-2xl">
