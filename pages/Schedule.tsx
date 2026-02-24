@@ -36,7 +36,7 @@ const Schedule: React.FC = () => {
   });
 
   const inactiveClients = useMemo(() => {
-    const threshold = 1;
+    const threshold = 30;
     const now = new Date();
     return clients
       .map((c: any) => {
@@ -75,10 +75,39 @@ const Schedule: React.FC = () => {
     alert('✅ Campanha criada!');
   };
 
+  const buildPhone = (raw: string) => {
+    const digits = raw.replace(/\D/g, '');
+    return digits.startsWith('55') ? digits : `55${digits}`;
+  };
+
+  // Mensagem genérica para um cliente inativo
   const handleSendWhatsApp = (clientPhone: string, clientName: string, daysAgo: number) => {
     const bookingUrl = window.location.origin;
-    const msg = encodeURIComponent(`Olá ${clientName}! Sentimos sua falta no ${config?.name || 'Sr. José'}! 🪒\nFaz ${daysAgo} dias desde sua última visita.\nAgende agora: ${bookingUrl}`);
-    window.open(`https://wa.me/55${clientPhone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+    const msg = encodeURIComponent(
+      `Olá ${clientName}! Sentimos sua falta no ${config?.name || 'Sr. José'}! 🪒\nFaz ${daysAgo} dias desde sua última visita.\nAgende agora: ${bookingUrl}`
+    );
+    window.open(`https://wa.me/${buildPhone(clientPhone)}?text=${msg}`, '_blank');
+  };
+
+  // Envia a mensagem de uma campanha específica para um cliente
+  const handleSendCampaignToClient = (clientPhone: string, clientName: string, daysAgo: number, camp: InactivityCampaign) => {
+    const bookingUrl = window.location.origin;
+    const text = camp.message
+      .replace(/\{nome\}/gi, clientName)
+      .replace(/\{dias\}/gi, String(daysAgo))
+      .replace(/\{link\}/gi, bookingUrl)
+      .replace(/\{desconto\}/gi, camp.discount > 0 ? `${camp.discount}%` : '');
+    window.open(`https://wa.me/${buildPhone(clientPhone)}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  // Dispara campanha para todos os inativos compatíveis (um por um com delay)
+  const handleBroadcastCampaign = (camp: InactivityCampaign) => {
+    const targets = inactiveClients.filter((c: any) => c.daysAgo >= camp.daysInactive);
+    if (targets.length === 0) { alert('Nenhum cliente inativo compatível com esta campanha.'); return; }
+    if (!confirm(`Abrir WhatsApp para ${targets.length} cliente(s) inativo(s)?\nCada aba abrirá com 0.8s de intervalo.`)) return;
+    targets.forEach((c: any, i: number) => {
+      setTimeout(() => handleSendCampaignToClient(c.phone, c.name, c.daysAgo, camp), i * 800);
+    });
   };
 
   const isDark = theme !== 'light';
@@ -168,18 +197,34 @@ const Schedule: React.FC = () => {
           {(inactivityCampaigns || []).length > 0 && (
             <div className="space-y-2">
               <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-2">Campanhas Salvas</p>
-              {(inactivityCampaigns || []).map((camp: InactivityCampaign) => (
-                <div key={camp.id} className={`rounded-2xl p-5 border flex items-center justify-between gap-4 ${bg}`}>
-                  <div className="flex items-center gap-3">
-                    <MessageSquare size={20} className="text-[#C58A4A] shrink-0" />
-                    <div>
-                      <p className={`font-black text-sm ${txt}`}>{camp.name}</p>
-                      <p className="text-[9px] text-zinc-500 font-bold uppercase">{camp.daysInactive}+ dias inativos {camp.discount > 0 && `· ${camp.discount}% desconto`}</p>
+              {(inactivityCampaigns || []).map((camp: InactivityCampaign) => {
+                const targets = inactiveClients.filter((c: any) => c.daysAgo >= camp.daysInactive);
+                return (
+                  <div key={camp.id} className={`rounded-2xl p-5 border ${bg}`}>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <MessageSquare size={20} className="text-[#C58A4A] shrink-0" />
+                        <div>
+                          <p className={`font-black text-sm ${txt}`}>{camp.name}</p>
+                          <p className="text-[9px] text-zinc-500 font-bold uppercase">
+                            {camp.daysInactive}+ dias inativos {camp.discount > 0 && `· ${camp.discount}% desconto`} · {targets.length} cliente(s) elegíveis
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleBroadcastCampaign(camp)}
+                          title="Enviar para todos os inativos elegíveis"
+                          className="flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-2 rounded-xl font-black text-[9px] uppercase hover:scale-105 transition-all shadow"
+                        >
+                          <Phone size={11} /> Disparar ({targets.length})
+                        </button>
+                        <button onClick={() => deleteCampaign(camp.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all"><Trash2 size={14} /></button>
+                      </div>
                     </div>
                   </div>
-                  <button onClick={() => deleteCampaign(camp.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all"><Trash2 size={14} /></button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -192,19 +237,38 @@ const Schedule: React.FC = () => {
           </div>
 
           {inactiveClients.map((client: any) => (
-            <div key={client.id} className={`rounded-[2rem] p-5 border flex items-center justify-between gap-4 ${bg}`}>
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${client.daysAgo > 60 ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>{client.name.charAt(0)}</div>
-                <div>
-                  <p className={`font-black ${txt}`}>{client.name}</p>
-                  <p className="text-[9px] text-zinc-500 font-bold">{client.phone}</p>
-                  <p className={`text-[9px] font-black uppercase mt-0.5 ${client.daysAgo > 60 ? 'text-red-500' : 'text-amber-500'}`}>{client.daysAgo} dias sem visita</p>
+            <div key={client.id} className={`rounded-[2rem] p-5 border ${bg}`}>
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${client.daysAgo > 60 ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>{client.name.charAt(0)}</div>
+                  <div>
+                    <p className={`font-black ${txt}`}>{client.name}</p>
+                    <p className="text-[9px] text-zinc-500 font-bold">{client.phone}</p>
+                    <p className={`text-[9px] font-black uppercase mt-0.5 ${client.daysAgo > 60 ? 'text-red-500' : 'text-amber-500'}`}>{client.daysAgo} dias sem visita</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Botão mensagem genérica */}
+                  <button onClick={() => handleSendWhatsApp(client.phone, client.name, client.daysAgo)}
+                    className="flex items-center gap-1.5 bg-[#25D366] text-white px-3 py-2.5 rounded-xl font-black text-[9px] uppercase hover:scale-105 transition-all shadow-lg">
+                    <Phone size={11} /> WhatsApp
+                  </button>
+                  {/* Botões por campanha */}
+                  {(inactivityCampaigns || [])
+                    .filter((camp: InactivityCampaign) => client.daysAgo >= camp.daysInactive)
+                    .map((camp: InactivityCampaign) => (
+                      <button
+                        key={camp.id}
+                        onClick={() => handleSendCampaignToClient(client.phone, client.name, client.daysAgo, camp)}
+                        title={`Enviar campanha: ${camp.name}`}
+                        className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-black text-[9px] uppercase hover:scale-105 transition-all border ${isDark ? 'bg-white/5 border-white/10 text-zinc-300 hover:bg-[#C58A4A]/20 hover:border-[#C58A4A]/40' : 'bg-zinc-100 border-zinc-200 text-zinc-700 hover:bg-amber-50 hover:border-amber-300'}`}
+                      >
+                        <MessageSquare size={11} /> {camp.name}
+                      </button>
+                    ))
+                  }
                 </div>
               </div>
-              <button onClick={() => handleSendWhatsApp(client.phone, client.name, client.daysAgo)}
-                className="flex items-center gap-2 bg-[#25D366] text-white px-4 py-2.5 rounded-xl font-black text-[9px] uppercase hover:scale-105 transition-all shadow-lg">
-                <Phone size={12} /> WhatsApp
-              </button>
             </div>
           ))}
 
