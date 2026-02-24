@@ -32,13 +32,11 @@ interface BarberContextType {
   config: ShopConfig;
   loading: boolean;
   theme: 'dark' | 'light';
-  // Novos estados
   loyaltyCards: LoyaltyCard[];
   subscriptions: Subscription[];
   partners: Partner[];
   blockedSlots: BlockedSlot[];
   inactivityCampaigns: InactivityCampaign[];
-  // Métodos existentes
   toggleTheme: () => void;
   login: (emailOrPhone: string, pass: string) => Promise<void>;
   logout: () => void;
@@ -67,7 +65,6 @@ interface BarberContextType {
   clearNotifications: () => void;
   updateConfig: (data: Partial<ShopConfig>) => Promise<void>;
   addShopReview: (review: Omit<Review, 'id' | 'date'>) => void;
-  // Novos métodos
   addLoyaltyCard: (data: Omit<LoyaltyCard, 'id'>) => Promise<void>;
   updateLoyaltyCard: (clientId: string, data: Partial<LoyaltyCard>) => Promise<void>;
   addSubscription: (data: Omit<Subscription, 'id'>) => Promise<void>;
@@ -113,7 +110,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Estados existentes
   const [clients, setClients] = useState<Client[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -122,38 +118,18 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [config, setConfig] = useState<ShopConfig>({
-    name: "",
-    description: "",
-    aboutTitle: "",
-    aboutText: "",
-    address: "",
-    city: "",
-    state: "",
-    whatsapp: "",
-    instagram: "",
-    logo: "",
-    coverImage: "",
-    loginBackground: "",
-    locationUrl: "",
-    openingTime: "08:00",
-    closingTime: "20:00",
-    email: "",
-    cnpj: "",
-    gallery: [],
-    reviews: []
+    name: "", description: "", aboutTitle: "", aboutText: "", address: "",
+    city: "", state: "", whatsapp: "", instagram: "", logo: "", coverImage: "",
+    loginBackground: "", locationUrl: "", openingTime: "08:00", closingTime: "20:00",
+    email: "", cnpj: "", gallery: [], reviews: []
   });
-
-  // Novos estados
   const [loyaltyCards, setLoyaltyCards] = useState<LoyaltyCard[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
   const [inactivityCampaigns, setInactivityCampaigns] = useState<InactivityCampaign[]>([]);
 
-  useEffect(() => {
-    localStorage.setItem('brb_theme', theme);
-  }, [theme]);
-
+  useEffect(() => { localStorage.setItem('brb_theme', theme); }, [theme]);
   useEffect(() => {
     if (user) localStorage.setItem('brb_user', JSON.stringify(user));
     else localStorage.removeItem('brb_user');
@@ -161,56 +137,27 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   useEffect(() => {
     const unsubscribers = [
-      onSnapshot(collection(db, COLLECTIONS.CLIENTS), (snapshot) => {
-        setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.PROFESSIONALS), (snapshot) => {
-        setProfessionals(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Professional)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.SERVICES), (snapshot) => {
-        setServices(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Service)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.APPOINTMENTS), (snapshot) => {
-        setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Appointment)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.FINANCIAL), (snapshot) => {
-        setFinancialEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FinancialEntry)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.NOTIFICATIONS), (snapshot) => {
-        setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.SUGGESTIONS), (snapshot) => {
-        setSuggestions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Suggestion)));
-      }),
-      // Novos listeners
-      onSnapshot(collection(db, COLLECTIONS.LOYALTY_CARDS), (snapshot) => {
-        setLoyaltyCards(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LoyaltyCard)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.SUBSCRIPTIONS), (snapshot) => {
-        setSubscriptions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subscription)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.PARTNERS), (snapshot) => {
-        setPartners(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Partner)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.BLOCKED_SLOTS), (snapshot) => {
-        setBlockedSlots(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlockedSlot)));
-      }),
-      onSnapshot(collection(db, COLLECTIONS.INACTIVITY_CAMPAIGNS), (snapshot) => {
-        setInactivityCampaigns(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InactivityCampaign)));
-      }),
-      onSnapshot(doc(db, COLLECTIONS.CONFIG, 'main'), (doc) => {
-        if (doc.exists()) {
-          const configData = doc.data() as ShopConfig;
+      onSnapshot(collection(db, COLLECTIONS.CLIENTS), snap => setClients(snap.docs.map(d => ({ id: d.id, ...d.data() } as Client)))),
+      onSnapshot(collection(db, COLLECTIONS.PROFESSIONALS), snap => setProfessionals(snap.docs.map(d => ({ id: d.id, ...d.data() } as Professional)))),
+      onSnapshot(collection(db, COLLECTIONS.SERVICES), snap => setServices(snap.docs.map(d => ({ id: d.id, ...d.data() } as Service)))),
+      onSnapshot(collection(db, COLLECTIONS.APPOINTMENTS), snap => setAppointments(snap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)))),
+      onSnapshot(collection(db, COLLECTIONS.FINANCIAL), snap => setFinancialEntries(snap.docs.map(d => ({ id: d.id, ...d.data() } as FinancialEntry)))),
+      onSnapshot(collection(db, COLLECTIONS.NOTIFICATIONS), snap => setNotifications(snap.docs.map(d => ({ id: d.id, ...d.data() } as Notification)))),
+      onSnapshot(collection(db, COLLECTIONS.SUGGESTIONS), snap => setSuggestions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Suggestion)))),
+      onSnapshot(collection(db, COLLECTIONS.LOYALTY_CARDS), snap => setLoyaltyCards(snap.docs.map(d => ({ id: d.id, ...d.data() } as LoyaltyCard)))),
+      onSnapshot(collection(db, COLLECTIONS.SUBSCRIPTIONS), snap => setSubscriptions(snap.docs.map(d => ({ id: d.id, ...d.data() } as Subscription)))),
+      onSnapshot(collection(db, COLLECTIONS.PARTNERS), snap => setPartners(snap.docs.map(d => ({ id: d.id, ...d.data() } as Partner)))),
+      onSnapshot(collection(db, COLLECTIONS.BLOCKED_SLOTS), snap => setBlockedSlots(snap.docs.map(d => ({ id: d.id, ...d.data() } as BlockedSlot)))),
+      onSnapshot(collection(db, COLLECTIONS.INACTIVITY_CAMPAIGNS), snap => setInactivityCampaigns(snap.docs.map(d => ({ id: d.id, ...d.data() } as InactivityCampaign)))),
+      onSnapshot(doc(db, COLLECTIONS.CONFIG, 'main'), docSnap => {
+        if (docSnap.exists()) {
+          const configData = docSnap.data() as ShopConfig;
           setConfig(configData);
           const savedUser = localStorage.getItem('brb_user');
           if (savedUser) {
             const parsedUser = JSON.parse(savedUser);
             if (parsedUser.role === 'ADMIN' && configData.adminName) {
-              const updatedUser = {
-                ...parsedUser,
-                name: configData.adminName,
-                avatar: configData.logo
-              };
+              const updatedUser = { ...parsedUser, name: configData.adminName, avatar: configData.logo };
               setUser(updatedUser);
               localStorage.setItem('brb_user', JSON.stringify(updatedUser));
             }
@@ -218,7 +165,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
         }
       })
     ];
-
     setLoading(false);
     return () => unsubscribers.forEach(unsub => unsub());
   }, []);
@@ -229,13 +175,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     if (id === 'srjoseadm@gmail.com' && pass === '654326') {
       const adminName = config.adminName || 'Sr. José';
       const adminAvatar = config.logo || 'https://i.pravatar.cc/150';
-      setUser({
-        id: 'admin',
-        name: adminName,
-        email: id,
-        role: 'ADMIN',
-        avatar: adminAvatar
-      });
+      setUser({ id: 'admin', name: adminName, email: id, role: 'ADMIN', avatar: adminAvatar });
       return;
     }
     const client = clients.find(c => (c.phone === id || c.email === id) && c.password === pass);
@@ -257,62 +197,29 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     });
   };
 
-  // ── CLIENTS ─────────────────────────────────────────────────
+  // ── CLIENTS ──────────────────────────────────────────────────
   const addClient = async (data: any) => {
-    const docRef = await addDoc(collection(db, COLLECTIONS.CLIENTS), {
-      ...data,
-      totalSpent: 0,
-      createdAt: new Date().toISOString()
-    });
+    const docRef = await addDoc(collection(db, COLLECTIONS.CLIENTS), { ...data, totalSpent: 0, createdAt: new Date().toISOString() });
     return { id: docRef.id, ...data } as Client;
   };
-
-  const updateClient = async (id: string, data: any) => {
-    await updateDoc(doc(db, COLLECTIONS.CLIENTS, id), data);
-  };
-
-  const deleteClient = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.CLIENTS, id));
-  };
+  const updateClient = async (id: string, data: any) => { await updateDoc(doc(db, COLLECTIONS.CLIENTS, id), data); };
+  const deleteClient = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.CLIENTS, id)); };
 
   // ── SERVICES ─────────────────────────────────────────────────
-  const addService = async (data: any) => {
-    await addDoc(collection(db, COLLECTIONS.SERVICES), data);
-  };
+  const addService = async (data: any) => { await addDoc(collection(db, COLLECTIONS.SERVICES), data); };
+  const updateService = async (id: string, data: any) => { await updateDoc(doc(db, COLLECTIONS.SERVICES, id), data); };
+  const deleteService = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.SERVICES, id)); };
 
-  const updateService = async (id: string, data: any) => {
-    await updateDoc(doc(db, COLLECTIONS.SERVICES, id), data);
-  };
-
-  const deleteService = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.SERVICES, id));
-  };
-
-  // ── PROFESSIONALS ────────────────────────────────────────────
-  const addProfessional = async (data: any) => {
-    await addDoc(collection(db, COLLECTIONS.PROFESSIONALS), { ...data, likes: 0 });
-  };
-
-  const updateProfessional = async (id: string, data: any) => {
-    await updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, id), data);
-  };
-
-  const deleteProfessional = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.PROFESSIONALS, id));
-  };
-
+  // ── PROFESSIONALS ─────────────────────────────────────────────
+  const addProfessional = async (data: any) => { await addDoc(collection(db, COLLECTIONS.PROFESSIONALS), { ...data, likes: 0 }); };
+  const updateProfessional = async (id: string, data: any) => { await updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, id), data); };
+  const deleteProfessional = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.PROFESSIONALS, id)); };
   const likeProfessional = async (id: string) => {
-    const professional = professionals.find(p => p.id === id);
-    if (professional) {
-      await updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, id), { likes: (professional.likes || 0) + 1 });
-    }
+    const p = professionals.find(p => p.id === id);
+    if (p) await updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, id), { likes: (p.likes || 0) + 1 });
   };
-
   const resetAllLikes = async () => {
-    const updates = professionals.map(prof =>
-      updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, prof.id), { likes: 0 })
-    );
-    await Promise.all(updates);
+    await Promise.all(professionals.map(p => updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, p.id), { likes: 0 })));
   };
 
   // ── APPOINTMENTS ─────────────────────────────────────────────
@@ -332,33 +239,16 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const updateAppointmentStatus = async (id: string, status: any) => {
     await updateDoc(doc(db, COLLECTIONS.APPOINTMENTS, id), { status });
 
-    // Se voltando para PENDENTE, remove a receita gerada automaticamente
+    const appointment = appointments.find(a => a.id === id);
+
+    // ── Voltar para PENDENTE: remove receita + estorna fidelidade ──
     if (status === 'PENDENTE') {
+      // Remove entrada financeira vinculada
       const linkedEntry = financialEntries.find(e => e.appointmentId === id);
-      if (linkedEntry) {
-        await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
-      }
-    }
+      if (linkedEntry) await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
 
-    // Criar receita automática + cashback + selo ao marcar como CONCLUIDO_PAGO
-    if (status === 'CONCLUIDO_PAGO') {
-      const appointment = appointments.find(a => a.id === id);
+      // Estorna selos e cashback de fidelidade
       if (appointment) {
-        const entryDescription = `Agendamento #${id.substring(0, 8)} - ${appointment.serviceName}`;
-        const existingEntry = financialEntries.find(e => e.description === entryDescription);
-
-        if (!existingEntry) {
-          await addDoc(collection(db, COLLECTIONS.FINANCIAL), {
-            description: entryDescription,
-            amount: appointment.price,
-            type: 'RECEITA',
-            category: 'Serviços',
-            date: new Date().toISOString().split('T')[0],
-            appointmentId: id
-          });
-        }
-
-        // ── Cashback automático + Selos de fidelidade ────────────
         const cashbackPct = (config as any).cashbackPercent ?? 5;
         const stampsLimit = (config as any).stampsForFreeCut ?? 10;
         const cashbackValue = parseFloat(((appointment.price * cashbackPct) / 100).toFixed(2));
@@ -368,18 +258,58 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
         if (cardDoc) {
           const card = cardDoc.data();
-          const newStamps = (card.stamps || 0) + 1;
-          const cycled = newStamps >= stampsLimit;
+          // Verifica se este agendamento gerou um corte grátis (totalStamps % stampsLimit === 0 antes deste)
+          const prevTotal = (card.totalStamps || 0) - 1;
+          const gaveFreeCut = prevTotal > 0 && prevTotal % stampsLimit === 0;
+
           await updateDoc(doc(db, COLLECTIONS.LOYALTY_CARDS, cardDoc.id), {
-            stamps: cycled ? newStamps - stampsLimit : newStamps,
-            totalStamps: (card.totalStamps || 0) + 1,
-            credits: parseFloat(((card.credits || 0) + cashbackValue).toFixed(2)),
-            freeCutsPending: cycled ? (card.freeCutsPending || 0) + 1 : (card.freeCutsPending || 0),
-            freeCutsEarned: cycled ? (card.freeCutsEarned || 0) + 1 : (card.freeCutsEarned || 0),
+            stamps: Math.max(0, (card.stamps || 0) - 1),
+            totalStamps: Math.max(0, (card.totalStamps || 0) - 1),
+            credits: Math.max(0, parseFloat(((card.credits || 0) - cashbackValue).toFixed(2))),
+            freeCutsPending: gaveFreeCut ? Math.max(0, (card.freeCutsPending || 0) - 1) : (card.freeCutsPending || 0),
+            freeCutsEarned: gaveFreeCut ? Math.max(0, (card.freeCutsEarned || 0) - 1) : (card.freeCutsEarned || 0),
             updatedAt: new Date().toISOString(),
           });
         }
-        // ─────────────────────────────────────────────────────────
+      }
+    }
+
+    // ── Marcar como CONCLUIDO_PAGO: cria receita + aplica fidelidade ──
+    if (status === 'CONCLUIDO_PAGO' && appointment) {
+      const entryDescription = `Agendamento #${id.substring(0, 8)} - ${appointment.serviceName}`;
+      const existingEntry = financialEntries.find(e => e.description === entryDescription);
+
+      if (!existingEntry) {
+        await addDoc(collection(db, COLLECTIONS.FINANCIAL), {
+          description: entryDescription,
+          amount: appointment.price,
+          type: 'RECEITA',
+          category: 'Serviços',
+          date: new Date().toISOString().split('T')[0],
+          appointmentId: id
+        });
+      }
+
+      // Cashback + Selos
+      const cashbackPct = (config as any).cashbackPercent ?? 5;
+      const stampsLimit = (config as any).stampsForFreeCut ?? 10;
+      const cashbackValue = parseFloat(((appointment.price * cashbackPct) / 100).toFixed(2));
+
+      const loyaltySnapshot = await getDocs(collection(db, COLLECTIONS.LOYALTY_CARDS));
+      const cardDoc = loyaltySnapshot.docs.find(d => d.data().clientId === appointment.clientId);
+
+      if (cardDoc) {
+        const card = cardDoc.data();
+        const newStamps = (card.stamps || 0) + 1;
+        const cycled = newStamps >= stampsLimit;
+        await updateDoc(doc(db, COLLECTIONS.LOYALTY_CARDS, cardDoc.id), {
+          stamps: cycled ? newStamps - stampsLimit : newStamps,
+          totalStamps: (card.totalStamps || 0) + 1,
+          credits: parseFloat(((card.credits || 0) + cashbackValue).toFixed(2)),
+          freeCutsPending: cycled ? (card.freeCutsPending || 0) + 1 : (card.freeCutsPending || 0),
+          freeCutsEarned: cycled ? (card.freeCutsEarned || 0) + 1 : (card.freeCutsEarned || 0),
+          updatedAt: new Date().toISOString(),
+        });
       }
     }
   };
@@ -390,27 +320,17 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   const deleteAppointment = async (id: string) => {
     const linkedEntry = financialEntries.find(e => e.appointmentId === id);
-    if (linkedEntry) {
-      await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
-    }
+    if (linkedEntry) await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
     await deleteDoc(doc(db, COLLECTIONS.APPOINTMENTS, id));
   };
 
-  // ── FINANCIAL ────────────────────────────────────────────────
-  const addFinancialEntry = async (data: any) => {
-    await addDoc(collection(db, COLLECTIONS.FINANCIAL), data);
-  };
+  // ── FINANCIAL ─────────────────────────────────────────────────
+  const addFinancialEntry = async (data: any) => { await addDoc(collection(db, COLLECTIONS.FINANCIAL), data); };
+  const deleteFinancialEntry = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, id)); };
 
-  const deleteFinancialEntry = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, id));
-  };
-
-  // ── SUGGESTIONS ──────────────────────────────────────────────
+  // ── SUGGESTIONS ───────────────────────────────────────────────
   const addSuggestion = async (data: any) => {
-    await addDoc(collection(db, COLLECTIONS.SUGGESTIONS), {
-      ...data,
-      date: new Date().toLocaleDateString('pt-BR')
-    });
+    await addDoc(collection(db, COLLECTIONS.SUGGESTIONS), { ...data, date: new Date().toLocaleDateString('pt-BR') });
     await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
       title: 'Nova Sugestão',
       message: `${data.clientName} enviou uma sugestão`,
@@ -420,123 +340,71 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
       clientPhone: data.clientPhone
     });
   };
+  const updateSuggestion = async (id: string, data: any) => { await updateDoc(doc(db, COLLECTIONS.SUGGESTIONS, id), data); };
+  const deleteSuggestion = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.SUGGESTIONS, id)); };
 
-  const updateSuggestion = async (id: string, data: any) => {
-    await updateDoc(doc(db, COLLECTIONS.SUGGESTIONS, id), data);
-  };
-
-  const deleteSuggestion = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.SUGGESTIONS, id));
-  };
-
-  // ── NOTIFICATIONS ────────────────────────────────────────────
-  const markNotificationAsRead = async (id: string) => {
-    await updateDoc(doc(db, COLLECTIONS.NOTIFICATIONS, id), { read: true });
-  };
-
+  // ── NOTIFICATIONS ─────────────────────────────────────────────
+  const markNotificationAsRead = async (id: string) => { await updateDoc(doc(db, COLLECTIONS.NOTIFICATIONS, id), { read: true }); };
   const clearNotifications = async () => {
     const snapshot = await getDocs(collection(db, COLLECTIONS.NOTIFICATIONS));
-    snapshot.docs.forEach(async (document) => {
-      await deleteDoc(doc(db, COLLECTIONS.NOTIFICATIONS, document.id));
-    });
+    snapshot.docs.forEach(async d => await deleteDoc(doc(db, COLLECTIONS.NOTIFICATIONS, d.id)));
   };
 
-  // ── CONFIG ───────────────────────────────────────────────────
+  // ── CONFIG ────────────────────────────────────────────────────
   const updateConfig = async (data: Partial<ShopConfig>) => {
     const sanitize = (obj: any): any => JSON.parse(JSON.stringify(obj));
     const merged = sanitize({ ...config, ...data });
     await setDoc(doc(db, COLLECTIONS.CONFIG, 'main'), merged, { merge: true });
   };
-
   const addShopReview = async (review: Omit<Review, 'id' | 'date'>) => {
     const newReview: Review = { ...review, id: `rev_${Date.now()}`, date: new Date().toLocaleDateString('pt-BR') };
     await updateConfig({ reviews: [newReview, ...(config.reviews || [])] });
   };
 
-  // ── LOYALTY CARDS ────────────────────────────────────────────
+  // ── LOYALTY CARDS ─────────────────────────────────────────────
   const addLoyaltyCard = async (data: Omit<LoyaltyCard, 'id'>) => {
     await addDoc(collection(db, COLLECTIONS.LOYALTY_CARDS), data);
   };
-
   const updateLoyaltyCard = async (clientId: string, data: Partial<LoyaltyCard>) => {
     const snapshot = await getDocs(collection(db, COLLECTIONS.LOYALTY_CARDS));
     const cardDoc = snapshot.docs.find(d => d.data().clientId === clientId);
-    if (cardDoc) {
-      await updateDoc(doc(db, COLLECTIONS.LOYALTY_CARDS, cardDoc.id), data);
-    }
+    if (cardDoc) await updateDoc(doc(db, COLLECTIONS.LOYALTY_CARDS, cardDoc.id), data);
   };
 
-  // ── SUBSCRIPTIONS ────────────────────────────────────────────
-  const addSubscription = async (data: Omit<Subscription, 'id'>) => {
-    await addDoc(collection(db, COLLECTIONS.SUBSCRIPTIONS), data);
-  };
+  // ── SUBSCRIPTIONS ─────────────────────────────────────────────
+  const addSubscription = async (data: Omit<Subscription, 'id'>) => { await addDoc(collection(db, COLLECTIONS.SUBSCRIPTIONS), data); };
+  const updateSubscription = async (id: string, data: Partial<Subscription>) => { await updateDoc(doc(db, COLLECTIONS.SUBSCRIPTIONS, id), data); };
+  const deleteSubscription = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.SUBSCRIPTIONS, id)); };
 
-  const updateSubscription = async (id: string, data: Partial<Subscription>) => {
-    await updateDoc(doc(db, COLLECTIONS.SUBSCRIPTIONS, id), data);
-  };
+  // ── PARTNERS ──────────────────────────────────────────────────
+  const addPartner = async (data: Omit<Partner, 'id'>) => { await addDoc(collection(db, COLLECTIONS.PARTNERS), data); };
+  const updatePartner = async (id: string, data: Partial<Partner>) => { await updateDoc(doc(db, COLLECTIONS.PARTNERS, id), data); };
+  const deletePartner = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.PARTNERS, id)); };
 
-  const deleteSubscription = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.SUBSCRIPTIONS, id));
-  };
-
-  // ── PARTNERS ─────────────────────────────────────────────────
-  const addPartner = async (data: Omit<Partner, 'id'>) => {
-    await addDoc(collection(db, COLLECTIONS.PARTNERS), data);
-  };
-
-  const updatePartner = async (id: string, data: Partial<Partner>) => {
-    await updateDoc(doc(db, COLLECTIONS.PARTNERS, id), data);
-  };
-
-  const deletePartner = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.PARTNERS, id));
-  };
-
-  // ── BLOCKED SLOTS ────────────────────────────────────────────
-  const addBlockedSlot = async (data: Omit<BlockedSlot, 'id'>) => {
-    await addDoc(collection(db, COLLECTIONS.BLOCKED_SLOTS), data);
-  };
-
-  const deleteBlockedSlot = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.BLOCKED_SLOTS, id));
-  };
-
+  // ── BLOCKED SLOTS ─────────────────────────────────────────────
+  const addBlockedSlot = async (data: Omit<BlockedSlot, 'id'>) => { await addDoc(collection(db, COLLECTIONS.BLOCKED_SLOTS), data); };
+  const deleteBlockedSlot = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.BLOCKED_SLOTS, id)); };
   const isSlotBlocked = (professionalId: string, date: string, time: string): boolean => {
     const dayOfWeek = new Date(date + 'T12:00:00').getDay();
     return blockedSlots.some(slot => {
       if (slot.professionalId !== professionalId) return false;
       const timeInRange = time >= slot.startTime && time < slot.endTime;
       if (!timeInRange) return false;
-      if (slot.recurring) {
-        return slot.recurringDays?.includes(dayOfWeek) ?? false;
-      }
+      if (slot.recurring) return slot.recurringDays?.includes(dayOfWeek) ?? false;
       return slot.date === date;
     });
   };
 
-  // ── INACTIVITY CAMPAIGNS ─────────────────────────────────────
-  const addCampaign = async (data: Omit<InactivityCampaign, 'id'>) => {
-    await addDoc(collection(db, COLLECTIONS.INACTIVITY_CAMPAIGNS), {
-      ...data,
-      lastRun: '',
-      clientsSent: [],
-      status: 'ATIVA',
-    });
-  };
-
-  const updateCampaign = async (id: string, data: Partial<InactivityCampaign>) => {
-    await updateDoc(doc(db, COLLECTIONS.INACTIVITY_CAMPAIGNS, id), data);
-  };
-
-  const deleteCampaign = async (id: string) => {
-    await deleteDoc(doc(db, COLLECTIONS.INACTIVITY_CAMPAIGNS, id));
-  };
+  // ── INACTIVITY CAMPAIGNS ──────────────────────────────────────
+  const addCampaign = async (data: Omit<InactivityCampaign, 'id'>) => { await addDoc(collection(db, COLLECTIONS.INACTIVITY_CAMPAIGNS), data); };
+  const updateCampaign = async (id: string, data: Partial<InactivityCampaign>) => { await updateDoc(doc(db, COLLECTIONS.INACTIVITY_CAMPAIGNS, id), data); };
+  const deleteCampaign = async (id: string) => { await deleteDoc(doc(db, COLLECTIONS.INACTIVITY_CAMPAIGNS, id)); };
 
   return React.createElement(BarberContext.Provider, {
     value: {
-      // Existentes
       user, clients, professionals, services, appointments, financialEntries,
       notifications, suggestions, config, loading, theme,
+      loyaltyCards, subscriptions, partners, blockedSlots, inactivityCampaigns,
       toggleTheme, login, logout, updateUser,
       addClient, updateClient, deleteClient,
       addService, updateService, deleteService,
@@ -546,8 +414,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
       addSuggestion, updateSuggestion, deleteSuggestion,
       markNotificationAsRead, clearNotifications,
       updateConfig, addShopReview,
-      // Novos
-      loyaltyCards, subscriptions, partners, blockedSlots, inactivityCampaigns,
       addLoyaltyCard, updateLoyaltyCard,
       addSubscription, updateSubscription, deleteSubscription,
       addPartner, updatePartner, deletePartner,
