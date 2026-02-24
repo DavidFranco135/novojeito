@@ -1,13 +1,17 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { Client, Professional, Service, Appointment, ShopConfig, User, FinancialEntry, Notification, Review, Suggestion } from './types';
+import {
+  Client, Professional, Service, Appointment, ShopConfig, User,
+  FinancialEntry, Notification, Review, Suggestion,
+  LoyaltyCard, Subscription, Partner, BlockedSlot, InactivityCampaign
+} from './types';
 import { db } from './firebase';
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
+import {
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
   onSnapshot,
   setDoc,
   query,
@@ -28,6 +32,13 @@ interface BarberContextType {
   config: ShopConfig;
   loading: boolean;
   theme: 'dark' | 'light';
+  // Novos estados
+  loyaltyCards: LoyaltyCard[];
+  subscriptions: Subscription[];
+  partners: Partner[];
+  blockedSlots: BlockedSlot[];
+  inactivityCampaigns: InactivityCampaign[];
+  // Métodos existentes
   toggleTheme: () => void;
   login: (emailOrPhone: string, pass: string) => Promise<void>;
   logout: () => void;
@@ -56,6 +67,21 @@ interface BarberContextType {
   clearNotifications: () => void;
   updateConfig: (data: Partial<ShopConfig>) => Promise<void>;
   addShopReview: (review: Omit<Review, 'id' | 'date'>) => void;
+  // Novos métodos
+  addLoyaltyCard: (data: Omit<LoyaltyCard, 'id'>) => Promise<void>;
+  updateLoyaltyCard: (clientId: string, data: Partial<LoyaltyCard>) => Promise<void>;
+  addSubscription: (data: Omit<Subscription, 'id'>) => Promise<void>;
+  updateSubscription: (id: string, data: Partial<Subscription>) => Promise<void>;
+  deleteSubscription: (id: string) => Promise<void>;
+  addPartner: (data: Omit<Partner, 'id'>) => Promise<void>;
+  updatePartner: (id: string, data: Partial<Partner>) => Promise<void>;
+  deletePartner: (id: string) => Promise<void>;
+  addBlockedSlot: (data: Omit<BlockedSlot, 'id'>) => Promise<void>;
+  deleteBlockedSlot: (id: string) => Promise<void>;
+  addCampaign: (data: Omit<InactivityCampaign, 'id'>) => Promise<void>;
+  updateCampaign: (id: string, data: Partial<InactivityCampaign>) => Promise<void>;
+  deleteCampaign: (id: string) => Promise<void>;
+  isSlotBlocked: (professionalId: string, date: string, time: string) => boolean;
 }
 
 const BarberContext = createContext<BarberContextType | undefined>(undefined);
@@ -68,7 +94,12 @@ const COLLECTIONS = {
   FINANCIAL: 'financialEntries',
   CONFIG: 'config',
   NOTIFICATIONS: 'notifications',
-  SUGGESTIONS: 'suggestions'
+  SUGGESTIONS: 'suggestions',
+  LOYALTY_CARDS: 'loyaltyCards',
+  SUBSCRIPTIONS: 'subscriptions',
+  PARTNERS: 'partners',
+  BLOCKED_SLOTS: 'blockedSlots',
+  INACTIVITY_CAMPAIGNS: 'inactivityCampaigns',
 };
 
 export function BarberProvider({ children }: { children?: ReactNode }) {
@@ -82,6 +113,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // Estados existentes
   const [clients, setClients] = useState<Client[]>([]);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -110,6 +142,13 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     gallery: [],
     reviews: []
   });
+
+  // Novos estados
+  const [loyaltyCards, setLoyaltyCards] = useState<LoyaltyCard[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([]);
+  const [inactivityCampaigns, setInactivityCampaigns] = useState<InactivityCampaign[]>([]);
 
   useEffect(() => {
     localStorage.setItem('brb_theme', theme);
@@ -143,12 +182,26 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
       onSnapshot(collection(db, COLLECTIONS.SUGGESTIONS), (snapshot) => {
         setSuggestions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Suggestion)));
       }),
+      // Novos listeners
+      onSnapshot(collection(db, COLLECTIONS.LOYALTY_CARDS), (snapshot) => {
+        setLoyaltyCards(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LoyaltyCard)));
+      }),
+      onSnapshot(collection(db, COLLECTIONS.SUBSCRIPTIONS), (snapshot) => {
+        setSubscriptions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subscription)));
+      }),
+      onSnapshot(collection(db, COLLECTIONS.PARTNERS), (snapshot) => {
+        setPartners(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Partner)));
+      }),
+      onSnapshot(collection(db, COLLECTIONS.BLOCKED_SLOTS), (snapshot) => {
+        setBlockedSlots(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlockedSlot)));
+      }),
+      onSnapshot(collection(db, COLLECTIONS.INACTIVITY_CAMPAIGNS), (snapshot) => {
+        setInactivityCampaigns(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InactivityCampaign)));
+      }),
       onSnapshot(doc(db, COLLECTIONS.CONFIG, 'main'), (doc) => {
         if (doc.exists()) {
           const configData = doc.data() as ShopConfig;
           setConfig(configData);
-          
-          // âœ… CORREÃ‡ÃƒO: Se houver usuÃ¡rio admin logado, atualizar com o nome do Firebase
           const savedUser = localStorage.getItem('brb_user');
           if (savedUser) {
             const parsedUser = JSON.parse(savedUser);
@@ -174,14 +227,12 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   const login = async (id: string, pass: string) => {
     if (id === 'srjoseadm@gmail.com' && pass === '654326') {
-      // âœ… CORREÃ‡ÃƒO: Carregar nome do Firebase ao fazer login
-      const adminName = config.adminName || 'Sr. JosÃ©';
+      const adminName = config.adminName || 'Sr. José';
       const adminAvatar = config.logo || 'https://i.pravatar.cc/150';
-      
-      setUser({ 
-        id: 'admin', 
-        name: adminName, 
-        email: id, 
+      setUser({
+        id: 'admin',
+        name: adminName,
+        email: id,
         role: 'ADMIN',
         avatar: adminAvatar
       });
@@ -191,12 +242,12 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     if (client) {
       setUser({ id: client.id, name: client.name, email: client.email, role: 'CLIENTE', phone: client.phone });
     } else {
-      throw new Error('Credenciais invÃ¡lidas');
+      throw new Error('Credenciais inválidas');
     }
   };
 
   const logout = () => setUser(null);
-  
+
   const updateUser = (data: Partial<User>) => {
     setUser(prev => {
       if (!prev) return null;
@@ -206,6 +257,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     });
   };
 
+  // ── CLIENTS ─────────────────────────────────────────────────
   const addClient = async (data: any) => {
     const docRef = await addDoc(collection(db, COLLECTIONS.CLIENTS), {
       ...data,
@@ -223,6 +275,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.CLIENTS, id));
   };
 
+  // ── SERVICES ─────────────────────────────────────────────────
   const addService = async (data: any) => {
     await addDoc(collection(db, COLLECTIONS.SERVICES), data);
   };
@@ -235,6 +288,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.SERVICES, id));
   };
 
+  // ── PROFESSIONALS ────────────────────────────────────────────
   const addProfessional = async (data: any) => {
     await addDoc(collection(db, COLLECTIONS.PROFESSIONALS), { ...data, likes: 0 });
   };
@@ -255,12 +309,13 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   };
 
   const resetAllLikes = async () => {
-    const updates = professionals.map(prof => 
+    const updates = professionals.map(prof =>
       updateDoc(doc(db, COLLECTIONS.PROFESSIONALS, prof.id), { likes: 0 })
     );
     await Promise.all(updates);
   };
 
+  // ── APPOINTMENTS ─────────────────────────────────────────────
   const addAppointment = async (data: any, isPublic = false) => {
     await addDoc(collection(db, COLLECTIONS.APPOINTMENTS), { ...data, status: 'PENDENTE' });
     if (isPublic) {
@@ -276,7 +331,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
 
   const updateAppointmentStatus = async (id: string, status: any) => {
     await updateDoc(doc(db, COLLECTIONS.APPOINTMENTS, id), { status });
-    
+
     // Se voltando para PENDENTE, remove a receita gerada automaticamente
     if (status === 'PENDENTE') {
       const linkedEntry = financialEntries.find(e => e.appointmentId === id);
@@ -284,31 +339,47 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
         await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
       }
     }
-    
-    // Criar receita automÃ¡tica ao marcar como CONCLUÃDO_PAGO
+
+    // Criar receita automática + cashback + selo ao marcar como CONCLUIDO_PAGO
     if (status === 'CONCLUIDO_PAGO') {
       const appointment = appointments.find(a => a.id === id);
       if (appointment) {
         const entryDescription = `Agendamento #${id.substring(0, 8)} - ${appointment.serviceName}`;
-        
-        const existingEntry = financialEntries.find(
-          e => e.description === entryDescription
-        );
-        
+        const existingEntry = financialEntries.find(e => e.description === entryDescription);
+
         if (!existingEntry) {
           await addDoc(collection(db, COLLECTIONS.FINANCIAL), {
             description: entryDescription,
             amount: appointment.price,
             type: 'RECEITA',
-            category: 'ServiÃ§os',
+            category: 'Serviços',
             date: new Date().toISOString().split('T')[0],
             appointmentId: id
           });
-          
-          console.log(`âœ… Receita criada automaticamente: R$ ${appointment.price}`);
-        } else {
-          console.log('â„¹ï¸ Receita jÃ¡ existe para este agendamento');
         }
+
+        // ── Cashback automático + Selos de fidelidade ────────────
+        const cashbackPct = (config as any).cashbackPercent ?? 5;
+        const stampsLimit = (config as any).stampsForFreeCut ?? 10;
+        const cashbackValue = parseFloat(((appointment.price * cashbackPct) / 100).toFixed(2));
+
+        const loyaltySnapshot = await getDocs(collection(db, COLLECTIONS.LOYALTY_CARDS));
+        const cardDoc = loyaltySnapshot.docs.find(d => d.data().clientId === appointment.clientId);
+
+        if (cardDoc) {
+          const card = cardDoc.data();
+          const newStamps = (card.stamps || 0) + 1;
+          const cycled = newStamps >= stampsLimit;
+          await updateDoc(doc(db, COLLECTIONS.LOYALTY_CARDS, cardDoc.id), {
+            stamps: cycled ? newStamps - stampsLimit : newStamps,
+            totalStamps: (card.totalStamps || 0) + 1,
+            credits: parseFloat(((card.credits || 0) + cashbackValue).toFixed(2)),
+            freeCutsPending: cycled ? (card.freeCutsPending || 0) + 1 : (card.freeCutsPending || 0),
+            freeCutsEarned: cycled ? (card.freeCutsEarned || 0) + 1 : (card.freeCutsEarned || 0),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+        // ─────────────────────────────────────────────────────────
       }
     }
   };
@@ -318,7 +389,6 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   };
 
   const deleteAppointment = async (id: string) => {
-    // Remove a entrada financeira vinculada a este agendamento (se existir)
     const linkedEntry = financialEntries.find(e => e.appointmentId === id);
     if (linkedEntry) {
       await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, linkedEntry.id));
@@ -326,6 +396,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.APPOINTMENTS, id));
   };
 
+  // ── FINANCIAL ────────────────────────────────────────────────
   const addFinancialEntry = async (data: any) => {
     await addDoc(collection(db, COLLECTIONS.FINANCIAL), data);
   };
@@ -334,14 +405,15 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.FINANCIAL, id));
   };
 
+  // ── SUGGESTIONS ──────────────────────────────────────────────
   const addSuggestion = async (data: any) => {
     await addDoc(collection(db, COLLECTIONS.SUGGESTIONS), {
       ...data,
       date: new Date().toLocaleDateString('pt-BR')
     });
     await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
-      title: 'Nova SugestÃ£o',
-      message: `${data.clientName} enviou uma sugestÃ£o`,
+      title: 'Nova Sugestão',
+      message: `${data.clientName} enviou uma sugestão`,
       time: new Date().toISOString(),
       read: false,
       type: 'suggestion',
@@ -357,6 +429,7 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await deleteDoc(doc(db, COLLECTIONS.SUGGESTIONS, id));
   };
 
+  // ── NOTIFICATIONS ────────────────────────────────────────────
   const markNotificationAsRead = async (id: string) => {
     await updateDoc(doc(db, COLLECTIONS.NOTIFICATIONS, id), { read: true });
   };
@@ -368,8 +441,8 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     });
   };
 
+  // ── CONFIG ───────────────────────────────────────────────────
   const updateConfig = async (data: Partial<ShopConfig>) => {
-    // Remove campos undefined recursivamente — o Firestore não aceita undefined em nenhum campo
     const sanitize = (obj: any): any => JSON.parse(JSON.stringify(obj));
     const merged = sanitize({ ...config, ...data });
     await setDoc(doc(db, COLLECTIONS.CONFIG, 'main'), merged, { merge: true });
@@ -380,15 +453,106 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
     await updateConfig({ reviews: [newReview, ...(config.reviews || [])] });
   };
 
+  // ── LOYALTY CARDS ────────────────────────────────────────────
+  const addLoyaltyCard = async (data: Omit<LoyaltyCard, 'id'>) => {
+    await addDoc(collection(db, COLLECTIONS.LOYALTY_CARDS), data);
+  };
+
+  const updateLoyaltyCard = async (clientId: string, data: Partial<LoyaltyCard>) => {
+    const snapshot = await getDocs(collection(db, COLLECTIONS.LOYALTY_CARDS));
+    const cardDoc = snapshot.docs.find(d => d.data().clientId === clientId);
+    if (cardDoc) {
+      await updateDoc(doc(db, COLLECTIONS.LOYALTY_CARDS, cardDoc.id), data);
+    }
+  };
+
+  // ── SUBSCRIPTIONS ────────────────────────────────────────────
+  const addSubscription = async (data: Omit<Subscription, 'id'>) => {
+    await addDoc(collection(db, COLLECTIONS.SUBSCRIPTIONS), data);
+  };
+
+  const updateSubscription = async (id: string, data: Partial<Subscription>) => {
+    await updateDoc(doc(db, COLLECTIONS.SUBSCRIPTIONS, id), data);
+  };
+
+  const deleteSubscription = async (id: string) => {
+    await deleteDoc(doc(db, COLLECTIONS.SUBSCRIPTIONS, id));
+  };
+
+  // ── PARTNERS ─────────────────────────────────────────────────
+  const addPartner = async (data: Omit<Partner, 'id'>) => {
+    await addDoc(collection(db, COLLECTIONS.PARTNERS), data);
+  };
+
+  const updatePartner = async (id: string, data: Partial<Partner>) => {
+    await updateDoc(doc(db, COLLECTIONS.PARTNERS, id), data);
+  };
+
+  const deletePartner = async (id: string) => {
+    await deleteDoc(doc(db, COLLECTIONS.PARTNERS, id));
+  };
+
+  // ── BLOCKED SLOTS ────────────────────────────────────────────
+  const addBlockedSlot = async (data: Omit<BlockedSlot, 'id'>) => {
+    await addDoc(collection(db, COLLECTIONS.BLOCKED_SLOTS), data);
+  };
+
+  const deleteBlockedSlot = async (id: string) => {
+    await deleteDoc(doc(db, COLLECTIONS.BLOCKED_SLOTS, id));
+  };
+
+  const isSlotBlocked = (professionalId: string, date: string, time: string): boolean => {
+    const dayOfWeek = new Date(date + 'T12:00:00').getDay();
+    return blockedSlots.some(slot => {
+      if (slot.professionalId !== professionalId) return false;
+      const timeInRange = time >= slot.startTime && time < slot.endTime;
+      if (!timeInRange) return false;
+      if (slot.recurring) {
+        return slot.recurringDays?.includes(dayOfWeek) ?? false;
+      }
+      return slot.date === date;
+    });
+  };
+
+  // ── INACTIVITY CAMPAIGNS ─────────────────────────────────────
+  const addCampaign = async (data: Omit<InactivityCampaign, 'id'>) => {
+    await addDoc(collection(db, COLLECTIONS.INACTIVITY_CAMPAIGNS), {
+      ...data,
+      lastRun: '',
+      clientsSent: [],
+      status: 'ATIVA',
+    });
+  };
+
+  const updateCampaign = async (id: string, data: Partial<InactivityCampaign>) => {
+    await updateDoc(doc(db, COLLECTIONS.INACTIVITY_CAMPAIGNS, id), data);
+  };
+
+  const deleteCampaign = async (id: string) => {
+    await deleteDoc(doc(db, COLLECTIONS.INACTIVITY_CAMPAIGNS, id));
+  };
+
   return React.createElement(BarberContext.Provider, {
     value: {
-      user, clients, professionals, services, appointments, financialEntries, notifications, suggestions, config, loading, theme,
-      toggleTheme, login, logout, updateUser, addClient, updateClient, deleteClient,
+      // Existentes
+      user, clients, professionals, services, appointments, financialEntries,
+      notifications, suggestions, config, loading, theme,
+      toggleTheme, login, logout, updateUser,
+      addClient, updateClient, deleteClient,
       addService, updateService, deleteService,
       addProfessional, updateProfessional, deleteProfessional, likeProfessional, resetAllLikes,
       addAppointment, updateAppointmentStatus, rescheduleAppointment, deleteAppointment,
-      addFinancialEntry, deleteFinancialEntry, addSuggestion, updateSuggestion, deleteSuggestion,
-      markNotificationAsRead, clearNotifications, updateConfig, addShopReview
+      addFinancialEntry, deleteFinancialEntry,
+      addSuggestion, updateSuggestion, deleteSuggestion,
+      markNotificationAsRead, clearNotifications,
+      updateConfig, addShopReview,
+      // Novos
+      loyaltyCards, subscriptions, partners, blockedSlots, inactivityCampaigns,
+      addLoyaltyCard, updateLoyaltyCard,
+      addSubscription, updateSubscription, deleteSubscription,
+      addPartner, updatePartner, deletePartner,
+      addBlockedSlot, deleteBlockedSlot, isSlotBlocked,
+      addCampaign, updateCampaign, deleteCampaign,
     }
   }, children);
 }
