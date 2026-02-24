@@ -172,8 +172,8 @@ export function BarberProvider({ children }: { children?: ReactNode }) {
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   const login = async (id: string, pass: string) => {
-    if (id === 'srjoseadm@gmail.com' && pass === '654326') {
-      const adminName = config.adminName || 'Sr. José';
+    if (id === 'novojeitoadm@gmail.com' && pass === '654326') {
+      const adminName = config.adminName || 'Novo Jeito';
       const adminAvatar = config.logo || 'https://i.pravatar.cc/150';
       setUser({ id: 'admin', name: adminName, email: id, role: 'ADMIN', avatar: adminAvatar });
       return;
