@@ -11,15 +11,15 @@ export const CORES = {
 
 // Fix: Added missing 'aboutTitle' and 'aboutText' properties to satisfy ShopConfig interface
 export const CONFIG_LOJA: ShopConfig = {
-  name: "Barbearia Sr. José",
+  name: "Barbearia Novo Jeito",
   description: "Referência em São Gonçalo desde 1995. Unimos a tradição da barbearia clássica with as técnicas mais modernas de visagismo masculino. Um refúgio de bem-estar para o homem contemporâneo.",
   aboutTitle: "Nossa História Signature",
   aboutText: "O Sr. José começou com um sonho de trazer a verdadeira experiência da barbearia clássica para o Rio. Hoje, somos referência em cuidado masculino, unindo o old-school com as técnicas mais modernas do mercado.",
   address: "Rua Feliciano Sodré, 123",
   city: "São Gonçalo",
   state: "RJ",
-  whatsapp: "21987654321",
-  instagram: "@srjosebarberpub",
+  whatsapp: "5521973708141",
+  instagram: "@novojeitobarbearia",
   logo: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=200&h=200&auto=format&fit=crop",
   coverImage: "https://images.unsplash.com/photo-1512690196252-741ef294f260?q=80&w=2000",
   loginBackground: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2000",
